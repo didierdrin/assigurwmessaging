@@ -930,9 +930,9 @@ async function selectInsuranceCoverType(phone, phoneNumberId) {
     //to: formattedPhone,
     type: "template",
     template: {
-      name: "insurancecover", //"welcomeseven",//"welcome_message_icupa", // Replace with your approved template name
+      name: "insurancecovermessage", //"welcomeseven",//"welcome_message_icupa", // Replace with your approved template name
       language: {
-        code: "en", // Replace with the appropriate language code
+        code: "en_US", // Replace with the appropriate language code
       },
       components: [
         {
