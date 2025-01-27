@@ -1,4 +1,7 @@
 import axios from 'axios';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Function to convert URL to base64
 async function getBase64FromUrl(url) {
