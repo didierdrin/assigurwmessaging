@@ -932,7 +932,7 @@ async function selectInsuranceCoverType(phone, phoneNumberId) {
     template: {
       name: "insurancecover", //"welcomeseven",//"welcome_message_icupa", // Replace with your approved template name
       language: {
-        code: "en_US", // Replace with the appropriate language code
+        code: "en", // Replace with the appropriate language code
       },
       components: [
         {
