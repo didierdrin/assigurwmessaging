@@ -495,12 +495,9 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
 };
 
 
-
-
 const handleDocumentUpload = async (message, phone, phoneNumberId) => {
   const userContext = userContexts.get(phone) || {};
 
-  // Only process if expecting a document
   if (userContext.stage !== "EXPECTING_DOCUMENT") {
     console.log("Not expecting a document at this stage");
     return;
@@ -510,10 +507,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
   const mediaMimeType = message.document?.mime_type || message.image?.mime_type;
 
   // Validate file type
-  if (
-    !mediaId ||
-    !(mediaMimeType === "application/pdf" || mediaMimeType.startsWith("image/"))
-  ) {
+  if (!mediaId || !(mediaMimeType === "application/pdf" || mediaMimeType.startsWith("image/"))) {
     await sendWhatsAppMessage(phone, {
       type: "text",
       text: {
@@ -524,7 +518,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
   }
 
   try {
-    console.log("Received a document:", mediaId);
+    console.log("Received a document:", mediaId, "with type:", mediaMimeType);
 
     // Download the document from WhatsApp
     const mediaUrl = `https://graph.facebook.com/${VERSION}/${mediaId}`;
@@ -535,8 +529,12 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       responseType: 'arraybuffer',
     });
 
+    // Determine file extension
+    let extension = mediaMimeType.split('/')[1];
+    if (extension === 'jpeg') extension = 'jpg';
+
     // Upload the document to Firebase Storage
-    const fileName = `${uuidv4()}.${mediaMimeType.split('/')[1]}`;
+    const fileName = `${uuidv4()}.${extension}`;
     const file = storage.bucket(bucketName).file(fileName);
     await file.save(response.data, {
       metadata: { contentType: mediaMimeType },
@@ -545,34 +543,46 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     // Get the public URL of the uploaded document
     const [url] = await file.getSignedUrl({
       action: 'read',
-      expires: '03-09-2491', // Far future date
+      expires: '03-09-2491',
     });
 
-    // Extract data from the document
-    const extractedData = await extractImageData(url);
+    try {
+      // Extract data from the document
+      const extractedData = await extractImageData(url);
 
-    // Validate the extracted data
-    const requiredFields = ['policyholder name', 'policy no', 'inception date', 'expiry date', 'mark & type', 'registation plate no', 'chassis', 'licensed to carry no', 'usage', 'insurer'];
-    const isValidDocument = requiredFields.every(field => extractedData.raw_response.includes(field));
+      // Validate the extracted data
+      const requiredFields = ['policyholder name', 'policy no', 'inception date', 'expiry date', 'mark & type', 'registation plate no', 'chassis', 'licensed to carry no', 'usage', 'insurer'];
+      const isValidDocument = requiredFields.every(field => extractedData.raw_response.includes(field));
 
-    if (!isValidDocument) {
+      if (!isValidDocument) {
+        await sendWhatsAppMessage(phone, {
+          type: "text",
+          text: {
+            body: "The document you provided is not valid. Please upload a valid insurance certificate.",
+          },
+        }, phoneNumberId);
+        return;
+      }
+
+      // Store the document URL and extracted data in the userContext
+      userContext.insuranceDocumentUrl = url;
+      userContext.extractedData = extractedData;
+      userContext.stage = null;
+      userContexts.set(phone, userContext);
+
+      // Proceed to next step
+      await requestVehiclePlateNumber(phone, phoneNumberId);
+
+    } catch (extractionError) {
+      console.error("Error extracting data:", extractionError);
       await sendWhatsAppMessage(phone, {
         type: "text",
         text: {
-          body: "The document you provided is not valid. Please upload a valid insurance certificate.",
+          body: "Unable to read the document clearly. Please upload a clearer image of your insurance certificate.",
         },
       }, phoneNumberId);
-      return;
     }
 
-    // Store the document URL and extracted data in the userContext
-    userContext.insuranceDocumentUrl = url;
-    userContext.extractedData = extractedData;
-    userContext.stage = null; // Clear the expecting document stage
-    userContexts.set(phone, userContext);
-
-    // Proceed to next step
-    await requestVehiclePlateNumber(phone, phoneNumberId);
   } catch (error) {
     console.error("Error processing document:", error);
     await sendWhatsAppMessage(phone, {
@@ -583,7 +593,6 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     }, phoneNumberId);
   }
 };
-
 
 const processedMessages = new Set();
 
