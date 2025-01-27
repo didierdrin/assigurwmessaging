@@ -7,7 +7,9 @@ import { firestore, storage } from "./firebaseConfig.js";
 import http from "http";
 import https from "https";
 import { v4 as uuidv4 } from "uuid";
+import { extractImageData } from './imageExtraction.js';
 const bucketName = 'gs://assigurw.appspot.com'; 
+
 
 
 // Custom HTTP and HTTPS Agents
