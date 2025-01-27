@@ -1,24 +1,36 @@
 import axios from 'axios';
-import dotenv from 'dotenv';
+import sharp from 'sharp'; // Add this for image processing
 
-dotenv.config();
-
-// Function to convert URL to base64
 async function getBase64FromUrl(url) {
-  const response = await axios.get(url, { responseType: 'arraybuffer' });
-  const buffer = Buffer.from(response.data, 'binary');
-  return `data:image/jpeg;base64,${buffer.toString('base64')}`;
+  try {
+    const response = await axios.get(url, { responseType: 'arraybuffer' });
+    const buffer = Buffer.from(response.data);
+    
+    // Convert to JPEG using sharp
+    const processedBuffer = await sharp(buffer)
+      .jpeg() // Convert to JPEG
+      .toBuffer();
+    
+    return `data:image/jpeg;base64,${processedBuffer.toString('base64')}`;
+  } catch (error) {
+    console.error('Error in getBase64FromUrl:', error);
+    throw new Error('Failed to process image');
+  }
 }
 
-// Main extraction function
 export async function extractImageData(imageUrl) {
   try {
+    // Check if it's a PDF
+    if (imageUrl.toLowerCase().endsWith('.pdf')) {
+      throw new Error('PDF processing not supported yet');
+    }
+
     const base64Image = await getBase64FromUrl(imageUrl);
     
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: "gpt-4o", // Fixed model name
+        model: "gpt-4o",
         messages: [
           {
             role: "user",
@@ -56,7 +68,7 @@ export async function extractImageData(imageUrl) {
 
     throw new Error('No valid response from API');
   } catch (error) {
-    console.error('Error during extraction:', error.response?.data || error.message);
-    throw new Error(error.response?.data?.error?.message || error.message);
+    console.error('Error during extraction:', error);
+    throw error;
   }
 }
