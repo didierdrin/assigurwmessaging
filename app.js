@@ -8,6 +8,8 @@ import http from "http";
 import https from "https";
 import { v4 as uuidv4 } from "uuid";
 //import admin from 'firebase-admin';
+//const storage = new Storage();
+const bucketName = 'gs://assigurw.appspot.com'; 
 
 
 // Custom HTTP and HTTPS Agents
@@ -46,7 +48,7 @@ app.use(bodyParser.json());
 // WhatsApp API Credentials
 const ACCESS_TOKEN =
   "EAAGHrMn6uugBO9xlSTNU1FsbnZB7AnBLCvTlgZCYQDZC8OZA7q3nrtxpxn3VgHiT8o9KbKQIyoPNrESHKZCq2c9B9lvNr2OsT8YDBewaDD1OzytQd74XlmSOgxZAVL6TEQpDT43zZCZBwQg9AZA5QPeksUVzmAqTaoNyIIaaqSvJniVmn6dW1rw88dbZAyR6VZBMTTpjQZDZD";//"EAA1kZAGvg8CkBO7CvHgw7vOETU2TPYwnzqBtJMKm08L3u3iaCau2J98glnWGkbx1A80bHrCvRK8lZA4ZB4diboE0ACxtqUOG4bR0LU6uqUWxsd6cRRaDQZBJTJt6LDLZCEMKw4h87ixIhRyTfwoSzphuUMDCVjsQBmOjsWCqn0WhcWTS7UESldlis6OL5fz0Tp7teEsKX8iIWOcoAVZAf3SEF1lfMZD";//"EAAGHrMn6uugBO9xlSTNU1FsbnZB7AnBLCvTlgZCYQDZC8OZA7q3nrtxpxn3VgHiT8o9KbKQIyoPNrESHKZCq2c9B9lvNr2OsT8YDBewaDD1OzytQd74XlmSOgxZAVL6TEQpDT43zZCZBwQg9AZA5QPeksUVzmAqTaoNyIIaaqSvJniVmn6dW1rw88dbZAyR6VZBMTTpjQZDZD";//"EAA1kZAGvg8CkBO24xE3Nh1NvIOrZAHhEt6N1w6LBa0gLxpK3KZCYZBBeFroUunZCYvJhwFgXblw2rsxkRLkAThSSHgmzvO2ArQKq9kvsHkQQSzrK7pYy0bJktsrPzad3XLbpVwgG9WDbz2ZC5DHLtee99GMjqXxM9C3RbZBZALGz7n7dYl6ydJwMYagLADh0TAZCrOC3MiTe7Yq3Tvx4n9pKISPZB5QIsZD";
-//const PHONE_NUMBER_ID = "553852214469319"; //"396791596844039";
+
 const VERSION = "v19.0";
 
 // Global in-memory store for user contexts
@@ -494,6 +496,7 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
 
 
 
+
 const handleDocumentUpload = async (message, phone, phoneNumberId) => {
   const userContext = userContexts.get(phone) || {};
 
@@ -523,11 +526,48 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
   try {
     console.log("Received a document:", mediaId);
 
-    
+    // Download the document from WhatsApp
+    const mediaUrl = `https://graph.facebook.com/${VERSION}/${mediaId}`;
+    const response = await axios.get(mediaUrl, {
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+      },
+      responseType: 'arraybuffer',
+    });
 
+    // Upload the document to Firebase Storage
+    const fileName = `${uuidv4()}.${mediaMimeType.split('/')[1]}`;
+    const file = storage.bucket(bucketName).file(fileName);
+    await file.save(response.data, {
+      metadata: { contentType: mediaMimeType },
+    });
 
-    // Store the document ID (or URL if you download it) in the userContext
-    userContext.insuranceDocumentId = mediaId;
+    // Get the public URL of the uploaded document
+    const [url] = await file.getSignedUrl({
+      action: 'read',
+      expires: '03-09-2491', // Far future date
+    });
+
+    // Extract data from the document
+    const extractedData = await extractImageData(url);
+
+    // Validate the extracted data
+    const requiredFields = ['policyholder name', 'policy no', 'inception date', 'expiry date', 'mark & type', 'registation plate no', 'chassis', 'licensed to carry no', 'usage', 'insurer'];
+    const isValidDocument = requiredFields.every(field => extractedData.raw_response.includes(field));
+
+    if (!isValidDocument) {
+      await sendWhatsAppMessage(phone, {
+        type: "text",
+        text: {
+          body: "The document you provided is not valid. Please upload a valid insurance certificate.",
+        },
+      }, phoneNumberId);
+      return;
+    }
+
+    // Store the document URL and extracted data in the userContext
+    userContext.insuranceDocumentUrl = url;
+    userContext.extractedData = extractedData;
     userContext.stage = null; // Clear the expecting document stage
     userContexts.set(phone, userContext);
 
@@ -543,6 +583,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     }, phoneNumberId);
   }
 };
+
 
 const processedMessages = new Set();
 
@@ -1240,28 +1281,27 @@ async function processPayment(phone, paymentPlan, phoneNumberId) {
   const todayFirebase = new Date();
   const formattedDateFirebase = `${todayFirebase.getDate().toString().padStart(2, '0')}/${(todayFirebase.getMonth() + 1).toString().padStart(2, '0')}/${todayFirebase.getFullYear()}`;
 
-  // Storing userContext data into the second Firebase project (firestore2)
   const insuranceOrderData = {
-    userPhone: userContext.userPhone ? String(userContext.userPhone) : "",
-    plateNumber: userContext.plateNumber ? String(userContext.plateNumber) : "",
-    insuranceStartDate: userContext.insuranceStartDate ? String(userContext.insuranceStartDate) : "",
-    selectedCoverTypes: userContext.selectedCoverTypes ? String(userContext.selectedCoverTypes) : "",
-    selectedPersonalAccidentCoverage: userContext.selectedCoverage ? parseFloat(userContext.selectedCoverage) : 0.0,
-    totalCost: userContext.totalCost ? parseFloat(userContext.totalCost) : 0.0,
-    numberOfCoveredPeople: userContext.numberOfCoveredPeople ? parseFloat(userContext.numberOfCoveredPeople) : 0.0,
-    selectedInstallment: userContext.selectedInstallment ? String(userContext.selectedInstallment) : "",
-    insuranceDocumentUrl: userContext.insuranceDocumentId ? String(userContext.insuranceDocumentId) : "",
-    creationDate: formattedDateFirebase, // admin.firestore.FieldValue.serverTimestamp(),  // Adding a timestamp for the record
-  };
+  userPhone: userContext.userPhone ? String(userContext.userPhone) : "",
+  plateNumber: userContext.plateNumber ? String(userContext.plateNumber) : "",
+  insuranceStartDate: userContext.insuranceStartDate ? String(userContext.insuranceStartDate) : "",
+  selectedCoverTypes: userContext.selectedCoverTypes ? String(userContext.selectedCoverTypes) : "",
+  selectedPersonalAccidentCoverage: userContext.selectedCoverage ? parseFloat(userContext.selectedCoverage) : 0.0,
+  totalCost: userContext.totalCost ? parseFloat(userContext.totalCost) : 0.0,
+  numberOfCoveredPeople: userContext.numberOfCoveredPeople ? parseFloat(userContext.numberOfCoveredPeople) : 0.0,
+  selectedInstallment: userContext.selectedInstallment ? String(userContext.selectedInstallment) : "",
+  insuranceDocumentUrl: userContext.insuranceDocumentUrl ? String(userContext.insuranceDocumentUrl) : "",
+  extractedData: userContext.extractedData ? userContext.extractedData : {},
+  creationDate: formattedDateFirebase,
+};
 
-  try {
-    // Saving the userContext data into Firestore (second Firebase project)
-    const docRef = await firestore.collection("whatsappInsuranceOrders").add(insuranceOrderData);
-    console.log("User data successfully saved to firestore2 with ID:", docRef.id);
-    console.log(insuranceOrderData); 
-  } catch (error) {
-    console.error("Error saving user data to firestore2:", error.message);
-  }
+try {
+  const docRef = await firestore.collection("whatsappInsuranceOrders").add(insuranceOrderData);
+  console.log("User data successfully saved to Firestore with ID:", docRef.id);
+  console.log(insuranceOrderData); 
+} catch (error) {
+  console.error("Error saving user data to Firestore:", error.message);
+}
   
   // Add logic to integrate with payment gateway API if needed.
   console.log("______________________________________");
