@@ -170,7 +170,7 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
 
       case "EXPECTING_END_DATE":
         const startDate = userContext.insuranceStartDate;
-        if (inputDate <= startDate) {
+        if (inputDate >= startDate) {
           await sendWhatsAppMessage(phone, {
             type: "text",
             text: {
