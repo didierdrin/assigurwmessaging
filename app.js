@@ -573,6 +573,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     try {
       await firestore.collection("whatsappInsuranceOrders").add(insuranceData);
       console.log("Document reference saved to Firestore");
+      userContext.insuranceDocId = docRef.id; 
     } catch (firestoreError) {
       console.error("Firestore save error:", firestoreError);
       throw new Error("Failed to save document reference");
@@ -589,13 +590,27 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
         imageUrl: publicUrl // Use the storage URL for extraction
       });
       console.log("Data extraction response:", extractionResponse.data);
+       // Save the extracted data to Firestore
+        await firestore.collection("whatsappInsuranceOrders").doc(userContext.insuranceDocId).update({
+          policyholderName: extractedData.policyholder_name,
+          policyNo: extractedData.policy_no,
+          inceptionDate: extractedData.inception_date,
+          expiryDate: extractedData.expiry_date,
+          markAndType: extractedData.mark_and_type,
+          registrationPlateNo: extractedData.registration_plate_no,
+          chassis: extractedData.chassis,
+          licensedToCarryNo: extractedData.licensed_to_carry_no,
+          usage: extractedData.usage,
+          insurer: extractedData.insurer
+        });
     } catch (extractionError) {
       console.error("Data extraction error:", extractionError);
       // Continue with the flow even if extraction fails
     }
 
     // 9. Proceed to next step regardless of extraction result
-    await requestVehiclePlateNumber(phone, phoneNumberId);
+    //await requestVehiclePlateNumber(phone, phoneNumberId);
+    await selectInsurancePeriod(phone, formattedPlateNumber, phoneNumberId);
 
   } catch (error) {
     console.error("Error processing document:", error);
