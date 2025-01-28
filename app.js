@@ -279,6 +279,12 @@ const handlePaymentTermsReply = async (replyId, phone, userContext, phoneNumberI
       }
 
       break;
+
+       
+                  //  userContext.stage === "EXPECTING_CONFIRM_PAY" ||
+                  //  userContext.stage === "PERSONAL_ACCIDENT_COVER" ||
+                  //  userContext.stage === "EXPECTING_INSURANCE_PERIOD"
+                  
     case "add_yes":
       if (userContext.stage === "PERSONAL_ACCIDENT_COVER") {
         await selectPersonalAccidentCategory(phone, phoneNumberId);
@@ -918,11 +924,7 @@ app.post("/webhook", async (req, res) => {
   
                   // Only process if MENU pay
                   const userContext = userContexts.get(phone) || {};
-                  if (
-                    userContext.stage === "EXPECTING_CONFIRM_PAY" ||
-                    userContext.stage === "PERSONAL_ACCIDENT_COVER" ||
-                    userContext.stage === "EXPECTING_INSURANCE_PERIOD"
-                  ) {
+                 
                     await handlePaymentTermsReply(
                       buttonId,
                       phone,
@@ -930,7 +932,7 @@ app.post("/webhook", async (req, res) => {
                     );
                     console.log("Expecting AGREE & PAY button reply");
                     return;
-                  }
+                  
                 
                 } else {
                   await handleInteractiveMessages(message, phone, phoneNumberId);
