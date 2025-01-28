@@ -277,7 +277,7 @@ const handlePaymentTermsReply = async (replyId, phone, userContext, phoneNumberI
       break;
     case "less_than_a_year":
       if (userContext.stage === "EXPECTING_STATE_INSURANCE_DURATION") {
-        await startDate(phone, userContext.formattedPlate, phoneNumberId);
+        await startDate(phone, phoneNumberId);
         return;
       }
 
@@ -1205,9 +1205,8 @@ async function stateInsuranceDuration(phone, plateNumber, phoneNumberId) {
 }
 
 // Start  Date
-async function startDate(phone, plateNumber, phoneNumberId) {
+async function startDate(phone, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
-  userContext.plateNumber = plateNumber;
   userContext.stage = "EXPECTING_START_DATE";
   userContexts.set(phone, userContext);
 
