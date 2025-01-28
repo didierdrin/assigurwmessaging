@@ -590,19 +590,28 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
         imageUrl: publicUrl // Use the storage URL for extraction
       });
       console.log("Data extraction response:", extractionResponse.data);
-       // Save the extracted data to Firestore
+       if (extractionResponse.data.success) {
+        const extractedData = extractionResponse.data.data;
+
+        // Save the extracted data to Firestore
         await firestore.collection("whatsappInsuranceOrders").doc(userContext.insuranceDocId).update({
+          insuranceStartDate: extractedData.inception_date,
+          plateNumber: extractedData.registration_plate_no,
           policyholderName: extractedData.policyholder_name,
           policyNo: extractedData.policy_no,
-          inceptionDate: extractedData.inception_date,
           expiryDate: extractedData.expiry_date,
           markAndType: extractedData.mark_and_type,
-          registrationPlateNo: extractedData.registration_plate_no,
           chassis: extractedData.chassis,
           licensedToCarryNo: extractedData.licensed_to_carry_no,
           usage: extractedData.usage,
           insurer: extractedData.insurer
         });
+
+        userContext.formattedPlate = extractedData.registration_plate_no; // Update with storage URL
+        userContexts.set(phone, userContext);
+      } else {
+        console.error("Data extraction failed:", extractionResponse.data);
+      }
     } catch (extractionError) {
       console.error("Data extraction error:", extractionError);
       // Continue with the flow even if extraction fails
@@ -610,7 +619,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
 
     // 9. Proceed to next step regardless of extraction result
     //await requestVehiclePlateNumber(phone, phoneNumberId);
-    await selectInsurancePeriod(phone, formattedPlateNumber, phoneNumberId);
+    await selectInsurancePeriod(phone, userContext.formattedPlate, phoneNumberId);
 
   } catch (error) {
     console.error("Error processing document:", error);
