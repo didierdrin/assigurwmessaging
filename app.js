@@ -625,7 +625,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
         });
 
 
-        userContext.formattedPlate = extractedData.plateNumber; // Update with storage URL
+        userContext.formattedPlate = plateNumber; // Update with storage URL
         userContexts.set(phone, userContext);
       } else {
         console.error("Data extraction failed:", extractionResponse.data);
