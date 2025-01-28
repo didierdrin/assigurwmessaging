@@ -7,10 +7,11 @@ import { firestore, storage } from "./firebaseConfig.js";
 import http from "http";
 import https from "https";
 import { v4 as uuidv4 } from "uuid";
-import { extractImageData } from './imageExtraction.js';
+import dotenv from "dotenv";
+//import { extractImageData } from './imageExtraction.js';
 const bucketName = 'gs://assigurw.appspot.com'; 
 
-
+dotenv.config();
 
 // Custom HTTP and HTTPS Agents
 const httpAgent = new http.Agent({
@@ -521,51 +522,49 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
   try {
     console.log("Received a document:", mediaId);
 
-    // 1. Get media URL from WhatsApp
-    const whatsappMediaUrl = await getMediaUrl(mediaId);
-    if (!whatsappMediaUrl) {
-      throw new Error("Failed to get media URL from WhatsApp");
+    // 1. Store mediaId in Firestore immediately
+    const today = new Date();
+    const formattedDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+    
+    const insuranceData = {
+      userPhone: phone,
+      insuranceDocumentUrl: mediaId, // Store the mediaId directly
+      creationDate: formattedDate,
+      plateNumber: "", // Will be filled later
+      insuranceStartDate: "", // Will be filled later
+      selectedCoverTypes: "",
+      numberOfCoveredPeople: 0,
+      selectedPersonalAccidentCoverage: 0,
+      totalCost: 0,
+      selectedInstallment: ""
+    };
+
+    // 2. Save to Firestore
+    try {
+      await firestore.collection("whatsappInsuranceOrders").add(insuranceData);
+      console.log("Document reference saved to Firestore");
+    } catch (firestoreError) {
+      console.error("Firestore save error:", firestoreError);
+      throw new Error("Failed to save document reference");
     }
 
-    // 2. Download the document
-    const documentBuffer = await axios.get(whatsappMediaUrl, { responseType: 'arraybuffer' });
-
-    // 3. Store in Firebase Storage
-    const filename = `insurance_docs/${phone}_${Date.now()}${getFileExtension(mediaMimeType)}`;
-    const storageRef = admin.storage().bucket().file(filename);
-    
-    await storageRef.save(documentBuffer.data, {
-      metadata: {
-        contentType: mediaMimeType
-      }
-    });
-
-    // 4. Get the storage URL
-    const [storageUrl] = await storageRef.getSignedUrl({
-      action: 'read',
-      expires: '03-01-2500'  // Long expiration
-    });
-
-    // 5. Extract data using the storage URL
-    const extractedData = await extractImageData(storageUrl);
-    const parsedData = JSON.parse(extractedData.raw_response);
-
-    // 6. Save to Firestore with storage URL and extracted data
-    const docRef = await firestore.collection("whatsappInsuranceOrders").add({
-      userPhone: phone,
-      insuranceDocumentUrl: storageUrl,
-      plateNumberFromDoc: parsedData.registation_plate_no || "",
-      ...parsedData,
-      creationDate: new Date().toLocaleDateString()
-    });
-
-    // 7. Update user context
-    userContext.insuranceDocumentId = docRef.id;
-    userContext.extractedPlateNumber = parsedData.registation_plate_no;
+    // 3. Update user context
+    userContext.insuranceDocumentId = mediaId;
     userContext.stage = null;
     userContexts.set(phone, userContext);
 
-    // 8. Proceed to next step
+    // 4. Make POST request to extract data endpoint
+    try {
+      const extractionResponse = await axios.post('https://assigurwmessaging.onrender.com/extract-data', {
+        imageUrl: mediaId
+      });
+      console.log("Data extraction response:", extractionResponse.data);
+    } catch (extractionError) {
+      console.error("Data extraction error:", extractionError);
+      // Continue with the flow even if extraction fails
+    }
+
+    // 5. Proceed to next step regardless of extraction result
     await requestVehiclePlateNumber(phone, phoneNumberId);
 
   } catch (error) {
@@ -573,7 +572,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     await sendWhatsAppMessage(phone, {
       type: "text",
       text: {
-        body: "An error occurred while processing your document. Please ensure you're uploading a clear image of your insurance certificate and try again.",
+        body: "An error occurred while processing your document. Please try again.",
       },
     }, phoneNumberId);
   }
@@ -608,6 +607,84 @@ function getFileExtension(mimeType) {
   return extensions[mimeType] || '';
 }
 
+async function getBase64FromUrl(url) {
+  const response = await axios.get(url, { responseType: 'arraybuffer' });
+  const buffer = Buffer.from(response.data, 'binary');
+  return `data:image/jpeg;base64,${buffer.toString('base64')}`;
+}
+
+async function extractImageData(imageUrl) {
+  try {
+    const base64Image = await getBase64FromUrl(imageUrl);
+    
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: "gpt-4o", 
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Extract the following details, policyholder name, policy no, inception date, expiry date, mark & type, registation plate no, chassis, licensed to carry no, usage, insurer. Return these details in JSON format."
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: base64Image
+                }
+                
+              }
+            ]
+          }
+        ],
+        max_tokens: 150,
+        temperature: 0.2
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+     if (response.data.choices && response.data.choices[0]) {
+      const content = response.data.choices[0].message.content;
+      // Return the raw response content without parsing
+      return {
+        raw_response: content,
+      };
+    }
+   
+
+    throw new Error('No valid response from API');
+  } catch (error) {
+    console.error('Error during extraction:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.error?.message || error.message);
+  }
+}
+
+app.post('/extract-data', async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    
+    if (!imageUrl) {
+      return res.status(400).json({ error: 'Image URL is required' });
+    }
+
+    const extractedData = await extractImageData(imageUrl);
+    console.log('Extracted data:', extractedData);
+    res.json({ success: true, data: extractedData });
+  } catch (error) {
+    console.error('Error processing request:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Failed to extract data' 
+    });
+  }
+});
 
 const processedMessages = new Set();
 
