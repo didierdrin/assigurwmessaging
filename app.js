@@ -158,6 +158,16 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
         userContext.insuranceStartDate = inputDate;
         userContexts.set(phone, userContext);
 
+        if (userContext.stage === "EXPECTING_START_DATE") {
+          // Proceed to next step: selecting insurance cover type
+          await endDate(phone, phoneNumberId);
+        }
+        if (userContext.stage === "EXPECTING_END_DATE") {
+          // Proceed to next step: selecting insurance cover type
+          await selectInsuranceCoverType(phone, phoneNumberId);
+        }
+        
+        
         // Proceed to next step: selecting insurance cover type
         await selectInsuranceCoverType(phone, phoneNumberId);
       } else {
@@ -1203,24 +1213,11 @@ async function startDate(phone, plateNumber, phoneNumberId) {
 
   const payload = {
     type: "interactive",
-    interactive: {
-      type: "button",
-      body: {
+    body: {
         text: `Provide inception date.`,
       },
-      action: {
-        buttons: [
-          {
-            type: "reply",
-            reply: {
-              id: "start_date",
-              title: "Start Date",
-            },
-          },
-         
-        ],
-      },
-    },
+     
+    
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
@@ -1233,23 +1230,10 @@ async function endDate(phone, phoneNumberId) {
 
   const payload = {
     type: "interactive",
-    interactive: {
-      type: "button",
-      body: {
+    body: {
         text: `Provide end date.`,
       },
-      action: {
-        buttons: [
-        
-          {
-            type: "reply",
-            reply: {
-              id: "end_date",
-              title: "End Date",
-            },
-          },
-        ],
-      },
+     
     },
   };
 
