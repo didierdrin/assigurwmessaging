@@ -985,11 +985,11 @@ async function sendWelcomeMessage(phone, phoneNumberId) {
                 title: "Get Insurance",
                 description: "Apply for a new insurance policy",
               },
-              {
-                id: "file_claim",
-                title: "File Claim",
-                description: "Submit a new insurance claim",
-              },
+             // {
+             //   id: "file_claim",
+             //   title: "File Claim",
+             //   description: "Submit a new insurance claim",
+             // },
             ],
           },
         ],
