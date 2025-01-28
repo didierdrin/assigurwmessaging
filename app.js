@@ -267,7 +267,7 @@ const handlePaymentTermsReply = async (replyId, phone, userContext, phoneNumberI
       break;
     case "less_than_a_year":
       if (userContext.stage === "EXPECTING_STATE_INSURANCE_DURATION") {
-        await startDate(phone, phoneNumberId);
+        await startDate(phone, userContext.formattedPlate, phoneNumberId);
         return;
       }
 
@@ -548,6 +548,12 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
 const handleDocumentUpload = async (message, phone, phoneNumberId) => {
   const userContext = userContexts.get(phone) || {};
 
+  // Validate phoneNumberId early
+  if (!phoneNumberId) {
+    console.error("Missing phoneNumberId in handleDocumentUpload");
+    return;
+  }
+
   // Only process if expecting a document
   if (userContext.stage !== "EXPECTING_DOCUMENT") {
     console.log("Not expecting a document at this stage");
@@ -686,7 +692,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     // 9. Proceed to next step regardless of extraction result
     //await requestVehiclePlateNumber(phone, phoneNumberId);
     //await selectInsurancePeriod(phone, userContext.formattedPlate, phoneNumberId);
-    await stateInsuranceDuration(phone, phoneNumberId);
+    await stateInsuranceDuration(phone, userContext.formattedPlate, phoneNumberId);
 
   } catch (error) {
     console.error("Error processing document:", error);
@@ -1218,9 +1224,8 @@ async function startDate(phone, plateNumber, phoneNumberId) {
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
 }
 
-async function endDate(phone, plateNumber, phoneNumberId) {
+async function endDate(phone, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
-  userContext.plateNumber = plateNumber;
   userContext.stage = "EXPECTING_END_DATE";
   userContexts.set(phone, userContext);
 
