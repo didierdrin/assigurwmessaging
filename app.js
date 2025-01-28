@@ -170,15 +170,15 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
 
       case "EXPECTING_END_DATE":
         const startDate = userContext.insuranceStartDate;
-        if (inputDate >= startDate) {
-          await sendWhatsAppMessage(phone, {
-            type: "text",
-            text: {
-              body: "End date must be after the start date. Please enter a valid end date."
-            }
-          }, phoneNumberId);
-          return;
-        }
+        //if (inputDate >= startDate) {
+          //await sendWhatsAppMessage(phone, {
+           // type: "text",
+           // text: {
+           //   body: "End date must be after the start date. Please enter a valid end date."
+          //  }
+         // }, phoneNumberId);
+        //  return;
+       // }
         userContext.insuranceEndDate = inputDate;
         userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
         userContexts.set(phone, userContext);
