@@ -233,7 +233,7 @@ const handlePaymentTermsReply = async (replyId, phone, userContext, phoneNumberI
   switch (replyId) {
     case "add_yes":
       if (userContext.stage === "PERSONAL_ACCIDENT_COVER") {
-        await selectPersonalAccidentCategory(phone);
+        await selectPersonalAccidentCategory(phone, phoneNumberId);
         console.log("Expecting CAT1.../FULL PAYMENT button reply");
         return;
       }
