@@ -158,22 +158,45 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
         userContext.insuranceStartDate = inputDate;
         userContexts.set(phone, userContext);
 
-        if (userContext.stage === "EXPECTING_END_DATE") {
-          // Proceed to next step: selecting insurance cover type
-          await endDate(phone, phoneNumberId);
-        }
-        if (userContext.stage === "EXPECTING_INSURANCE_COVER_TYPE") {
-          // Proceed to next step: selecting insurance cover type
-          await selectInsuranceCoverType(phone, phoneNumberId);
-        }
-
-       
-
-        if (userContext.stage === "CUSTOM_DATE_INPUT") {
-          // Proceed to next step: selecting insurance cover type
-          await selectInsuranceCoverType(phone, phoneNumberId);
-        }
         
+    // Handle different stages
+    switch (userContext.stage) {
+      case "EXPECTING_START_DATE":
+        userContext.insuranceStartDate = inputDate;
+        userContext.stage = "EXPECTING_END_DATE";
+        userContexts.set(phone, userContext);
+        await endDate(phone, phoneNumberId);
+        break;
+
+      case "EXPECTING_END_DATE":
+        const startDate = userContext.insuranceStartDate;
+        if (inputDate <= startDate) {
+          await sendWhatsAppMessage(phone, {
+            type: "text",
+            text: {
+              body: "End date must be after the start date. Please enter a valid end date."
+            }
+          }, phoneNumberId);
+          return;
+        }
+        userContext.insuranceEndDate = inputDate;
+        userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
+        userContexts.set(phone, userContext);
+        await selectInsuranceCoverType(phone, phoneNumberId);
+        break;
+
+      case "CUSTOM_DATE_INPUT":
+        userContext.insuranceStartDate = inputDate;
+        userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
+        userContexts.set(phone, userContext);
+        await selectInsuranceCoverType(phone, phoneNumberId);
+        break;
+
+      default:
+        console.log("Unexpected stage for date input:", userContext.stage);
+        break;
+    }
+
         
         // Proceed to next step: selecting insurance cover type
         //await selectInsuranceCoverType(phone, phoneNumberId);
