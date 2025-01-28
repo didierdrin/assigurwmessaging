@@ -496,6 +496,8 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
 };
 
 // handle document upload
+
+// handle document upload
 const handleDocumentUpload = async (message, phone, phoneNumberId) => {
   const userContext = userContexts.get(phone) || {};
 
@@ -522,13 +524,36 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
   try {
     console.log("Received a document:", mediaId);
 
-    // 1. Store mediaId in Firestore immediately
+    // 1. Get the media URL from WhatsApp
+    const mediaUrl = await getMediaUrl(mediaId);
+    if (!mediaUrl) {
+      throw new Error("Failed to get media URL from WhatsApp");
+    }
+
+    // 2. Download the media file
+    const fileBuffer = await axios.get(mediaUrl, { responseType: 'arraybuffer' }).then(res => Buffer.from(res.data, 'binary'));
+    const fileExtension = getFileExtension(mediaMimeType);
+    const fileName = `insurance_documents/${phone}_${Date.now()}${fileExtension}`;
+
+    // 3. Upload the file to Firebase Storage
+    const file = bucket.file(fileName);
+    await file.save(fileBuffer, {
+      metadata: { contentType: mediaMimeType },
+    });
+
+    // 4. Get the public URL of the uploaded file
+    const [publicUrl] = await file.getSignedUrl({
+      action: 'read',
+      expires: '03-09-2491', // Far future date
+    });
+
+    // 5. Save the storage URL to Firestore
     const today = new Date();
     const formattedDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
     
     const insuranceData = {
       userPhone: phone,
-      insuranceDocumentUrl: mediaId, // Store the mediaId directly
+      insuranceDocumentUrl: publicUrl, // Store the storage URL
       creationDate: formattedDate,
       plateNumber: "", // Will be filled later
       insuranceStartDate: "", // Will be filled later
@@ -539,7 +564,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       selectedInstallment: ""
     };
 
-    // 2. Save to Firestore
+    // 6. Save to Firestore
     try {
       await firestore.collection("whatsappInsuranceOrders").add(insuranceData);
       console.log("Document reference saved to Firestore");
@@ -548,15 +573,15 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       throw new Error("Failed to save document reference");
     }
 
-    // 3. Update user context
-    userContext.insuranceDocumentId = mediaId;
+    // 7. Update user context
+    userContext.insuranceDocumentId = publicUrl; // Update with storage URL
     userContext.stage = null;
     userContexts.set(phone, userContext);
 
-    // 4. Make POST request to extract data endpoint
+    // 8. Make POST request to extract data endpoint
     try {
       const extractionResponse = await axios.post('https://assigurwmessaging.onrender.com/extract-data', {
-        imageUrl: mediaId
+        imageUrl: publicUrl // Use the storage URL for extraction
       });
       console.log("Data extraction response:", extractionResponse.data);
     } catch (extractionError) {
@@ -564,7 +589,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       // Continue with the flow even if extraction fails
     }
 
-    // 5. Proceed to next step regardless of extraction result
+    // 9. Proceed to next step regardless of extraction result
     await requestVehiclePlateNumber(phone, phoneNumberId);
 
   } catch (error) {
