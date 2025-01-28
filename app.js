@@ -1211,9 +1211,9 @@ async function startDate(phone, phoneNumberId) {
   userContexts.set(phone, userContext);
 
   const payload = {
-    type: "interactive",
-    body: {
-        text: `Provide inception date.`,
+    type: "text",
+    text: {
+        body: `Provide inception date.`,
       },
      
     
@@ -1228,9 +1228,9 @@ async function endDate(phone, phoneNumberId) {
   userContexts.set(phone, userContext);
 
   const payload = {
-    type: "interactive",
-    body: {
-        text: `Provide end date.`,
+    type: "text",
+    text: {
+        body: `Provide end date.`,
       },
      
     
