@@ -1182,17 +1182,18 @@ async function stateInsuranceDuration(phone, plateNumber, phoneNumberId) {
           {
             type: "reply",
             reply: {
-              id: "less_than_a_year",
-              title: "Less Than A Year",
+              id: "full_year",
+              title: "Full Year",
             },
           },
           {
             type: "reply",
             reply: {
-              id: "full_year",
-              title: "Full Year",
+              id: "less_than_a_year",
+              title: "Less Than A Year",
             },
           },
+          
         ],
       },
     },
