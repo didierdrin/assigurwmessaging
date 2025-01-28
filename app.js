@@ -570,9 +570,8 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     };
 
     // 6. Save to Firestore
-    let docRef;
     try {
-      await firestore.collection("whatsappInsuranceOrders").add(insuranceData);
+      const docRef = await firestore.collection("whatsappInsuranceOrders").add(insuranceData);
       console.log("Document reference saved to Firestore");
       userContext.insuranceDocId = docRef.id; 
     } catch (firestoreError) {
