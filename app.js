@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
 //import { extractImageData } from './imageExtraction.js';
 const bucketName = 'gs://assigurw.appspot.com'; 
+const bucket = storage.bucket(bucketName);
 
 dotenv.config();
 
