@@ -593,18 +593,30 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
        if (extractionResponse.data.success) {
         const extractedData = extractionResponse.data.data;
 
+        // Ensure we provide default values for undefined fields
+        const insuranceStartDate = extractedData.inception_date || "";
+        const plateNumber = extractedData.registration_plate_no || "";
+        const policyholderName = extractedData.policyholder_name || "";
+        const policyNo = extractedData.policy_no || "";
+        const expiryDate = extractedData.expiry_date || "";
+        const markAndType = extractedData.mark_and_type || "";
+        const chassis = extractedData.chassis || "";
+        const licensedToCarryNo = extractedData.licensed_to_carry_no || "";
+        const usage = extractedData.usage || "";
+        const insurer = extractedData.insurer || "";
+
         // Save the extracted data to Firestore
         await firestore.collection("whatsappInsuranceOrders").doc(userContext.insuranceDocId).update({
-          insuranceStartDate: extractedData.inception_date,
-          plateNumber: extractedData.registration_plate_no,
-          policyholderName: extractedData.policyholder_name,
-          policyNo: extractedData.policy_no,
-          expiryDate: extractedData.expiry_date,
-          markAndType: extractedData.mark_and_type,
-          chassis: extractedData.chassis,
-          licensedToCarryNo: extractedData.licensed_to_carry_no,
-          usage: extractedData.usage,
-          insurer: extractedData.insurer
+          insuranceStartDate,
+          plateNumber,
+          policyholderName,
+          policyNo,
+          expiryDate,
+          markAndType,
+          chassis,
+          licensedToCarryNo,
+          usage,
+          insurer
         });
 
         userContext.formattedPlate = extractedData.registration_plate_no; // Update with storage URL
