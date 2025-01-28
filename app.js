@@ -38,7 +38,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://assigurwmessaging.onrender.com",
+      "https://icupamessaging.onrender.com",
     ],
     methods: ["GET", "POST"],
     credentials: true,
