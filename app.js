@@ -494,10 +494,11 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
   }
 };
 
-
+// handle document upload
 const handleDocumentUpload = async (message, phone, phoneNumberId) => {
   const userContext = userContexts.get(phone) || {};
 
+  // Only process if expecting a document
   if (userContext.stage !== "EXPECTING_DOCUMENT") {
     console.log("Not expecting a document at this stage");
     return;
@@ -518,81 +519,95 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
   }
 
   try {
-    console.log("Received a document:", mediaId, "with type:", mediaMimeType);
+    console.log("Received a document:", mediaId);
 
-    // Download the document from WhatsApp
-    const mediaUrl = `https://graph.facebook.com/${VERSION}/${mediaId}`;
-    const response = await axios.get(mediaUrl, {
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-      },
-      responseType: 'arraybuffer',
-    });
-
-    // Determine file extension
-    let extension = mediaMimeType.split('/')[1];
-    if (extension === 'jpeg') extension = 'jpg';
-
-    // Upload the document to Firebase Storage
-    const fileName = `${uuidv4()}.${extension}`;
-    const file = storage.bucket(bucketName).file(fileName);
-    await file.save(response.data, {
-      metadata: { contentType: mediaMimeType },
-    });
-
-    // Get the public URL of the uploaded document
-    const [url] = await file.getSignedUrl({
-      action: 'read',
-      expires: '03-09-2491',
-    });
-
-    try {
-      // Extract data from the document
-      const extractedData = await extractImageData(url);
-
-      // Validate the extracted data
-      const requiredFields = ['policyholder name', 'policy no', 'inception date', 'expiry date', 'mark & type', 'registation plate no', 'chassis', 'licensed to carry no', 'usage', 'insurer'];
-      const isValidDocument = requiredFields.every(field => extractedData.raw_response.includes(field));
-
-      if (!isValidDocument) {
-        await sendWhatsAppMessage(phone, {
-          type: "text",
-          text: {
-            body: "The document you provided is not valid. Please upload a valid insurance certificate.",
-          },
-        }, phoneNumberId);
-        return;
-      }
-
-      // Store the document URL and extracted data in the userContext
-      userContext.insuranceDocumentUrl = url;
-      userContext.extractedData = extractedData;
-      userContext.stage = null;
-      userContexts.set(phone, userContext);
-
-      // Proceed to next step
-      await requestVehiclePlateNumber(phone, phoneNumberId);
-
-    } catch (extractionError) {
-      console.error("Error extracting data:", extractionError);
-      await sendWhatsAppMessage(phone, {
-        type: "text",
-        text: {
-          body: "Unable to read the document clearly. Please upload a clearer image of your insurance certificate.",
-        },
-      }, phoneNumberId);
+    // 1. Get media URL from WhatsApp
+    const whatsappMediaUrl = await getMediaUrl(mediaId);
+    if (!whatsappMediaUrl) {
+      throw new Error("Failed to get media URL from WhatsApp");
     }
+
+    // 2. Download the document
+    const documentBuffer = await axios.get(whatsappMediaUrl, { responseType: 'arraybuffer' });
+
+    // 3. Store in Firebase Storage
+    const filename = `insurance_docs/${phone}_${Date.now()}${getFileExtension(mediaMimeType)}`;
+    const storageRef = admin.storage().bucket().file(filename);
+    
+    await storageRef.save(documentBuffer.data, {
+      metadata: {
+        contentType: mediaMimeType
+      }
+    });
+
+    // 4. Get the storage URL
+    const [storageUrl] = await storageRef.getSignedUrl({
+      action: 'read',
+      expires: '03-01-2500'  // Long expiration
+    });
+
+    // 5. Extract data using the storage URL
+    const extractedData = await extractImageData(storageUrl);
+    const parsedData = JSON.parse(extractedData.raw_response);
+
+    // 6. Save to Firestore with storage URL and extracted data
+    const docRef = await firestore.collection("whatsappInsuranceOrders").add({
+      userPhone: phone,
+      insuranceDocumentUrl: storageUrl,
+      plateNumberFromDoc: parsedData.registation_plate_no || "",
+      ...parsedData,
+      creationDate: new Date().toLocaleDateString()
+    });
+
+    // 7. Update user context
+    userContext.insuranceDocumentId = docRef.id;
+    userContext.extractedPlateNumber = parsedData.registation_plate_no;
+    userContext.stage = null;
+    userContexts.set(phone, userContext);
+
+    // 8. Proceed to next step
+    await requestVehiclePlateNumber(phone, phoneNumberId);
 
   } catch (error) {
     console.error("Error processing document:", error);
     await sendWhatsAppMessage(phone, {
       type: "text",
       text: {
-        body: "An error occurred while processing your document. Please try again.",
+        body: "An error occurred while processing your document. Please ensure you're uploading a clear image of your insurance certificate and try again.",
       },
     }, phoneNumberId);
   }
 };
+
+// Helper function to get media URL from WhatsApp
+async function getMediaUrl(mediaId) {
+  try {
+    const response = await axios.get(
+      `https://graph.facebook.com/${VERSION}/${mediaId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+        },
+      }
+    );
+    return response.data.url;
+  } catch (error) {
+    console.error("Error getting media URL:", error);
+    return null;
+  }
+}
+
+// Helper function to get file extension from MIME type
+function getFileExtension(mimeType) {
+  const extensions = {
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/gif': '.gif',
+    'application/pdf': '.pdf'
+  };
+  return extensions[mimeType] || '';
+}
+
 
 const processedMessages = new Set();
 
