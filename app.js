@@ -158,18 +158,25 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
         userContext.insuranceStartDate = inputDate;
         userContexts.set(phone, userContext);
 
-        if (userContext.stage === "EXPECTING_START_DATE") {
+        if (userContext.stage === "EXPECTING_END_DATE") {
           // Proceed to next step: selecting insurance cover type
           await endDate(phone, phoneNumberId);
         }
-        if (userContext.stage === "EXPECTING_END_DATE") {
+        if (userContext.stage === "EXPECTING_INSURANCE_COVER_TYPE") {
+          // Proceed to next step: selecting insurance cover type
+          await selectInsuranceCoverType(phone, phoneNumberId);
+        }
+
+       
+
+        if (userContext.stage === "CUSTOM_DATE_INPUT") {
           // Proceed to next step: selecting insurance cover type
           await selectInsuranceCoverType(phone, phoneNumberId);
         }
         
         
         // Proceed to next step: selecting insurance cover type
-        await selectInsuranceCoverType(phone, phoneNumberId);
+        //await selectInsuranceCoverType(phone, phoneNumberId);
       } else {
         // Send error message for invalid date
         const errorPayload = {
@@ -241,40 +248,7 @@ const handleNFMReply = async (message, phone, phoneNumberId) => {
 
 const handlePaymentTermsReply = async (replyId, phone, userContext, phoneNumberId) => {
   switch (replyId) {
-      case "start_date":
-      if (userContext.stage === "EXPECTING_START_DATE") {
-        // await startEndDate(phone, phoneNumberId);
-        await sendWhatsAppMessage(phone, {
-          type: "text",
-          text: {
-            body: "Please enter your desired start date (DD/MM/YYYY):",
-          },
-        }, phoneNumberId);
-        userContext.stage = "CUSTOM_DATE_INPUT";
-        userContexts.set(phone, userContext);
-        console.log("Expecting custom_date button reply");
-        await endDate(phone, phoneNumberId);
-        return;
-      }
-
-      break;
-    case "end_date":
-      if (userContext.stage === "EXPECTING_END_DATE") {
-        await sendWhatsAppMessage(phone, {
-          type: "text",
-          text: {
-            body: "Please enter your desired end date (DD/MM/YYYY):",
-          },
-        }, phoneNumberId);
-        userContext.stage = "CUSTOM_DATE_INPUT";
-        userContexts.set(phone, userContext);
-        console.log("Expecting custom_date button reply");
-        // await selectInsurancePeriod(phone, userContext.formattedPlate, phoneNumberId);
-        await selectInsuranceCoverType(phone, phoneNumberId);
-        return;
-      }
-
-      break;
+      
     case "less_than_a_year":
       if (userContext.stage === "EXPECTING_STATE_INSURANCE_DURATION") {
         await startDate(phone, phoneNumberId);
