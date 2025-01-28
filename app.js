@@ -231,6 +231,54 @@ const handleNFMReply = async (message, phone, phoneNumberId) => {
 
 const handlePaymentTermsReply = async (replyId, phone, userContext, phoneNumberId) => {
   switch (replyId) {
+      case "start_date":
+      if (userContext.stage === "EXPECTING_START_DATE") {
+        // await startEndDate(phone, phoneNumberId);
+        await sendWhatsAppMessage(phone, {
+          type: "text",
+          text: {
+            body: "Please enter your desired start date (DD/MM/YYYY):",
+          },
+        }, phoneNumberId);
+        userContext.stage = "CUSTOM_DATE_INPUT";
+        userContexts.set(phone, userContext);
+        console.log("Expecting custom_date button reply");
+        await endDate(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+    case "end_date":
+      if (userContext.stage === "EXPECTING_END_DATE") {
+        await sendWhatsAppMessage(phone, {
+          type: "text",
+          text: {
+            body: "Please enter your desired end date (DD/MM/YYYY):",
+          },
+        }, phoneNumberId);
+        userContext.stage = "CUSTOM_DATE_INPUT";
+        userContexts.set(phone, userContext);
+        console.log("Expecting custom_date button reply");
+        // await selectInsurancePeriod(phone, userContext.formattedPlate, phoneNumberId);
+        await selectInsuranceCoverType(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+    case "less_than_a_year":
+      if (userContext.stage === "EXPECTING_STATE_INSURANCE_DURATION") {
+        await startDate(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+    case "full_year":
+      if (userContext.stage === "EXPECTING_STATE_INSURANCE_DURATION") {
+        await selectInsurancePeriod(phone, userContext.formattedPlate, phoneNumberId);
+        return;
+      }
+
+      break;
     case "add_yes":
       if (userContext.stage === "PERSONAL_ACCIDENT_COVER") {
         await selectPersonalAccidentCategory(phone, phoneNumberId);
@@ -637,7 +685,8 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
 
     // 9. Proceed to next step regardless of extraction result
     //await requestVehiclePlateNumber(phone, phoneNumberId);
-    await selectInsurancePeriod(phone, userContext.formattedPlate, phoneNumberId);
+    //await selectInsurancePeriod(phone, userContext.formattedPlate, phoneNumberId);
+    await stateInsuranceDuration(phone, phoneNumberId);
 
   } catch (error) {
     console.error("Error processing document:", error);
@@ -1099,6 +1148,107 @@ async function requestVehiclePlateNumber(phone, phoneNumberId) {
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
 }
 
+// State Insurance Duration
+async function stateInsuranceDuration(phone, plateNumber, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.plateNumber = plateNumber;
+  userContext.stage = "EXPECTING_STATE_INSURANCE_DURATION";
+  userContexts.set(phone, userContext);
+
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: `Vehicle Plate Number: ${plateNumber}\n\nHow long do you need your insurance to last?`,
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "less_than_a_year",
+              title: "Less Than A Year",
+            },
+          },
+          {
+            type: "reply",
+            reply: {
+              id: "full_year",
+              title: "Full Year",
+            },
+          },
+        ],
+      },
+    },
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Start  Date
+async function startDate(phone, plateNumber, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.plateNumber = plateNumber;
+  userContext.stage = "EXPECTING_START_DATE";
+  userContexts.set(phone, userContext);
+
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: `Provide inception date.`,
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "start_date",
+              title: "Start Date",
+            },
+          },
+         
+        ],
+      },
+    },
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+async function endDate(phone, plateNumber, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.plateNumber = plateNumber;
+  userContext.stage = "EXPECTING_END_DATE";
+  userContexts.set(phone, userContext);
+
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: `Provide end date.`,
+      },
+      action: {
+        buttons: [
+        
+          {
+            type: "reply",
+            reply: {
+              id: "end_date",
+              title: "End Date",
+            },
+          },
+        ],
+      },
+    },
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
 // Insurance Period Selection
 async function selectInsurancePeriod(phone, plateNumber, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
@@ -1487,4 +1637,5 @@ app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
   testWhatsAppConnection();
 });
+
 
