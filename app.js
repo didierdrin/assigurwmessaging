@@ -591,19 +591,24 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       });
       console.log("Data extraction response:", extractionResponse.data);
        if (extractionResponse.data.success) {
-        const extractedData = extractionResponse.data.data;
+        // Parse the raw response by removing the code block markers and parsing the JSON
+        const rawResponse = extractionResponse.data.data.raw_response;
+        const jsonString = rawResponse.replace(/```json\n|\n```/g, '').trim();
+        const extractedData = JSON.parse(jsonString);
 
-        // Ensure we provide default values for undefined fields
-        const insuranceStartDate = extractedData.inception_date || "";
-        const plateNumber = extractedData.registration_plate_no || "";
-        const policyholderName = extractedData.policyholder_name || "";
-        const policyNo = extractedData.policy_no || "";
-        const expiryDate = extractedData.expiry_date || "";
-        const markAndType = extractedData.mark_and_type || "";
-        const chassis = extractedData.chassis || "";
-        const licensedToCarryNo = extractedData.licensed_to_carry_no || "";
-        const usage = extractedData.usage || "";
-        const insurer = extractedData.insurer || "";
+        // Now extractedData is a proper JavaScript object
+        const {
+          policyholder_name: policyholderName = "",
+          policy_no: policyNo = "",
+          inception_date: insuranceStartDate = "",
+          expiry_date: expiryDate = "",
+          mark_and_type: markAndType = "",
+          registration_plate_no: plateNumber = "",
+          chassis = "",
+          licensed_to_carry_no: licensedToCarryNo = "",
+          usage = "",
+          insurer = ""
+        } = extractedData;
 
         // Save the extracted data to Firestore
         await firestore.collection("whatsappInsuranceOrders").doc(userContext.insuranceDocId).update({
@@ -619,7 +624,8 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
           insurer
         });
 
-        userContext.formattedPlate = extractedData.registration_plate_no; // Update with storage URL
+
+        userContext.formattedPlate = extractedData.plateNumber; // Update with storage URL
         userContexts.set(phone, userContext);
       } else {
         console.error("Data extraction failed:", extractionResponse.data);
