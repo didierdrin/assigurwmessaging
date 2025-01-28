@@ -496,8 +496,6 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
 };
 
 // handle document upload
-
-// handle document upload
 const handleDocumentUpload = async (message, phone, phoneNumberId) => {
   const userContext = userContexts.get(phone) || {};
 
@@ -530,8 +528,14 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       throw new Error("Failed to get media URL from WhatsApp");
     }
 
-    // 2. Download the media file
-    const fileBuffer = await axios.get(mediaUrl, { responseType: 'arraybuffer' }).then(res => Buffer.from(res.data, 'binary'));
+    // 2. Download the media file with proper headers
+    const fileBuffer = await axios.get(mediaUrl, {
+      responseType: 'arraybuffer',
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+      },
+    }).then(res => Buffer.from(res.data, 'binary'));
+
     const fileExtension = getFileExtension(mediaMimeType);
     const fileName = `insurance_documents/${phone}_${Date.now()}${fileExtension}`;
 
