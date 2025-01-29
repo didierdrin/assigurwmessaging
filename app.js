@@ -631,7 +631,7 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
 
     case "goods":
       // Send location request message
-      const locationRequestPayload = {
+      const locationRequestPayloadGoods = {
         type: "interactive",
         interactive: {
           type: "location_request_message",
@@ -644,7 +644,7 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
         },
       };
 
-      await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
+      await sendWhatsAppMessage(phone, locationRequestPayloadGoods, phoneNumberId);
       
       userContext.stage = "EXPECTING_PICKUP_ADDRESS_GOODS";
       userContexts.set(phone, userContext);
