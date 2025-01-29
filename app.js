@@ -1280,7 +1280,7 @@ async function sendLifutiWelcomeMessage(phone, phoneNumberId) {
       type: "list",
       header: {
         type: "text",
-        text: "Welcome to Lifuti",
+        text: "Welcome to Lifuti\nRide Sharing Services!",
       },
       body: {
         text: "What would you like to do today?",
@@ -1301,7 +1301,7 @@ async function sendLifutiWelcomeMessage(phone, phoneNumberId) {
               },
               {
                 id: "goods",
-                title: "Goods(Transport of goods)",
+                title: "Goods(Transportation)",
                 description: "Move goods to the location of your choice",
               },
             ],
