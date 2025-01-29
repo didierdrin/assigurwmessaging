@@ -662,9 +662,32 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       console.log("Data extraction response:", extractionResponse.data);
        if (extractionResponse.data.success) {
         // Parse the raw response by removing the code block markers and parsing the JSON
-        const rawResponse = extractionResponse.data.data.raw_response;
-        const jsonString = rawResponse.replace(/```json\n|\n```/g, '').trim();
-        const extractedData = JSON.parse(jsonString);
+        
+         //const rawResponse = extractionResponse.data.data.raw_response;
+        //const jsonString = rawResponse.replace(/```json\n|\n```/g, '').trim();
+        //const extractedData = JSON.parse(jsonString);
+
+         const rawResponse = extractionResponse.data.data.raw_response;
+        console.log("Raw response before parsing:", rawResponse);
+
+        let extractedData;
+        try {
+            const jsonString = rawResponse.replace(/```json\n|\n```/g, '').trim();
+            console.log("Cleaned JSON string:", jsonString);
+            extractedData = JSON.parse(jsonString);
+        } catch (parseError) {
+            console.error("JSON parsing error:", parseError);
+            // Send message to user about invalid document
+            await sendWhatsAppMessage(phone, {
+                type: "text",
+                text: {
+                    body: "The uploaded document appears to be invalid. Please ensure it's a valid insurance certificate containing policyholder name, chassis number, and insurer details. Please upload a valid document.",
+                },
+            }, phoneNumberId);
+            userContext.stage = "EXPECTING_DOCUMENT";
+            userContexts.set(phone, userContext);
+            return;
+        }
 
         // Now extractedData is a proper JavaScript object
         const {
