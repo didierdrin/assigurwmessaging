@@ -1,15 +1,15 @@
-// APP 
+// APP
 import express from "express";
 import bodyParser from "body-parser";
 import axios from "axios";
 import cors from "cors";
-import { firestore, storage } from "./firebaseConfig.js"; 
+import { firestore, storage } from "./firebaseConfig.js";
 import http from "http";
 import https from "https";
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
 //import { extractImageData } from './imageExtraction.js';
-const bucketName = 'gs://assigurw.appspot.com'; 
+const bucketName = "gs://assigurw.appspot.com";
 const bucket = storage.bucket(bucketName);
 
 dotenv.config();
@@ -36,10 +36,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "https://icupamessaging.onrender.com",
-    ],
+    origin: ["http://localhost:3000", "https://icupamessaging.onrender.com"],
     methods: ["GET", "POST"],
     credentials: true,
   })
@@ -49,7 +46,7 @@ app.use(bodyParser.json());
 
 // WhatsApp API Credentials
 const ACCESS_TOKEN =
-  "EAAGHrMn6uugBO9xlSTNU1FsbnZB7AnBLCvTlgZCYQDZC8OZA7q3nrtxpxn3VgHiT8o9KbKQIyoPNrESHKZCq2c9B9lvNr2OsT8YDBewaDD1OzytQd74XlmSOgxZAVL6TEQpDT43zZCZBwQg9AZA5QPeksUVzmAqTaoNyIIaaqSvJniVmn6dW1rw88dbZAyR6VZBMTTpjQZDZD";//"EAA1kZAGvg8CkBO7CvHgw7vOETU2TPYwnzqBtJMKm08L3u3iaCau2J98glnWGkbx1A80bHrCvRK8lZA4ZB4diboE0ACxtqUOG4bR0LU6uqUWxsd6cRRaDQZBJTJt6LDLZCEMKw4h87ixIhRyTfwoSzphuUMDCVjsQBmOjsWCqn0WhcWTS7UESldlis6OL5fz0Tp7teEsKX8iIWOcoAVZAf3SEF1lfMZD";//"EAAGHrMn6uugBO9xlSTNU1FsbnZB7AnBLCvTlgZCYQDZC8OZA7q3nrtxpxn3VgHiT8o9KbKQIyoPNrESHKZCq2c9B9lvNr2OsT8YDBewaDD1OzytQd74XlmSOgxZAVL6TEQpDT43zZCZBwQg9AZA5QPeksUVzmAqTaoNyIIaaqSvJniVmn6dW1rw88dbZAyR6VZBMTTpjQZDZD";//"EAA1kZAGvg8CkBO24xE3Nh1NvIOrZAHhEt6N1w6LBa0gLxpK3KZCYZBBeFroUunZCYvJhwFgXblw2rsxkRLkAThSSHgmzvO2ArQKq9kvsHkQQSzrK7pYy0bJktsrPzad3XLbpVwgG9WDbz2ZC5DHLtee99GMjqXxM9C3RbZBZALGz7n7dYl6ydJwMYagLADh0TAZCrOC3MiTe7Yq3Tvx4n9pKISPZB5QIsZD";
+  "EAAGHrMn6uugBO9xlSTNU1FsbnZB7AnBLCvTlgZCYQDZC8OZA7q3nrtxpxn3VgHiT8o9KbKQIyoPNrESHKZCq2c9B9lvNr2OsT8YDBewaDD1OzytQd74XlmSOgxZAVL6TEQpDT43zZCZBwQg9AZA5QPeksUVzmAqTaoNyIIaaqSvJniVmn6dW1rw88dbZAyR6VZBMTTpjQZDZD"; //"EAA1kZAGvg8CkBO7CvHgw7vOETU2TPYwnzqBtJMKm08L3u3iaCau2J98glnWGkbx1A80bHrCvRK8lZA4ZB4diboE0ACxtqUOG4bR0LU6uqUWxsd6cRRaDQZBJTJt6LDLZCEMKw4h87ixIhRyTfwoSzphuUMDCVjsQBmOjsWCqn0WhcWTS7UESldlis6OL5fz0Tp7teEsKX8iIWOcoAVZAf3SEF1lfMZD";//"EAAGHrMn6uugBO9xlSTNU1FsbnZB7AnBLCvTlgZCYQDZC8OZA7q3nrtxpxn3VgHiT8o9KbKQIyoPNrESHKZCq2c9B9lvNr2OsT8YDBewaDD1OzytQd74XlmSOgxZAVL6TEQpDT43zZCZBwQg9AZA5QPeksUVzmAqTaoNyIIaaqSvJniVmn6dW1rw88dbZAyR6VZBMTTpjQZDZD";//"EAA1kZAGvg8CkBO24xE3Nh1NvIOrZAHhEt6N1w6LBa0gLxpK3KZCYZBBeFroUunZCYvJhwFgXblw2rsxkRLkAThSSHgmzvO2ArQKq9kvsHkQQSzrK7pYy0bJktsrPzad3XLbpVwgG9WDbz2ZC5DHLtee99GMjqXxM9C3RbZBZALGz7n7dYl6ydJwMYagLADh0TAZCrOC3MiTe7Yq3Tvx4n9pKISPZB5QIsZD";
 
 const VERSION = "v19.0";
 
@@ -158,46 +155,44 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
         userContext.insuranceStartDate = inputDate;
         userContexts.set(phone, userContext);
 
-        
-    // Handle different stages
-    switch (userContext.stage) {
-      case "EXPECTING_START_DATE":
-        userContext.insuranceStartDate = inputDate;
-        userContext.stage = "EXPECTING_END_DATE";
-        userContexts.set(phone, userContext);
-        await endDate(phone, phoneNumberId);
-        break;
+        // Handle different stages
+        switch (userContext.stage) {
+          case "EXPECTING_START_DATE":
+            userContext.insuranceStartDate = inputDate;
+            userContext.stage = "EXPECTING_END_DATE";
+            userContexts.set(phone, userContext);
+            await endDate(phone, phoneNumberId);
+            break;
 
-      case "EXPECTING_END_DATE":
-        const startDate = userContext.insuranceStartDate;
-        //if (inputDate >= startDate) {
-          //await sendWhatsAppMessage(phone, {
-           // type: "text",
-           // text: {
-           //   body: "End date must be after the start date. Please enter a valid end date."
-          //  }
-         // }, phoneNumberId);
-        //  return;
-       // }
-        userContext.insuranceEndDate = inputDate;
-        userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
-        userContexts.set(phone, userContext);
-        await selectInsuranceCoverType(phone, phoneNumberId);
-        break;
+          case "EXPECTING_END_DATE":
+            const startDate = userContext.insuranceStartDate;
+            //if (inputDate >= startDate) {
+            //await sendWhatsAppMessage(phone, {
+            // type: "text",
+            // text: {
+            //   body: "End date must be after the start date. Please enter a valid end date."
+            //  }
+            // }, phoneNumberId);
+            //  return;
+            // }
+            userContext.insuranceEndDate = inputDate;
+            userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
+            userContexts.set(phone, userContext);
+            await selectInsuranceCoverType(phone, phoneNumberId);
+            break;
 
-      case "CUSTOM_DATE_INPUT":
-        userContext.insuranceStartDate = inputDate;
-        userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
-        userContexts.set(phone, userContext);
-        await selectInsuranceCoverType(phone, phoneNumberId);
-        break;
+          case "CUSTOM_DATE_INPUT":
+            userContext.insuranceStartDate = inputDate;
+            userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
+            userContexts.set(phone, userContext);
+            await selectInsuranceCoverType(phone, phoneNumberId);
+            break;
 
-      default:
-        console.log("Unexpected stage for date input:", userContext.stage);
-        break;
-    }
+          default:
+            console.log("Unexpected stage for date input:", userContext.stage);
+            break;
+        }
 
-        
         // Proceed to next step: selecting insurance cover type
         //await selectInsuranceCoverType(phone, phoneNumberId);
       } else {
@@ -226,7 +221,7 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
 // New comprehensive message handling functions
 const handleNFMReply = async (message, phone, phoneNumberId) => {
   const userContext = userContexts.get(phone) || {};
-    
+
   try {
     // Safely parse the flow response
     const flowResponse = message.interactive.nfm_reply.response_json;
@@ -269,9 +264,13 @@ const handleNFMReply = async (message, phone, phoneNumberId) => {
   }
 };
 
-const handlePaymentTermsReply = async (replyId, phone, userContext, phoneNumberId) => {
+const handlePaymentTermsReply = async (
+  replyId,
+  phone,
+  userContext,
+  phoneNumberId
+) => {
   switch (replyId) {
-      
     case "less_than_a_year":
       if (userContext.stage === "EXPECTING_STATE_INSURANCE_DURATION") {
         await startDate(phone, phoneNumberId);
@@ -281,17 +280,20 @@ const handlePaymentTermsReply = async (replyId, phone, userContext, phoneNumberI
       break;
     case "full_year":
       if (userContext.stage === "EXPECTING_STATE_INSURANCE_DURATION") {
-        await selectInsurancePeriod(phone, userContext.formattedPlate, phoneNumberId);
+        await selectInsurancePeriod(
+          phone,
+          userContext.formattedPlate,
+          phoneNumberId
+        );
         return;
       }
 
       break;
 
-       
-                  //  userContext.stage === "EXPECTING_CONFIRM_PAY" ||
-                  //  userContext.stage === "PERSONAL_ACCIDENT_COVER" ||
-                  //  userContext.stage === "EXPECTING_INSURANCE_PERIOD"
-                  
+    //  userContext.stage === "EXPECTING_CONFIRM_PAY" ||
+    //  userContext.stage === "PERSONAL_ACCIDENT_COVER" ||
+    //  userContext.stage === "EXPECTING_INSURANCE_PERIOD"
+
     case "add_yes":
       if (userContext.stage === "PERSONAL_ACCIDENT_COVER") {
         await selectPersonalAccidentCategory(phone, phoneNumberId);
@@ -315,23 +317,36 @@ const handlePaymentTermsReply = async (replyId, phone, userContext, phoneNumberI
       break;
     case "agree_to_terms":
       console.log("User agreed to the terms. Proceeding with payment.");
-      await processPayment(phone, userContext.selectedInstallment, phoneNumberId);
+      await processPayment(
+        phone,
+        userContext.selectedInstallment,
+        phoneNumberId
+      );
       break;
 
     case "cancel_payment":
       console.log("User canceled the payment.");
-      await sendWhatsAppMessage(phone, {
-        type: "text",
-        text: {
-          body: "Payment has been canceled. Let us know if you need anything else!",
+      await sendWhatsAppMessage(
+        phone,
+        {
+          type: "text",
+          text: {
+            body: "Payment has been canceled. Let us know if you need anything else!",
+          },
         },
-      }, phoneNumberId);
+        phoneNumberId
+      );
       break;
     case "start_today":
       if (userContext.stage === "EXPECTING_INSURANCE_PERIOD") {
         // Store the insurance start date in userContext
         const today = new Date();
-        const formattedDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+        const formattedDate = `${today
+          .getDate()
+          .toString()
+          .padStart(2, "0")}/${(today.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}/${today.getFullYear()}`;
         userContext.insuranceStartDate = formattedDate;
         userContexts.set(phone, userContext);
         await selectInsuranceCoverType(phone, phoneNumberId);
@@ -343,12 +358,16 @@ const handlePaymentTermsReply = async (replyId, phone, userContext, phoneNumberI
 
     case "custom_date":
       if (userContext.stage === "EXPECTING_INSURANCE_PERIOD") {
-        await sendWhatsAppMessage(phone, {
-          type: "text",
-          text: {
-            body: "Please enter your desired start date (DD/MM/YYYY, 02/01/2025):",
+        await sendWhatsAppMessage(
+          phone,
+          {
+            type: "text",
+            text: {
+              body: "Please enter your desired start date (DD/MM/YYYY, 02/01/2025):",
+            },
           },
-        }, phoneNumberId);
+          phoneNumberId
+        );
         userContext.stage = "CUSTOM_DATE_INPUT";
         userContexts.set(phone, userContext);
         console.log("Expecting custom_date button reply");
@@ -361,9 +380,6 @@ const handlePaymentTermsReply = async (replyId, phone, userContext, phoneNumberI
       console.log("Unknown payment response:", replyId);
   }
 };
-
-
-
 
 const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
   const userContext = userContexts.get(phone) || {};
@@ -395,28 +411,31 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
         await selectPaymentPlan(phone, phoneNumberId);
       } catch (error) {
         console.error("Processing error:", error);
-        await sendWhatsAppMessage(phone, {
-          type: "text",
-          text: {
-            body: "An error occurred. Please try again.",
+        await sendWhatsAppMessage(
+          phone,
+          {
+            type: "text",
+            text: {
+              body: "An error occurred. Please try again.",
+            },
           },
-        }, phoneNumberId);
+          phoneNumberId
+        );
       }
     } else {
-      await sendWhatsAppMessage(phone, {
-        type: "text",
-        text: {
-          body: "Invalid input. Please enter a number between 1 and 1000. For example: 3",
+      await sendWhatsAppMessage(
+        phone,
+        {
+          type: "text",
+          text: {
+            body: "Invalid input. Please enter a number between 1 and 1000. For example: 3",
+          },
         },
-      }, phoneNumberId);
+        phoneNumberId
+      );
     }
   }
 };
-
-
-
-
-
 
 const handleTextMessages = async (message, phone, phoneNumberId) => {
   const messageText = message.text.body.trim().toLowerCase();
@@ -432,11 +451,13 @@ const handleTextMessages = async (message, phone, phoneNumberId) => {
       console.log("User context reset.");
       break;
 
- 
-
     case "insurance":
       console.log("User requested insurance options.");
       await sendWelcomeMessage(phone, phoneNumberId);
+      break;
+    case "lifuti":
+      console.log("User requested insurance options.");
+      await sendLifutiWelcomeMessage(phone, phoneNumberId);
       break;
 
     default:
@@ -478,6 +499,27 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
   const userContext = userContexts.get(phone) || {};
 
   switch (replyId) {
+    case "passenger":
+      // Send location request message
+      const locationRequestPayload = {
+        type: "interactive",
+        interactive: {
+          type: "location_request_message",
+          body: {
+            text: "Share your pick up address",
+          },
+          action: {
+            name: "send_location",
+          },
+        },
+      };
+
+      await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
+      
+      userContext.stage = "EXPECTING_PICKUP_ADDRESS";
+      userContexts.set(phone, userContext);
+      break;
+
     case "get_insurance":
       await requestInsuranceDocument(phone, phoneNumberId);
       break;
@@ -523,33 +565,53 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       break;
 
     case "installment_cat1":
-      userContext.selectedInstallment = 'i_cat1';
-      userContexts.set(phone, userContext); 
-      await confirmAndPay(phone, userContext.selectedInstallment, phoneNumberId); 
+      userContext.selectedInstallment = "i_cat1";
+      userContexts.set(phone, userContext);
+      await confirmAndPay(
+        phone,
+        userContext.selectedInstallment,
+        phoneNumberId
+      );
       break;
 
     case "installment_cat2":
-      userContext.selectedInstallment = 'i_cat2';
-      userContexts.set(phone, userContext); 
-      await confirmAndPay(phone, userContext.selectedInstallment, phoneNumberId); 
-      break; 
+      userContext.selectedInstallment = "i_cat2";
+      userContexts.set(phone, userContext);
+      await confirmAndPay(
+        phone,
+        userContext.selectedInstallment,
+        phoneNumberId
+      );
+      break;
 
     case "installment_cat3":
-      userContext.selectedInstallment = 'i_cat3'; 
-      userContexts.set(phone, userContext); 
-      await confirmAndPay(phone, userContext.selectedInstallment, phoneNumberId); 
+      userContext.selectedInstallment = "i_cat3";
+      userContexts.set(phone, userContext);
+      await confirmAndPay(
+        phone,
+        userContext.selectedInstallment,
+        phoneNumberId
+      );
       break;
 
     case "installment_cat4":
-      userContext.selectedInstallment = 'i_cat4'; 
-      userContexts.set(phone, userContext); 
-      await confirmAndPay(phone, userContext.selectedInstallment, phoneNumberId); 
-      break; 
-      
-    case "full_payment":
-      userContext.selectedInstallment = 'i_catf'; 
+      userContext.selectedInstallment = "i_cat4";
       userContexts.set(phone, userContext);
-      await confirmAndPay(phone, userContext.selectedInstallment, phoneNumberId);
+      await confirmAndPay(
+        phone,
+        userContext.selectedInstallment,
+        phoneNumberId
+      );
+      break;
+
+    case "full_payment":
+      userContext.selectedInstallment = "i_catf";
+      userContexts.set(phone, userContext);
+      await confirmAndPay(
+        phone,
+        userContext.selectedInstallment,
+        phoneNumberId
+      );
       break;
 
     default:
@@ -577,17 +639,23 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
   const mediaMimeType = message.document?.mime_type || message.image?.mime_type;
 
   // Validate file type
-  if (!mediaId || !(mediaMimeType === "application/pdf" || mediaMimeType.startsWith("image/"))) {
-    await sendWhatsAppMessage(phone, {
-      type: "text",
-      text: {
-        body: "Invalid file type. Please upload a clear image or PDF of your insurance certificate.",
+  if (
+    !mediaId ||
+    !(mediaMimeType === "application/pdf" || mediaMimeType.startsWith("image/"))
+  ) {
+    await sendWhatsAppMessage(
+      phone,
+      {
+        type: "text",
+        text: {
+          body: "Invalid file type. Please upload a clear image or PDF of your insurance certificate.",
+        },
       },
-    }, phoneNumberId);
+      phoneNumberId
+    );
     return;
   }
 
-  
   try {
     console.log("Received a document:", mediaId);
 
@@ -598,12 +666,14 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     }
 
     // 2. Download the media file with proper headers
-    const fileBuffer = await axios.get(mediaUrl, {
-      responseType: 'arraybuffer',
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-      },
-    }).then(res => Buffer.from(res.data, 'binary'));
+    const fileBuffer = await axios
+      .get(mediaUrl, {
+        responseType: "arraybuffer",
+        headers: {
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+        },
+      })
+      .then((res) => Buffer.from(res.data, "binary"));
 
     const fileExtension = getFileExtension(mediaMimeType);
     const fileName = `insurance_documents/${phone}_${Date.now()}${fileExtension}`;
@@ -616,14 +686,18 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
 
     // 4. Get the public URL of the uploaded file
     const [publicUrl] = await file.getSignedUrl({
-      action: 'read',
-      expires: '03-09-2491', // Far future date
+      action: "read",
+      expires: "03-09-2491", // Far future date
     });
 
     // 5. Save the storage URL to Firestore
     const today = new Date();
-    const formattedDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
-    
+    const formattedDate = `${today.getDate().toString().padStart(2, "0")}/${(
+      today.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}/${today.getFullYear()}`;
+
     const insuranceData = {
       userPhone: phone,
       insuranceDocumentUrl: publicUrl, // Store the storage URL
@@ -634,15 +708,16 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       numberOfCoveredPeople: 0,
       selectedPersonalAccidentCoverage: 0,
       totalCost: 0,
-      selectedInstallment: ""
+      selectedInstallment: "",
     };
 
-    
     // 6. Save to Firestore
     try {
-      const docRef = await firestore.collection("whatsappInsuranceOrders").add(insuranceData);
+      const docRef = await firestore
+        .collection("whatsappInsuranceOrders")
+        .add(insuranceData);
       console.log("Document reference saved to Firestore");
-      userContext.insuranceDocId = docRef.id; 
+      userContext.insuranceDocId = docRef.id;
     } catch (firestoreError) {
       console.error("Firestore save error:", firestoreError);
       throw new Error("Failed to save document reference");
@@ -656,37 +731,44 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     let validDocument = false;
     // 8. Make POST request to extract data endpoint
     try {
-      const extractionResponse = await axios.post('https://assigurwmessaging.onrender.com/extract-data', {
-        imageUrl: publicUrl // Use the storage URL for extraction
-      });
+      const extractionResponse = await axios.post(
+        "https://assigurwmessaging.onrender.com/extract-data",
+        {
+          imageUrl: publicUrl, // Use the storage URL for extraction
+        }
+      );
       console.log("Data extraction response:", extractionResponse.data);
-       if (extractionResponse.data.success) {
+      if (extractionResponse.data.success) {
         // Parse the raw response by removing the code block markers and parsing the JSON
-        
-         //const rawResponse = extractionResponse.data.data.raw_response;
+
+        //const rawResponse = extractionResponse.data.data.raw_response;
         //const jsonString = rawResponse.replace(/```json\n|\n```/g, '').trim();
         //const extractedData = JSON.parse(jsonString);
 
-         const rawResponse = extractionResponse.data.data.raw_response;
+        const rawResponse = extractionResponse.data.data.raw_response;
         console.log("Raw response before parsing:", rawResponse);
 
         let extractedData;
         try {
-            const jsonString = rawResponse.replace(/```json\n|\n```/g, '').trim();
-            console.log("Cleaned JSON string:", jsonString);
-            extractedData = JSON.parse(jsonString);
+          const jsonString = rawResponse.replace(/```json\n|\n```/g, "").trim();
+          console.log("Cleaned JSON string:", jsonString);
+          extractedData = JSON.parse(jsonString);
         } catch (parseError) {
-            console.error("JSON parsing error:", parseError);
-            // Send message to user about invalid document
-            await sendWhatsAppMessage(phone, {
-                type: "text",
-                text: {
-                    body: "The uploaded document appears to be invalid. Please ensure it's a valid insurance certificate containing policyholder name, chassis number, and insurer details. Please upload a valid document.",
-                },
-            }, phoneNumberId);
-            userContext.stage = "EXPECTING_DOCUMENT";
-            userContexts.set(phone, userContext);
-            return;
+          console.error("JSON parsing error:", parseError);
+          // Send message to user about invalid document
+          await sendWhatsAppMessage(
+            phone,
+            {
+              type: "text",
+              text: {
+                body: "The uploaded document appears to be invalid. Please ensure it's a valid insurance certificate containing policyholder name, chassis number, and insurer details. Please upload a valid document.",
+              },
+            },
+            phoneNumberId
+          );
+          userContext.stage = "EXPECTING_DOCUMENT";
+          userContexts.set(phone, userContext);
+          return;
         }
 
         // Now extractedData is a proper JavaScript object
@@ -700,19 +782,29 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
           chassis = "",
           licensed_to_carry_no: licensedToCarryNo = "",
           usage = "",
-          insurer = ""
+          insurer = "",
         } = extractedData;
 
-         
         // Check for required fields
-        if (!policyholderName || policyholderName === "" || !chassis || chassis === "" || !insurer || insurer === "") {
+        if (
+          !policyholderName ||
+          policyholderName === "" ||
+          !chassis ||
+          chassis === "" ||
+          !insurer ||
+          insurer === ""
+        ) {
           // Send error message to user
-          await sendWhatsAppMessage(phone, {
-            type: "text",
-            text: {
-              body: "The uploaded document appears to be invalid. Please ensure it's a valid insurance certificate containing policyholder name, chassis number, and insurer details. Please upload a valid document.",
+          await sendWhatsAppMessage(
+            phone,
+            {
+              type: "text",
+              text: {
+                body: "The uploaded document appears to be invalid. Please ensure it's a valid insurance certificate containing policyholder name, chassis number, and insurer details. Please upload a valid document.",
+              },
             },
-          }, phoneNumberId);
+            phoneNumberId
+          );
 
           // Update context to expect another document
           userContext.stage = "EXPECTING_DOCUMENT";
@@ -720,23 +812,24 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
           return;
         }
 
-         validDocument = true;
+        validDocument = true;
 
-         
         // Save the extracted data to Firestore
-        await firestore.collection("whatsappInsuranceOrders").doc(userContext.insuranceDocId).update({
-          insuranceStartDate,
-          plateNumber,
-          policyholderName,
-          policyNo,
-          expiryDate,
-          markAndType,
-          chassis,
-          licensedToCarryNo,
-          usage,
-          insurer
-        });
-
+        await firestore
+          .collection("whatsappInsuranceOrders")
+          .doc(userContext.insuranceDocId)
+          .update({
+            insuranceStartDate,
+            plateNumber,
+            policyholderName,
+            policyNo,
+            expiryDate,
+            markAndType,
+            chassis,
+            licensedToCarryNo,
+            usage,
+            insurer,
+          });
 
         userContext.formattedPlate = plateNumber; // Update with storage URL
         userContexts.set(phone, userContext);
@@ -753,18 +846,25 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     //await selectInsurancePeriod(phone, userContext.formattedPlate, phoneNumberId);
     // Only proceed to next step if document is valid
     if (validDocument) {
-      await stateInsuranceDuration(phone, userContext.formattedPlate, phoneNumberId);
+      await stateInsuranceDuration(
+        phone,
+        userContext.formattedPlate,
+        phoneNumberId
+      );
     }
     //await stateInsuranceDuration(phone, userContext.formattedPlate, phoneNumberId);
-
   } catch (error) {
     console.error("Error processing document:", error);
-    await sendWhatsAppMessage(phone, {
-      type: "text",
-      text: {
-        body: "An error occurred while processing your document. Please try again.",
+    await sendWhatsAppMessage(
+      phone,
+      {
+        type: "text",
+        text: {
+          body: "An error occurred while processing your document. Please try again.",
+        },
       },
-    }, phoneNumberId);
+      phoneNumberId
+    );
   }
 };
 
@@ -789,228 +889,301 @@ async function getMediaUrl(mediaId) {
 // Helper function to get file extension from MIME type
 function getFileExtension(mimeType) {
   const extensions = {
-    'image/jpeg': '.jpg',
-    'image/png': '.png',
-    'image/gif': '.gif',
-    'application/pdf': '.pdf'
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/gif": ".gif",
+    "application/pdf": ".pdf",
   };
-  return extensions[mimeType] || '';
+  return extensions[mimeType] || "";
 }
 
 async function getBase64FromUrl(url) {
-  const response = await axios.get(url, { responseType: 'arraybuffer' });
-  const buffer = Buffer.from(response.data, 'binary');
-  return `data:image/jpeg;base64,${buffer.toString('base64')}`;
+  const response = await axios.get(url, { responseType: "arraybuffer" });
+  const buffer = Buffer.from(response.data, "binary");
+  return `data:image/jpeg;base64,${buffer.toString("base64")}`;
 }
 
 async function extractImageData(imageUrl) {
   try {
     const base64Image = await getBase64FromUrl(imageUrl);
-    
+
     const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
+      "https://api.openai.com/v1/chat/completions",
       {
-        model: "gpt-4o", 
+        model: "gpt-4o",
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "Extract the following details, policyholder name, policy no, inception date, expiry date, mark & type, registation plate no, chassis, licensed to carry no, usage, insurer. Return these details in JSON format."
+                text: "Extract the following details, policyholder name, policy no, inception date, expiry date, mark & type, registation plate no, chassis, licensed to carry no, usage, insurer. Return these details in JSON format.",
               },
               {
                 type: "image_url",
                 image_url: {
-                  url: base64Image
-                }
-                
-              }
-            ]
-          }
+                  url: base64Image,
+                },
+              },
+            ],
+          },
         ],
         max_tokens: 150,
-        temperature: 0.2
+        temperature: 0.2,
       },
       {
         headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
       }
     );
-    
-     if (response.data.choices && response.data.choices[0]) {
+
+    if (response.data.choices && response.data.choices[0]) {
       const content = response.data.choices[0].message.content;
       // Return the raw response content without parsing
       return {
         raw_response: content,
       };
     }
-   
 
-    throw new Error('No valid response from API');
+    throw new Error("No valid response from API");
   } catch (error) {
-    console.error('Error during extraction:', error.response?.data || error.message);
+    console.error(
+      "Error during extraction:",
+      error.response?.data || error.message
+    );
     throw new Error(error.response?.data?.error?.message || error.message);
   }
 }
 
-app.post('/extract-data', async (req, res) => {
+app.post("/extract-data", async (req, res) => {
   try {
     const { imageUrl } = req.body;
-    
+
     if (!imageUrl) {
-      return res.status(400).json({ error: 'Image URL is required' });
+      return res.status(400).json({ error: "Image URL is required" });
     }
 
     const extractedData = await extractImageData(imageUrl);
-    console.log('Extracted data:', extractedData);
+    console.log("Extracted data:", extractedData);
     res.json({ success: true, data: extractedData });
   } catch (error) {
-    console.error('Error processing request:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message || 'Failed to extract data' 
+    console.error("Error processing request:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message || "Failed to extract data",
     });
   }
 });
 
+const handleLocation = async (location, phone, phoneNumberId) => {
+  const userContext = userContexts.get(phone) || {};
+  try {
+    
+    if (userContext.stage === "EXPECTING_PICKUP_ADDRESS") {
+      // Retrieve the order from userContext
+    const userContext = userContexts.get(phone);
+
+    // Send location request message
+    const locationRequestPayload = {
+      type: "interactive",
+      interactive: {
+        type: "location_request_message",
+        body: {
+          text: "Share your drop off address",
+        },
+        action: {
+          name: "send_location",
+        },
+      },
+    };
+
+    await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
+    
+    // Update user context to expect TIN input
+    //userContext.vendorNumber = vendorNumber;
+    //userContext.currency = currentCurrency;
+    userContext.stage = "EXPECTING_DROPOFF_ADDRESS";
+    userContexts.set(phone, userContext);
+    } else if (userContext.stage === "EXPECTING_DROPOFF_ADDRESS") {
+      // Send location request message
+    const requestTimePayload = {
+      type: "text",
+      
+        text: {
+          body: "When do you want to be picked up?",
+        },
+       
+    };
+
+    await sendWhatsAppMessage(phone, requestTimePayload, phoneNumberId);
+    
+    // Update user context to expect TIN input
+    //userContext.vendorNumber = vendorNumber;
+    //userContext.currency = currentCurrency;
+    userContext.stage = "EXPECTING_TIME";
+    userContexts.set(phone, userContext);
+    } else {
+      console.log("Not the correct stage");
+    }
+
+    console.log("Location updated and order saved successfully.");
+  } catch (error) {
+    console.error("Error processing location and saving order:", error.message);
+    await sendWhatsAppMessage(
+      phone,
+      {
+        type: "text",
+        text: {
+          body: `Sorry, there was an error processing your location: ${error.message}. Please try again.`,
+        },
+      },
+      phoneNumberId
+    );
+  }
+};
+
 const processedMessages = new Set();
-
-
 
 // Webhook endpoint for receiving messages
 app.post("/webhook", async (req, res) => {
-    if (req.body.object === "whatsapp_business_account") {
-        const changes = req.body.entry?.[0]?.changes?.[0];
-        const messages = changes.value?.messages;
-        const phoneNumberId = changes.value?.metadata?.phone_number_id;
+  if (req.body.object === "whatsapp_business_account") {
+    const changes = req.body.entry?.[0]?.changes?.[0];
+    const messages = changes.value?.messages;
+    const phoneNumberId = changes.value?.metadata?.phone_number_id;
 
-        if (!changes || !messages || !phoneNumberId) {
-            return res.status(400).send("Invalid payload.");
-        }
-
-        // Only process the first message in the array
-        const message = messages[0];
-        const phone = message.from;
-        const uniqueMessageId = `${phoneNumberId}-${message.id}`;
-
-        if (processedMessages.has(uniqueMessageId)) {
-            console.log("Duplicate message ignored:", uniqueMessageId);
-            return res.sendStatus(200);
-        }
-
-        processedMessages.add(uniqueMessageId);
-      //if (phoneNumberId === "396791596844039") {
-             
-        try {
-            if (phoneNumberId === "189923527537354") {
-                await handlePhoneNumber1Logic(message, phone, changes, phoneNumberId);
-            } else {
-                console.warn("Unknown phone number ID:", phoneNumberId);
-            }
-        } catch (err) {
-            console.error("Error processing message:", err.message);
-        } finally {
-            setTimeout(() => processedMessages.delete(uniqueMessageId), 300000);
-        }
+    if (!changes || !messages || !phoneNumberId) {
+      return res.status(400).send("Invalid payload.");
     }
 
-    res.sendStatus(200);
+    // Only process the first message in the array
+    const message = messages[0];
+    const phone = message.from;
+    const uniqueMessageId = `${phoneNumberId}-${message.id}`;
+
+    if (processedMessages.has(uniqueMessageId)) {
+      console.log("Duplicate message ignored:", uniqueMessageId);
+      return res.sendStatus(200);
+    }
+
+    processedMessages.add(uniqueMessageId);
+    //if (phoneNumberId === "396791596844039") {
+
+    try {
+      if (phoneNumberId === "189923527537354") {
+        await handlePhoneNumber1Logic(message, phone, changes, phoneNumberId);
+      } else {
+        console.warn("Unknown phone number ID:", phoneNumberId);
+      }
+    } catch (err) {
+      console.error("Error processing message:", err.message);
+    } finally {
+      setTimeout(() => processedMessages.delete(uniqueMessageId), 300000);
+    }
+  }
+
+  res.sendStatus(200);
 });
 
+async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
+  switch (message.type) {
+    case "text":
+      await handleTextMessages(message, phone, phoneNumberId);
+      await handlePlateNumberValidation(message, phone, phoneNumberId);
+      await handleDateValidation(message, phone, phoneNumberId);
+      await handleNumberOfPeople(message, phone, phoneNumberId);
+      const userContext = userContexts.get(phone) || {};
+      if (userContext.stage === "EXPECTING_TIN") {
+        const tin = message.text.body.trim();
+        if (tin) {
+          console.log(`User ${phone} provided TIN: ${tin}`);
+          // Store the TIN or process it as required
+          // Update the context to expect the location
+          //userContext.tin = tin;  // Save the TIN
+          userContext.stage = "EXPECTING_MTN_AIRTEL"; // Move to location stage
+          userContexts.set(phone, userContext);
 
-  
-  async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
-    switch (message.type) {
-      
-              case "text":
-                await handleTextMessages(message, phone, phoneNumberId);
-                await handlePlateNumberValidation(message, phone, phoneNumberId);
-                await handleDateValidation(message, phone, phoneNumberId);
-                await handleNumberOfPeople(message, phone, phoneNumberId);
-                const userContext = userContexts.get(phone) || {};
-                if (userContext.stage === "EXPECTING_TIN") {
-                  const tin = message.text.body.trim();
-                  if (tin) {
-                    console.log(`User ${phone} provided TIN: ${tin}`);
-                    // Store the TIN or process it as required
-                    // Update the context to expect the location
-                    //userContext.tin = tin;  // Save the TIN
-                    userContext.stage = "EXPECTING_MTN_AIRTEL"; // Move to location stage
-                    userContexts.set(phone, userContext);
-  
-                    await sendWhatsAppMessage(phone, {
-                      type: "interactive",
-                      interactive: {
-                        type: "button",
-                        body: {
-                          text: "Proceed to payment",
-                        },
-                        action: {
-                          buttons: [
-                            { type: "reply", reply: { id: "mtn_momo", title: "MTN MoMo" } },
-                            {
-                              type: "reply",
-                              reply: { id: "airtel_mobile_money", title: "Airtel Money" },
-                            },
-                          ],
-                        },
+          await sendWhatsAppMessage(
+            phone,
+            {
+              type: "interactive",
+              interactive: {
+                type: "button",
+                body: {
+                  text: "Proceed to payment",
+                },
+                action: {
+                  buttons: [
+                    {
+                      type: "reply",
+                      reply: { id: "mtn_momo", title: "MTN MoMo" },
+                    },
+                    {
+                      type: "reply",
+                      reply: {
+                        id: "airtel_mobile_money",
+                        title: "Airtel Money",
                       },
-                    }, phoneNumberId);
-  
-                    return;  // Exit early after processing TIN
-                  } else {
-                    await sendWhatsAppMessage(phone, {
-                      type: "text",
-                      text: {
-                        body: "Invalid TIN. Please provide a valid TIN.",
-                      },
-                    }, phoneNumberId);
-                    return;
-                  }
-                }
-                break;
-  
-              case "interactive":
-                if (message.interactive.type === "nfm_reply") {
-                  await handleNFMReply(message, phone, phoneNumberId);
-                } else if (message.interactive.type === "button_reply") {
-                  const buttonId = message.interactive.button_reply.id;
-  
-                  // Only process if MENU pay
-                  const userContext = userContexts.get(phone) || {};
-                 
-                    await handlePaymentTermsReply(
-                      buttonId,
-                      phone,
-                      userContexts.get(phone), phoneNumberId
-                    );
-                    console.log("Expecting AGREE & PAY button reply");
-                    return;
-                  
-                
-                } else {
-                  await handleInteractiveMessages(message, phone, phoneNumberId);
-                }
-                break;
-              case "document":
-              case "image":
-                await handleDocumentUpload(message, phone, phoneNumberId);
-                break;
-  
-  
-              default:
-                console.log("Unrecognized message type:", message.type);
-            }
+                    },
+                  ],
+                },
+              },
+            },
+            phoneNumberId
+          );
+
+          return; // Exit early after processing TIN
+        } else {
+          await sendWhatsAppMessage(
+            phone,
+            {
+              type: "text",
+              text: {
+                body: "Invalid TIN. Please provide a valid TIN.",
+              },
+            },
+            phoneNumberId
+          );
+          return;
+        }
+      }
+      break;
+
+    case "interactive":
+      if (message.interactive.type === "nfm_reply") {
+        await handleNFMReply(message, phone, phoneNumberId);
+      } else if (message.interactive.type === "button_reply") {
+        const buttonId = message.interactive.button_reply.id;
+
+        // Only process if MENU pay
+        const userContext = userContexts.get(phone) || {};
+
+        await handlePaymentTermsReply(
+          buttonId,
+          phone,
+          userContexts.get(phone),
+          phoneNumberId
+        );
+        console.log("Expecting AGREE & PAY button reply");
+        return;
+      } else {
+        await handleInteractiveMessages(message, phone, phoneNumberId);
+      }
+      break;
+    case "document":
+    case "image":
+      await handleDocumentUpload(message, phone, phoneNumberId);
+      break;
+
+    case "location":
+      await handleLocation(message.location, phone, phoneNumberId);
+      break;
+
+    default:
+      console.log("Unrecognized message type:", message.type);
   }
-  
-  
-  
-  
-
-
+}
 
 // Webhook verification
 app.get("/webhook", (req, res) => {
@@ -1080,7 +1253,10 @@ async function sendWhatsAppMessage(phone, messagePayload, phoneNumberId) {
       },
     });
 
-    console.log(`Message sent successfully from ${phoneNumberId}:`, response.data);
+    console.log(
+      `Message sent successfully from ${phoneNumberId}:`,
+      response.data
+    );
     return response.data;
   } catch (error) {
     console.error(
@@ -1091,7 +1267,52 @@ async function sendWhatsAppMessage(phone, messagePayload, phoneNumberId) {
   }
 }
 
+// Lifuti
+// Initial welcome message
+async function sendLifutiWelcomeMessage(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_LIFUTI_WELCOME"; // Stage set to "WELCOME"
+  userContexts.set(phone, userContext);
 
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Welcome to Lifut\nRide Sharing Services!",
+      },
+      body: {
+        text: "What would you like to do today?",
+      },
+      footer: {
+        text: "Select an action to proceed",
+      },
+      action: {
+        button: "View Options",
+        sections: [
+          {
+            title: "Lifuti Services",
+            rows: [
+              {
+                id: "passenger",
+                title: "Passenger(Taxi/Cab)",
+                description: "Get a ride",
+              },
+              {
+                id: "goods",
+                title: "Goods(Transport of goods)",
+                description: "Move goods to the location of your choice",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
 
 // Insurance services codes + the webhooks above
 // Initial welcome message
@@ -1125,11 +1346,11 @@ async function sendWelcomeMessage(phone, phoneNumberId) {
                 title: "Get Insurance",
                 description: "Apply for a new insurance policy",
               },
-             // {
-             //   id: "file_claim",
-             //   title: "File Claim",
-             //   description: "Submit a new insurance claim",
-             // },
+              // {
+              //   id: "file_claim",
+              //   title: "File Claim",
+              //   description: "Submit a new insurance claim",
+              // },
             ],
           },
         ],
@@ -1243,7 +1464,6 @@ async function stateInsuranceDuration(phone, plateNumber, phoneNumberId) {
               title: "Less Than A Year",
             },
           },
-          
         ],
       },
     },
@@ -1261,10 +1481,8 @@ async function startDate(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-        body: `Provide inception date.(e.g: DD/MM/YYYY, 02/01/2025)`,
-      },
-     
-    
+      body: `Provide inception date.(e.g: DD/MM/YYYY, 02/01/2025)`,
+    },
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
@@ -1278,10 +1496,8 @@ async function endDate(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-        body: `Provide end date.(e.g: DD/MM/YYYY, 04/01/2025)`,
-      },
-     
-    
+      body: `Provide end date.(e.g: DD/MM/YYYY, 04/01/2025)`,
+    },
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
@@ -1530,8 +1746,7 @@ async function selectPaymentPlan(phone, phoneNumberId) {
 async function confirmAndPay(phone, selectedInstallmentChoice, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
 
-  const totalCost = userContext.totalCost || 0;  
-  
+  const totalCost = userContext.totalCost || 0;
 
   let installmentBreakdown = "";
 
@@ -1598,36 +1813,36 @@ async function confirmAndPay(phone, selectedInstallmentChoice, phoneNumberId) {
 
 // Last message - get insurance
 async function processPayment(phone, paymentPlan, phoneNumberId) {
-    const userContext = userContexts.get(phone) || {};
+  const userContext = userContexts.get(phone) || {};
 
-    userContext.userPhone = phone;
-    userContexts.set(phone, userContext); 
-  
-    const totalCost = userContext.totalCost || 0;
-  
-    let installmentBreakdown = "";
-  
-    switch (paymentPlan) {
-      case "i_cat1":
-        installmentBreakdown = `1M: FRW ${totalCost * 0.25}`;
-        break;
-      case "i_cat2":
-        installmentBreakdown = `3M: FRW ${totalCost * 0.5}`;
-        break;
-      case "i_cat3":
-        installmentBreakdown = `6M: FRW ${totalCost * 0.75}`;
-        break;
-      case "i_cat4":
-        installmentBreakdown = `8M: FRW ${totalCost * 0.4}`;
-        break;
-      case "i_catf":
-        installmentBreakdown = `Full payment: FRW ${totalCost}`;
-        break;
-      default:
-        installmentBreakdown = "Unknown payment plan.";
-    }
-  
-    const paymentPayload = {
+  userContext.userPhone = phone;
+  userContexts.set(phone, userContext);
+
+  const totalCost = userContext.totalCost || 0;
+
+  let installmentBreakdown = "";
+
+  switch (paymentPlan) {
+    case "i_cat1":
+      installmentBreakdown = `1M: FRW ${totalCost * 0.25}`;
+      break;
+    case "i_cat2":
+      installmentBreakdown = `3M: FRW ${totalCost * 0.5}`;
+      break;
+    case "i_cat3":
+      installmentBreakdown = `6M: FRW ${totalCost * 0.75}`;
+      break;
+    case "i_cat4":
+      installmentBreakdown = `8M: FRW ${totalCost * 0.4}`;
+      break;
+    case "i_catf":
+      installmentBreakdown = `Full payment: FRW ${totalCost}`;
+      break;
+    default:
+      installmentBreakdown = "Unknown payment plan.";
+  }
+
+  const paymentPayload = {
     type: "text",
     text: {
       body: `Please pay with \nMoMo/Airtel to ${250788767816}\nName: Ikanisa\n_______________________\nYour purchase for ${installmentBreakdown} is being processed after your payment is received, you will receive a confirmation shortly.`,
@@ -1640,30 +1855,52 @@ async function processPayment(phone, paymentPlan, phoneNumberId) {
   await sendWhatsAppMessage(phone, paymentPayload, phoneNumberId);
 
   const todayFirebase = new Date();
-  const formattedDateFirebase = `${todayFirebase.getDate().toString().padStart(2, '0')}/${(todayFirebase.getMonth() + 1).toString().padStart(2, '0')}/${todayFirebase.getFullYear()}`;
+  const formattedDateFirebase = `${todayFirebase
+    .getDate()
+    .toString()
+    .padStart(2, "0")}/${(todayFirebase.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}/${todayFirebase.getFullYear()}`;
 
   const insuranceOrderData = {
-  userPhone: userContext.userPhone ? String(userContext.userPhone) : "",
-  plateNumber: userContext.plateNumber ? String(userContext.plateNumber) : "",
-  insuranceStartDate: userContext.insuranceStartDate ? String(userContext.insuranceStartDate) : "",
-  selectedCoverTypes: userContext.selectedCoverTypes ? String(userContext.selectedCoverTypes) : "",
-  selectedPersonalAccidentCoverage: userContext.selectedCoverage ? parseFloat(userContext.selectedCoverage) : 0.0,
-  totalCost: userContext.totalCost ? parseFloat(userContext.totalCost) : 0.0,
-  numberOfCoveredPeople: userContext.numberOfCoveredPeople ? parseFloat(userContext.numberOfCoveredPeople) : 0.0,
-  selectedInstallment: userContext.selectedInstallment ? String(userContext.selectedInstallment) : "",
-  insuranceDocumentUrl: userContext.insuranceDocumentUrl ? String(userContext.insuranceDocumentUrl) : "",
-  extractedData: userContext.extractedData ? userContext.extractedData : {},
-  creationDate: formattedDateFirebase,
-};
+    userPhone: userContext.userPhone ? String(userContext.userPhone) : "",
+    plateNumber: userContext.plateNumber ? String(userContext.plateNumber) : "",
+    insuranceStartDate: userContext.insuranceStartDate
+      ? String(userContext.insuranceStartDate)
+      : "",
+    selectedCoverTypes: userContext.selectedCoverTypes
+      ? String(userContext.selectedCoverTypes)
+      : "",
+    selectedPersonalAccidentCoverage: userContext.selectedCoverage
+      ? parseFloat(userContext.selectedCoverage)
+      : 0.0,
+    totalCost: userContext.totalCost ? parseFloat(userContext.totalCost) : 0.0,
+    numberOfCoveredPeople: userContext.numberOfCoveredPeople
+      ? parseFloat(userContext.numberOfCoveredPeople)
+      : 0.0,
+    selectedInstallment: userContext.selectedInstallment
+      ? String(userContext.selectedInstallment)
+      : "",
+    insuranceDocumentUrl: userContext.insuranceDocumentUrl
+      ? String(userContext.insuranceDocumentUrl)
+      : "",
+    extractedData: userContext.extractedData ? userContext.extractedData : {},
+    creationDate: formattedDateFirebase,
+  };
 
-try {
-  const docRef = await firestore.collection("whatsappInsuranceOrders").add(insuranceOrderData);
-  console.log("User data successfully saved to Firestore with ID:", docRef.id);
-  console.log(insuranceOrderData); 
-} catch (error) {
-  console.error("Error saving user data to Firestore:", error.message);
-}
-  
+  try {
+    const docRef = await firestore
+      .collection("whatsappInsuranceOrders")
+      .add(insuranceOrderData);
+    console.log(
+      "User data successfully saved to Firestore with ID:",
+      docRef.id
+    );
+    console.log(insuranceOrderData);
+  } catch (error) {
+    console.error("Error saving user data to Firestore:", error.message);
+  }
+
   // Add logic to integrate with payment gateway API if needed.
   console.log("______________________________________");
   console.log("User context after all flows:", userContext);
@@ -1675,5 +1912,3 @@ app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
   testWhatsAppConnection();
 });
-
-
