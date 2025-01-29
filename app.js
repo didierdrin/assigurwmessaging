@@ -271,6 +271,48 @@ const handlePaymentTermsReply = async (
   phoneNumberId
 ) => {
   switch (replyId) {
+      case "quantity_1":
+      if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
+        await sendAvailableDriversMessage(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+      case "quantity_2":
+      if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
+        await sendAvailableDriversMessage(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+      case "quantity_3":
+      if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
+        await sendAvailableDriversMessage(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+      case "quantity_4":
+      if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
+        await sendAvailableDriversMessage(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+      case "quantity_5":
+      if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
+        await sendAvailableDriversMessage(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+      case "quantity_more":
+      if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
+        await sendAdditionalQuantityMessage(phone, phoneNumberId);
+        return;
+      }
+
+      break;
       case "seats_1":
       if (userContext.stage === "EXPECTING_SEATS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
@@ -293,10 +335,36 @@ const handlePaymentTermsReply = async (
       }
 
       break;
+    case "seats_4":
+      if (userContext.stage === "EXPECTING_SEATS") {
+        await sendAvailableDriversMessage(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+    case "seats_5":
+      if (userContext.stage === "EXPECTING_SEATS") {
+        await sendAvailableDriversMessage(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+    case "seats_more":
+      if (userContext.stage === "EXPECTING_SEATS") {
+        await sendAdditionalSeatsMessage(phone, phoneNumberId);
+        return;
+      }
+
+      break;
     case "pickup_later":
       if (userContext.stage === "EXPECTING_NOW_LATER") {
         await sendCustomPickupTimeMessage(phone, phoneNumberId);
         return;
+      } else if (userContext.stage === "EXPECTING_NOW_LATER_GOODS") {
+        await sendCustomPickupTimeMessageGoods(phone, phoneNumberId);
+        return;
+      } else {
+        console.log("Not the right button");
       }
 
       break;
@@ -304,6 +372,11 @@ const handlePaymentTermsReply = async (
       if (userContext.stage === "EXPECTING_NOW_LATER") {
         await sendSeatSelectionMessage(phone, phoneNumberId);
         return;
+      } else if (userContext.stage === "EXPECTING_NOW_LATER_GOODS") {
+        await sendQuantitySelectionMessage(phone, phoneNumberId);
+        return;
+      } else {
+        console.log("Not the right button");
       }
 
       break;
@@ -553,6 +626,27 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
       
       userContext.stage = "EXPECTING_PICKUP_ADDRESS";
+      userContexts.set(phone, userContext);
+      break;
+
+    case "goods":
+      // Send location request message
+      const locationRequestPayload = {
+        type: "interactive",
+        interactive: {
+          type: "location_request_message",
+          body: {
+            text: "Share your pick up address",
+          },
+          action: {
+            name: "send_location",
+          },
+        },
+      };
+
+      await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
+      
+      userContext.stage = "EXPECTING_PICKUP_ADDRESS_GOODS";
       userContexts.set(phone, userContext);
       break;
 
@@ -1078,6 +1172,69 @@ const handleLocation = async (location, phone, phoneNumberId) => {
    
     userContext.stage = "EXPECTING_NOW_LATER";
     userContexts.set(phone, userContext);
+    } else if (userContext.stage === "EXPECTING_PICKUP_ADDRESS_GOODS") {
+
+      // Retrieve the order from userContext
+    const userContext = userContexts.get(phone);
+
+    // Send location request message
+    const locationRequestPayload = {
+      type: "interactive",
+      interactive: {
+        type: "location_request_message",
+        body: {
+          text: "Share your drop off address",
+        },
+        action: {
+          name: "send_location",
+        },
+      },
+    };
+
+    await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
+    
+  
+    userContext.stage = "EXPECTING_DROPOFF_ADDRESS_GOODS";
+    userContexts.set(phone, userContext);
+      
+    } else if (userContext.stage === "EXPECTING_DROPOFF_ADDRESS_GOODS") {
+
+      // Send location request message
+    
+      const requestTimePayload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: "When do you want to be picked up?",
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "pickup_now",
+              title: "Now",
+            },
+          },
+          {
+            type: "reply",
+            reply: {
+              id: "pickup_later",
+              title: "Later",
+            },
+          },
+        ],
+      },
+    },
+  };
+
+    await sendWhatsAppMessage(phone, requestTimePayload, phoneNumberId);
+    
+   
+    userContext.stage = "EXPECTING_NOW_LATER_GOODS";
+    userContexts.set(phone, userContext);
+      
     } else {
       console.log("Not the correct stage");
     }
@@ -1378,7 +1535,23 @@ async function sendCustomPickupTimeMessage(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Please enter your preferred pickup time in either format:\n12:00 PM or 13:00"
+      body: "Please enter your preferred pickup time in either format:\n12:00PM or 13:00"
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Step 5 Goods: Custom pickup time selection (for "Later" option)
+async function sendCustomPickupTimeMessageGoods(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_CUSTOM_TIME_GOODS";
+  userContexts.set(phone, userContext);
+
+  const payload = {
+    type: "text",
+    text: {
+      body: "Please enter your preferred pickup time in either format:\n12:00PM or 13:00"
     }
   };
 
@@ -1417,7 +1590,7 @@ async function sendSeatSelectionMessage(phone, phoneNumberId) {
           },
           {
             type: "reply",
-            reply: { id: "seats_3", title: "3 Seats" }
+            reply: { id: "seats_more", title: "More" }
           }
         ]
       }
@@ -1434,10 +1607,14 @@ async function sendAdditionalSeatsMessage(phone, phoneNumberId) {
     interactive: {
       type: "button",
       body: {
-        text: "Select more seats:"
+        text: "More seats:"
       },
       action: {
         buttons: [
+          {
+            type: "reply",
+            reply: { id: "seats_3", title: "3 Seats" }
+          },
           {
             type: "reply",
             reply: { id: "seats_4", title: "4 Seats" }
@@ -1445,6 +1622,79 @@ async function sendAdditionalSeatsMessage(phone, phoneNumberId) {
           {
             type: "reply",
             reply: { id: "seats_5", title: "5 Seats" }
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Step 6: Number of quantity selection (for goods rides)
+async function sendQuantitySelectionMessage(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_QUANTITY";
+  userContexts.set(phone, userContext);
+
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      header: {
+        type: "text",
+        text: "Select Number of Quantity"
+      },
+      body: {
+        text: "How much would you like to transport?"
+      },
+      footer: {
+        text: "Maximum 100Tons per booking"
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: { id: "quantity_1", title: "500 Kg" }
+          },
+          {
+            type: "reply",
+            reply: { id: "quantity_2", title: "1 Ton" }
+          },
+          {
+            type: "reply",
+            reply: { id: "quantity_more", title: "More" }
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Additional quantity options (limits buttons to 3)
+async function sendAdditionalQuantityMessage(phone, phoneNumberId) {
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: "More Quantities:"
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: { id: "quantity_3", title: "2 Tons" }
+          },
+          {
+            type: "reply",
+            reply: { id: "quantity_4", title: "3 Tons" }
+          },
+          {
+            type: "reply",
+            reply: { id: "quantity_5", title: "4 Tons" }
           }
         ]
       }
@@ -1464,37 +1714,37 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
   const drivers = [
     {
       id: "driver_1",
-      name: "John Doe",
+      plateno: "RAB894T",
       vehicle: "Toyota Corolla",
-      rating: "4.8★",
+      seats: "5",
       eta: "5 mins"
     },
     {
       id: "driver_2",
-      name: "Jane Smith",
+      plateno: "RAT340I",
       vehicle: "Honda Civic",
-      rating: "4.9★",
+      seats: "2",
       eta: "7 mins"
     },
     {
       id: "driver_3",
-      name: "Mike Johnson",
+      plateno: "RAC234P",
       vehicle: "Suzuki Swift",
-      rating: "4.7★",
+      seats: "5",
       eta: "10 mins"
     },
     {
       id: "driver_4",
-      name: "Sarah Wilson",
+      plateno: "RAE847I",
       vehicle: "Nissan Note",
-      rating: "4.9★",
+      seats: "5",
       eta: "12 mins"
     },
     {
       id: "driver_5",
-      name: "David Brown",
+      plateno: "RAA894E",
       vehicle: "Mazda Demio",
-      rating: "4.8★",
+      seats "4",
       eta: "15 mins"
     }
   ];
@@ -1520,8 +1770,8 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
             title: "Nearby Drivers",
             rows: drivers.map(driver => ({
               id: driver.id,
-              title: `${driver.name}`,
-              description: `Vehicle: ${driver.vehicle}| Rating: ${driver.rating} | ETA: ${driver.eta}`
+              title: `${driver.plateno}`,
+              description: `Vehicle: ${driver.vehicle}| Seats: ${driver.seats} | ETA: ${driver.eta}`
             }))
           }
         ]
@@ -1548,6 +1798,26 @@ async function handleTimeValidation(message, phone, phoneNumberId) {
       
       // Proceed to seat selection
       await sendSeatSelectionMessage(phone, phoneNumberId);
+    } else {
+      await sendWhatsAppMessage(phone, {
+        type: "text",
+        text: {
+          body: "Invalid time format. Please enter time as 12:00 PM or 13:00"
+        }
+      }, phoneNumberId);
+    }
+  } else if (userContext.stage === "EXPECTING_CUSTOM_TIME_GOODS") {
+    const timeInput = message.text.body.trim();
+    const is24HourFormat = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeInput);
+    const is12HourFormat = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*[AaPp][Mm]$/.test(timeInput);
+
+    if (is24HourFormat || is12HourFormat) {
+      userContext.pickupTime = timeInput;
+      userContext.stage = "EXPECTING_QUANTITY_GOODS";
+      userContexts.set(phone, userContext);
+      
+      // Proceed to quantity selection
+      await sendQuantitySelectionMessage(phone, phoneNumberId);
     } else {
       await sendWhatsAppMessage(phone, {
         type: "text",
