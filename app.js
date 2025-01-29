@@ -1229,7 +1229,7 @@ async function startDate(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-        body: `Provide inception date.`,
+        body: `Provide inception date.(e.g: DD/MM/YYYY, 02/01/2025)`,
       },
      
     
@@ -1246,7 +1246,7 @@ async function endDate(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-        body: `Provide end date.`,
+        body: `Provide end date.(e.g: DD/MM/YYYY, 04/01/2025)`,
       },
      
     
