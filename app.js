@@ -346,7 +346,7 @@ const handlePaymentTermsReply = async (replyId, phone, userContext, phoneNumberI
         await sendWhatsAppMessage(phone, {
           type: "text",
           text: {
-            body: "Please enter your desired start date (DD/MM/YYYY):",
+            body: "Please enter your desired start date (DD/MM/YYYY, 02/01/2025):",
           },
         }, phoneNumberId);
         userContext.stage = "CUSTOM_DATE_INPUT";
@@ -587,6 +587,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     return;
   }
 
+  
   try {
     console.log("Received a document:", mediaId);
 
@@ -636,6 +637,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       selectedInstallment: ""
     };
 
+    
     // 6. Save to Firestore
     try {
       const docRef = await firestore.collection("whatsappInsuranceOrders").add(insuranceData);
@@ -651,6 +653,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     userContext.stage = null;
     userContexts.set(phone, userContext);
 
+    let validDocument = false;
     // 8. Make POST request to extract data endpoint
     try {
       const extractionResponse = await axios.post('https://assigurwmessaging.onrender.com/extract-data', {
@@ -694,6 +697,8 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
           return;
         }
 
+         validDocument = true;
+
          
         // Save the extracted data to Firestore
         await firestore.collection("whatsappInsuranceOrders").doc(userContext.insuranceDocId).update({
@@ -723,7 +728,11 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     // 9. Proceed to next step regardless of extraction result
     //await requestVehiclePlateNumber(phone, phoneNumberId);
     //await selectInsurancePeriod(phone, userContext.formattedPlate, phoneNumberId);
-    await stateInsuranceDuration(phone, userContext.formattedPlate, phoneNumberId);
+    // Only proceed to next step if document is valid
+    if (validDocument) {
+      await stateInsuranceDuration(phone, userContext.formattedPlate, phoneNumberId);
+    }
+    //await stateInsuranceDuration(phone, userContext.formattedPlate, phoneNumberId);
 
   } catch (error) {
     console.error("Error processing document:", error);
