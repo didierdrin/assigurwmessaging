@@ -1520,8 +1520,8 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
             title: "Nearby Drivers",
             rows: drivers.map(driver => ({
               id: driver.id,
-              title: `${driver.name} - ${driver.vehicle}`,
-              description: `Rating: ${driver.rating} | ETA: ${driver.eta}`
+              title: `${driver.name}`,
+              description: `Vehicle: ${driver.vehicle}| Rating: ${driver.rating} | ETA: ${driver.eta}`
             }))
           }
         ]
