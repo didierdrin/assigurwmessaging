@@ -1280,7 +1280,7 @@ async function sendLifutiWelcomeMessage(phone, phoneNumberId) {
       type: "list",
       header: {
         type: "text",
-        text: "Welcome to Lifuti\nRide Sharing!",
+        text: "Welcome to Lifuti",
       },
       body: {
         text: "What would you like to do today?",
