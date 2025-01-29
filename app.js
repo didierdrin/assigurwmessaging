@@ -1744,7 +1744,7 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
       id: "driver_5",
       plateno: "RAA894E",
       vehicle: "Mazda Demio",
-      seats "4",
+      seats: "4",
       eta: "15 mins"
     }
   ];
