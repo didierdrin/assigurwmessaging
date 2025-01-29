@@ -682,7 +682,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
 
          
         // Check for required fields
-        if (!policyholderName || !chassis || !insurer) {
+        if (!policyholderName || policyholderName === "" || !chassis || chassis === "" || !insurer || insurer === "") {
           // Send error message to user
           await sendWhatsAppMessage(phone, {
             type: "text",
