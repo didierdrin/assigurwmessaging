@@ -302,7 +302,7 @@ const handlePaymentTermsReply = async (
       break;
     case "pickup_now":
       if (userContext.stage === "EXPECTING_NOW_LATER") {
-        await sendSeatSelection(phone, phoneNumberId);
+        await sendSeatSelectionMessage(phone, phoneNumberId);
         return;
       }
 
