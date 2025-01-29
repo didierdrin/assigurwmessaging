@@ -677,6 +677,24 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
           insurer = ""
         } = extractedData;
 
+         
+        // Check for required fields
+        if (!policyholderName || !chassis || !insurer) {
+          // Send error message to user
+          await sendWhatsAppMessage(phone, {
+            type: "text",
+            text: {
+              body: "The uploaded document appears to be invalid. Please ensure it's a valid insurance certificate containing policyholder name, chassis number, and insurer details. Please upload a valid document.",
+            },
+          }, phoneNumberId);
+
+          // Update context to expect another document
+          userContext.stage = "EXPECTING_DOCUMENT";
+          userContexts.set(phone, userContext);
+          return;
+        }
+
+         
         // Save the extracted data to Firestore
         await firestore.collection("whatsappInsuranceOrders").doc(userContext.insuranceDocId).update({
           insuranceStartDate,
