@@ -271,6 +271,42 @@ const handlePaymentTermsReply = async (
   phoneNumberId
 ) => {
   switch (replyId) {
+      case "seats_1":
+      if (userContext.stage === "EXPECTING_SEATS") {
+        await sendAvailableDriversMessage(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+    case "seats_2":
+      if (userContext.stage === "EXPECTING_SEATS") {
+        await sendAvailableDriversMessage(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+
+      case "seats_3":
+      if (userContext.stage === "EXPECTING_SEATS") {
+        await sendAvailableDriversMessage(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+    case "pickup_later":
+      if (userContext.stage === "EXPECTING_NOW_LATER") {
+        await sendCustomPickupTimeMessage(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+    case "pickup_now":
+      if (userContext.stage === "EXPECTING_NOW_LATER") {
+        await sendSeatSelection(phone, phoneNumberId);
+        return;
+      }
+
+      break;
     case "less_than_a_year":
       if (userContext.stage === "EXPECTING_STATE_INSURANCE_DURATION") {
         await startDate(phone, phoneNumberId);
@@ -1008,21 +1044,39 @@ const handleLocation = async (location, phone, phoneNumberId) => {
     userContexts.set(phone, userContext);
     } else if (userContext.stage === "EXPECTING_DROPOFF_ADDRESS") {
       // Send location request message
-    const requestTimePayload = {
-      type: "text",
-      
-        text: {
-          body: "When do you want to be picked up?",
-        },
-       
-    };
+    
+      const requestTimePayload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: "When do you want to be picked up?",
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "pickup_now",
+              title: "Now",
+            },
+          },
+          {
+            type: "reply",
+            reply: {
+              id: "pickup_later",
+              title: "Later",
+            },
+          },
+        ],
+      },
+    },
+  };
 
     await sendWhatsAppMessage(phone, requestTimePayload, phoneNumberId);
     
-    // Update user context to expect TIN input
-    //userContext.vendorNumber = vendorNumber;
-    //userContext.currency = currentCurrency;
-    userContext.stage = "EXPECTING_TIME";
+   
+    userContext.stage = "EXPECTING_NOW_LATER";
     userContexts.set(phone, userContext);
     } else {
       console.log("Not the correct stage");
@@ -1093,6 +1147,7 @@ async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
       await handlePlateNumberValidation(message, phone, phoneNumberId);
       await handleDateValidation(message, phone, phoneNumberId);
       await handleNumberOfPeople(message, phone, phoneNumberId);
+      await handleTimeValidation(message, phone, phoneNumberId);
       const userContext = userContexts.get(phone) || {};
       if (userContext.stage === "EXPECTING_TIN") {
         const tin = message.text.body.trim();
@@ -1312,6 +1367,196 @@ async function sendLifutiWelcomeMessage(phone, phoneNumberId) {
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Step 5: Custom pickup time selection (for "Later" option)
+async function sendCustomPickupTimeMessage(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_CUSTOM_TIME";
+  userContexts.set(phone, userContext);
+
+  const payload = {
+    type: "text",
+    text: {
+      body: "Please enter your preferred pickup time in either format:\n12:00 PM or 13:00"
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Step 6: Number of seats selection (for passenger rides)
+async function sendSeatSelectionMessage(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_SEATS";
+  userContexts.set(phone, userContext);
+
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      header: {
+        type: "text",
+        text: "Select Number of Seats"
+      },
+      body: {
+        text: "How many seats would you like to book?"
+      },
+      footer: {
+        text: "Maximum 5 seats per booking"
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: { id: "seats_1", title: "1 Seat" }
+          },
+          {
+            type: "reply",
+            reply: { id: "seats_2", title: "2 Seats" }
+          },
+          {
+            type: "reply",
+            reply: { id: "seats_3", title: "3 Seats" }
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Additional seats options (since WhatsApp limits buttons to 3)
+async function sendAdditionalSeatsMessage(phone, phoneNumberId) {
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: "Select more seats:"
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: { id: "seats_4", title: "4 Seats" }
+          },
+          {
+            type: "reply",
+            reply: { id: "seats_5", title: "5 Seats" }
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Step 7: Display available drivers
+async function sendAvailableDriversMessage(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "DISPLAYING_DRIVERS";
+  userContexts.set(phone, userContext);
+
+  // Hardcoded sample drivers
+  const drivers = [
+    {
+      id: "driver_1",
+      name: "John Doe",
+      vehicle: "Toyota Corolla",
+      rating: "4.8★",
+      eta: "5 mins"
+    },
+    {
+      id: "driver_2",
+      name: "Jane Smith",
+      vehicle: "Honda Civic",
+      rating: "4.9★",
+      eta: "7 mins"
+    },
+    {
+      id: "driver_3",
+      name: "Mike Johnson",
+      vehicle: "Suzuki Swift",
+      rating: "4.7★",
+      eta: "10 mins"
+    },
+    {
+      id: "driver_4",
+      name: "Sarah Wilson",
+      vehicle: "Nissan Note",
+      rating: "4.9★",
+      eta: "12 mins"
+    },
+    {
+      id: "driver_5",
+      name: "David Brown",
+      vehicle: "Mazda Demio",
+      rating: "4.8★",
+      eta: "15 mins"
+    }
+  ];
+
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Available Drivers"
+      },
+      body: {
+        text: "Select a driver to proceed with your booking:"
+      },
+      footer: {
+        text: "Tap to view driver details"
+      },
+      action: {
+        button: "View Drivers",
+        sections: [
+          {
+            title: "Nearby Drivers",
+            rows: drivers.map(driver => ({
+              id: driver.id,
+              title: `${driver.name} - ${driver.vehicle}`,
+              description: `Rating: ${driver.rating} | ETA: ${driver.eta}`
+            }))
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Handler for time validation
+async function handleTimeValidation(message, phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  
+  if (userContext.stage === "EXPECTING_CUSTOM_TIME") {
+    const timeInput = message.text.body.trim();
+    const is24HourFormat = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeInput);
+    const is12HourFormat = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*[AaPp][Mm]$/.test(timeInput);
+
+    if (is24HourFormat || is12HourFormat) {
+      userContext.pickupTime = timeInput;
+      userContext.stage = "EXPECTING_SEATS";
+      userContexts.set(phone, userContext);
+      
+      // Proceed to seat selection
+      await sendSeatSelectionMessage(phone, phoneNumberId);
+    } else {
+      await sendWhatsAppMessage(phone, {
+        type: "text",
+        text: {
+          body: "Invalid time format. Please enter time as 12:00 PM or 13:00"
+        }
+      }, phoneNumberId);
+    }
+  }
 }
 
 // Insurance services codes + the webhooks above
