@@ -1634,7 +1634,7 @@ async function sendAdditionalSeatsMessage(phone, phoneNumberId) {
 // Step 6: Number of quantity selection (for goods rides)
 async function sendQuantitySelectionMessage(phone, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
-  userContext.stage = "EXPECTING_QUANTITY";
+  userContext.stage = "EXPECTING_QUANTITY_GOODS";
   userContexts.set(phone, userContext);
 
   const payload = {
