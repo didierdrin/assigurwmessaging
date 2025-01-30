@@ -1880,6 +1880,11 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
     }
   }
 
+  // Store available drivers in user context for later reference
+  userContext.availableDrivers = availableDrivers;
+  userContexts.set(phone, userContext);
+
+
   // Prepare the WhatsApp message payload
   const payload = {
     type: "interactive",
