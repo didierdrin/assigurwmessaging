@@ -1879,7 +1879,7 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
         plateno: vehicleData.vehicleRegNumber,
         vehicle: vehicleData.vehicleMake,
         seats: offerData.selectedSeat,
-        eta: "~10 mins", // You might want to calculate this based on actual distance
+        driverId: offerData.user,
         price: offerData.pricePerSeat,
       });
     }
