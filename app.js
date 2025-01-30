@@ -1916,7 +1916,7 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
                 userContext.serviceType === "passengers"
                   ? `Seats: ${driver.seats}`
                   : "Goods Transport"
-              } | Price: ${driver.price}RWF`,
+              } | Price: ${driver.price.toLocaleString()} RWF`,
             })),
           },
         ],
