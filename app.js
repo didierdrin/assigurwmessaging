@@ -8,6 +8,7 @@ import http from "http";
 import https from "https";
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
+import admin from 'firebase-admin';
 //import { extractImageData } from './imageExtraction.js';
 const bucketName = "gs://assigurw.appspot.com";
 const bucket = storage.bucket(bucketName);
@@ -87,6 +88,7 @@ const validateDate = (dateString) => {
   const date = new Date(dateString);
   return date instanceof Date && !isNaN(date);
 };
+
 
 //// From here - readable modular functions.
 
@@ -274,6 +276,8 @@ const handlePaymentTermsReply = async (
       case "quantity_1":
       if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
+        userContext.quantity = "500kg";
+        userContexts.set(phone, userContext); 
         return;
       }
 
@@ -281,6 +285,8 @@ const handlePaymentTermsReply = async (
       case "quantity_2":
       if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
+        userContext.quantity = "1Ton";
+        userContexts.set(phone, userContext); 
         return;
       }
 
@@ -288,6 +294,8 @@ const handlePaymentTermsReply = async (
       case "quantity_3":
       if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
+        userContext.quantity = "2Tons";
+        userContexts.set(phone, userContext); 
         return;
       }
 
@@ -295,6 +303,8 @@ const handlePaymentTermsReply = async (
       case "quantity_4":
       if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
+        userContext.quantity = "4Tons";
+        userContexts.set(phone, userContext); 
         return;
       }
 
@@ -302,6 +312,8 @@ const handlePaymentTermsReply = async (
       case "quantity_5":
       if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
+        userContext.quantity = "5Tons"; 
+        userContexts.set(phone, userContext); 
         return;
       }
 
@@ -316,6 +328,8 @@ const handlePaymentTermsReply = async (
       case "seats_1":
       if (userContext.stage === "EXPECTING_SEATS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
+        userContext.seats = "1"; 
+        userContexts.set(phone, userContext); 
         return;
       }
 
@@ -323,6 +337,8 @@ const handlePaymentTermsReply = async (
     case "seats_2":
       if (userContext.stage === "EXPECTING_SEATS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
+        userContext.seats = "2";
+        userContexts.set(phone, userContext); 
         return;
       }
 
@@ -331,6 +347,8 @@ const handlePaymentTermsReply = async (
       case "seats_3":
       if (userContext.stage === "EXPECTING_SEATS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
+        userContext.seats = "3"; 
+        userContexts.set(phone, userContext); 
         return;
       }
 
@@ -338,6 +356,8 @@ const handlePaymentTermsReply = async (
     case "seats_4":
       if (userContext.stage === "EXPECTING_SEATS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
+        userContext.seats = "4";
+        userContexts.set(phone, userContext); 
         return;
       }
 
@@ -345,6 +365,8 @@ const handlePaymentTermsReply = async (
     case "seats_5":
       if (userContext.stage === "EXPECTING_SEATS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
+        userContext.seats = "5";
+        userContexts.set(phone, userContext); 
         return;
       }
 
@@ -399,9 +421,7 @@ const handlePaymentTermsReply = async (
 
       break;
 
-    //  userContext.stage === "EXPECTING_CONFIRM_PAY" ||
-    //  userContext.stage === "PERSONAL_ACCIDENT_COVER" ||
-    //  userContext.stage === "EXPECTING_INSURANCE_PERIOD"
+
 
     case "add_yes":
       if (userContext.stage === "PERSONAL_ACCIDENT_COVER") {
@@ -624,7 +644,8 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       };
 
       await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
-      
+
+      userContext.serviceType = "passengers";
       userContext.stage = "EXPECTING_PICKUP_ADDRESS";
       userContexts.set(phone, userContext);
       break;
@@ -645,7 +666,8 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       };
 
       await sendWhatsAppMessage(phone, locationRequestPayloadGoods, phoneNumberId);
-      
+
+      userContext.serviceType = "goods";
       userContext.stage = "EXPECTING_PICKUP_ADDRESS_GOODS";
       userContexts.set(phone, userContext);
       break;
@@ -1115,6 +1137,10 @@ const handleLocation = async (location, phone, phoneNumberId) => {
       // Retrieve the order from userContext
     const userContext = userContexts.get(phone);
 
+      userContext.pickupLatitude = location.latitude; 
+      userContext.pickupLongitude = location.longitude; 
+      userContext.pickupAddress = location.address || ""; 
+
     // Send location request message
     const locationRequestPayload = {
       type: "interactive",
@@ -1138,6 +1164,10 @@ const handleLocation = async (location, phone, phoneNumberId) => {
     userContexts.set(phone, userContext);
     } else if (userContext.stage === "EXPECTING_DROPOFF_ADDRESS") {
       // Send location request message
+
+      userContext.dropoffAddress = location.address || ""; 
+      userContext.dropoffLatitude = location.latitude; 
+      userContext.dropoffLongitude = location.longitude; 
     
       const requestTimePayload = {
     type: "interactive",
@@ -1177,6 +1207,10 @@ const handleLocation = async (location, phone, phoneNumberId) => {
       // Retrieve the order from userContext
     const userContext = userContexts.get(phone);
 
+      userContext.pickupAddress = location.address || "";
+      userContext.pickupLatitude = location.latitude; 
+      userContext.pickupLongitude = location.longitude;
+      
     // Send location request message
     const locationRequestPayload = {
       type: "interactive",
@@ -1200,6 +1234,11 @@ const handleLocation = async (location, phone, phoneNumberId) => {
     } else if (userContext.stage === "EXPECTING_DROPOFF_ADDRESS_GOODS") {
 
       // Send location request message
+      const userContext = userContexts.get(phone);
+
+      userContext.dropoffAddress = location.address || "";
+      userContext.dropoffLatitude = location.latitude; 
+      userContext.dropoffLongitude = location.longitude; 
     
       const requestTimePayload = {
     type: "interactive",
@@ -1709,6 +1748,58 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
   userContext.stage = "DISPLAYING_DRIVERS";
   userContexts.set(phone, userContext);
+
+// **********************************************
+  // Prepare data for Firebase
+    const rideData = {
+      // Required fields with default values
+      accepted: false,
+      cancelled: false,
+      completed: false,
+      country_code: "RW",
+      createdAt: admin.firestore.Timestamp.now(),
+      dropoff: false,
+      pickup: false,
+      paid: false,
+      price: 0,
+      rejected: false,
+      offerpool: "",
+      rider: "",
+
+      // Fields from userContext
+      type: userContext.serviceType || "passengers", // from initial selection
+      requestedBy: phone,
+      requestedTime: admin.firestore.Timestamp.fromDate(
+        userContext.pickupTime ? new Date(userContext.pickupTime) : new Date()
+      ),
+
+      // Location data
+      pickupLocation: {
+        address: userContext.pickupAddress || "",
+        latitude: userContext.pickupLatitude || 0,
+        longitude: userContext.pickupLongitude || 0
+      },
+      dropoffLocation: {
+        address: userContext.dropoffAddress || "",
+        latitude: userContext.dropoffLatitude || 0,
+        longitude: userContext.dropoffLongitude || 0
+      },
+
+      // Service-specific fields
+      seats: userContext.serviceType === "passengers" ? parseInt(userContext.seats) || 0 : null,
+      quantity: userContext.serviceType === "goods" ? userContext.quantity || null : null,
+      measure: null
+    };
+
+    // Save to Firebase
+    const docRef = await firestore.collection('whatsappRides').add(rideData);
+    console.log('Ride request saved with ID: ', docRef.id);
+
+    // Update user context with Firebase document ID
+    userContext.rideRequestId = docRef.id;
+    userContexts.set(phone, userContext);
+
+  // **********************************************
 
   // Hardcoded sample drivers
   const drivers = [
