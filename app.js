@@ -1185,13 +1185,13 @@ const handleLocation = async (location, phone, phoneNumberId) => {
               title: "Now",
             },
           },
-          {
-            type: "reply",
-            reply: {
-              id: "pickup_later",
-              title: "Later",
-            },
-          },
+         // {
+           // type: "reply",
+           // reply: {
+           //   id: "pickup_later",
+          //    title: "Later",
+         //   },
+        //  },
         ],
       },
     },
@@ -1293,6 +1293,49 @@ const handleLocation = async (location, phone, phoneNumberId) => {
     );
   }
 };
+
+
+
+// Add this function to handle driver selection
+async function handleDriverSelection(message, phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  
+  if (userContext.stage === "DISPLAYING_DRIVERS" && 
+      message.interactive?.type === "list_reply") {
+    
+    const selectedDriverId = message.interactive.list_reply.id;
+    
+    // Find the selected driver from stored context
+    const selectedDriver = userContext.availableDrivers.find(
+      driver => driver.id === selectedDriverId
+    );
+
+    if (selectedDriver && userContext.rideRequestId) {
+      // Update the ride request with selected driver info
+      await firestore.collection('whatsappRides').doc(userContext.rideRequestId).update({
+        rider: selectedDriver.driverId,
+        offerpool: selectedDriver.id,
+        price: selectedDriver.price
+      });
+
+      // Send confirmation message to user
+      const confirmationPayload = {
+        type: "text",
+        text: {
+          body: `Your ride has been booked!\n\nDriver Details:\nVehicle: ${selectedDriver.vehicle}\nPlate Number: ${selectedDriver.plateno}\nPrice: ${selectedDriver.price}RWF\n\nYour driver will contact you shortly.`
+        }
+      };
+      
+      await sendWhatsAppMessage(phone, confirmationPayload, phoneNumberId);
+      
+      // Update user context
+      userContext.stage = "RIDE_BOOKED";
+      userContexts.set(phone, userContext);
+    }
+  }
+}
+
+
 
 const processedMessages = new Set();
 
@@ -1409,6 +1452,8 @@ async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
 
         // Only process if MENU pay
         const userContext = userContexts.get(phone) || {};
+
+        await handleDriverSelection(message, phone, phoneNumberId);
 
         await handlePaymentTermsReply(
           buttonId,
