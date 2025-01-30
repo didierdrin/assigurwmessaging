@@ -1438,35 +1438,29 @@ async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
       break;
 
     case "interactive":
-      const interactiveType = message.interactive.type;
+      if (message.interactive.type === "nfm_reply") {
+        await handleNFMReply(message, phone, phoneNumberId);
+      } else if (message.interactive.type === "button_reply") {
+        const buttonId = message.interactive.button_reply.id;
 
-      switch (interactiveType) {
-        case "list_reply":
-          const userContext = userContexts.get(phone) || {};
-          if (userContext.stage === "DISPLAYING_DRIVERS") {
-            await handleDriverSelection(message, phone, phoneNumberId);
-          }
-          break;
+        // Only process if MENU pay
+        const userContext = userContexts.get(phone) || {};
 
-        case "nfm_reply":
-          await handleNFMReply(message, phone, phoneNumberId);
-          break;
+        await handleDriverSelection(message, phone, phoneNumberId);
 
-        case "button_reply":
-          const buttonId = message.interactive.button_reply.id;
-          await handlePaymentTermsReply(
-            buttonId,
-            phone,
-            userContexts.get(phone),
-            phoneNumberId
-          );
-          await handleInteractiveMessages(message, phone, phoneNumberId);
-          break;
-
-        default:
-          await handleInteractiveMessages(message, phone, phoneNumberId);
+        await handlePaymentTermsReply(
+          buttonId,
+          phone,
+          userContexts.get(phone),
+          phoneNumberId
+        );
+        console.log("Expecting AGREE & PAY button reply");
+        return;
+      } else {
+        await handleInteractiveMessages(message, phone, phoneNumberId);
       }
       break;
+
 
     case "document":
     case "image":
