@@ -8,7 +8,7 @@ import http from "http";
 import https from "https";
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
-import admin from 'firebase-admin';
+import admin from "firebase-admin";
 //import { extractImageData } from './imageExtraction.js';
 const bucketName = "gs://assigurw.appspot.com";
 const bucket = storage.bucket(bucketName);
@@ -88,7 +88,6 @@ const validateDate = (dateString) => {
   const date = new Date(dateString);
   return date instanceof Date && !isNaN(date);
 };
-
 
 //// From here - readable modular functions.
 
@@ -273,82 +272,82 @@ const handlePaymentTermsReply = async (
   phoneNumberId
 ) => {
   switch (replyId) {
-      case "quantity_1":
+    case "quantity_1":
       if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
         userContext.quantity = "500kg";
-        userContexts.set(phone, userContext); 
+        userContexts.set(phone, userContext);
         return;
       }
 
       break;
-      case "quantity_2":
+    case "quantity_2":
       if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
         userContext.quantity = "1Ton";
-        userContexts.set(phone, userContext); 
+        userContexts.set(phone, userContext);
         return;
       }
 
       break;
-      case "quantity_3":
+    case "quantity_3":
       if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
         userContext.quantity = "2Tons";
-        userContexts.set(phone, userContext); 
+        userContexts.set(phone, userContext);
         return;
       }
 
       break;
-      case "quantity_4":
+    case "quantity_4":
       if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
         userContext.quantity = "4Tons";
-        userContexts.set(phone, userContext); 
+        userContexts.set(phone, userContext);
         return;
       }
 
       break;
-      case "quantity_5":
+    case "quantity_5":
       if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
-        userContext.quantity = "5Tons"; 
-        userContexts.set(phone, userContext); 
+        userContext.quantity = "5Tons";
+        userContexts.set(phone, userContext);
         return;
       }
 
       break;
-      case "quantity_more":
+    case "quantity_more":
       if (userContext.stage === "EXPECTING_QUANTITY_GOODS") {
         await sendAdditionalQuantityMessage(phone, phoneNumberId);
         return;
       }
 
       break;
-      case "seats_1":
+    case "seats_1":
       //if (userContext.stage === "EXPECTING_SEATS") {
-        await sendAvailableDriversMessage(phone, phoneNumberId);
-        userContext.seats = "1"; 
-        userContexts.set(phone, userContext); 
+      await sendAvailableDriversMessage(phone, phoneNumberId);
+      userContext.seats = "1";
+      userContexts.set(phone, userContext);
       //  return;
-     // }
+      // }
 
       break;
     case "seats_2":
       if (userContext.stage === "EXPECTING_SEATS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
         userContext.seats = "2";
-        userContexts.set(phone, userContext); 
+        userContexts.set(phone, userContext);
         return;
       }
 
       break;
 
-      case "seats_3":
+    case "seats_3":
       if (userContext.stage === "EXPECTING_SEATS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
-        userContext.seats = "3"; 
-        userContexts.set(phone, userContext); 
+        userContext.seats = "3";
+        userContexts.set(phone, userContext);
         return;
       }
 
@@ -357,7 +356,7 @@ const handlePaymentTermsReply = async (
       if (userContext.stage === "EXPECTING_SEATS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
         userContext.seats = "4";
-        userContexts.set(phone, userContext); 
+        userContexts.set(phone, userContext);
         return;
       }
 
@@ -366,7 +365,7 @@ const handlePaymentTermsReply = async (
       if (userContext.stage === "EXPECTING_SEATS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
         userContext.seats = "5";
-        userContexts.set(phone, userContext); 
+        userContexts.set(phone, userContext);
         return;
       }
 
@@ -420,8 +419,6 @@ const handlePaymentTermsReply = async (
       }
 
       break;
-
-
 
     case "add_yes":
       if (userContext.stage === "PERSONAL_ACCIDENT_COVER") {
@@ -665,7 +662,11 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
         },
       };
 
-      await sendWhatsAppMessage(phone, locationRequestPayloadGoods, phoneNumberId);
+      await sendWhatsAppMessage(
+        phone,
+        locationRequestPayloadGoods,
+        phoneNumberId
+      );
 
       userContext.serviceType = "goods";
       userContext.stage = "EXPECTING_PICKUP_ADDRESS_GOODS";
@@ -1132,148 +1133,140 @@ app.post("/extract-data", async (req, res) => {
 const handleLocation = async (location, phone, phoneNumberId) => {
   const userContext = userContexts.get(phone) || {};
   try {
-    
     if (userContext.stage === "EXPECTING_PICKUP_ADDRESS") {
       // Retrieve the order from userContext
-    const userContext = userContexts.get(phone);
+      const userContext = userContexts.get(phone);
 
-      userContext.pickupLatitude = location.latitude; 
-      userContext.pickupLongitude = location.longitude; 
-      userContext.pickupAddress = location.address || ""; 
+      userContext.pickupLatitude = location.latitude;
+      userContext.pickupLongitude = location.longitude;
+      userContext.pickupAddress = location.address || "";
 
-    // Send location request message
-    const locationRequestPayload = {
-      type: "interactive",
-      interactive: {
-        type: "location_request_message",
-        body: {
-          text: "Share your drop off address",
+      // Send location request message
+      const locationRequestPayload = {
+        type: "interactive",
+        interactive: {
+          type: "location_request_message",
+          body: {
+            text: "Share your drop off address",
+          },
+          action: {
+            name: "send_location",
+          },
         },
-        action: {
-          name: "send_location",
-        },
-      },
-    };
+      };
 
-    await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
-    
-    // Update user context to expect TIN input
-    //userContext.vendorNumber = vendorNumber;
-    //userContext.currency = currentCurrency;
-    userContext.stage = "EXPECTING_DROPOFF_ADDRESS";
-    userContexts.set(phone, userContext);
+      await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
+
+      // Update user context to expect TIN input
+      //userContext.vendorNumber = vendorNumber;
+      //userContext.currency = currentCurrency;
+      userContext.stage = "EXPECTING_DROPOFF_ADDRESS";
+      userContexts.set(phone, userContext);
     } else if (userContext.stage === "EXPECTING_DROPOFF_ADDRESS") {
       // Send location request message
 
-      userContext.dropoffAddress = location.address || ""; 
-      userContext.dropoffLatitude = location.latitude; 
-      userContext.dropoffLongitude = location.longitude; 
-    
+      userContext.dropoffAddress = location.address || "";
+      userContext.dropoffLatitude = location.latitude;
+      userContext.dropoffLongitude = location.longitude;
+
       const requestTimePayload = {
-    type: "interactive",
-    interactive: {
-      type: "button",
-      body: {
-        text: "When do you want to be picked up?",
-      },
-      action: {
-        buttons: [
-          {
-            type: "reply",
-            reply: {
-              id: "pickup_now",
-              title: "Now",
-            },
+        type: "interactive",
+        interactive: {
+          type: "button",
+          body: {
+            text: "When do you want to be picked up?",
           },
-         // {
-           // type: "reply",
-           // reply: {
-           //   id: "pickup_later",
-          //    title: "Later",
-         //   },
-        //  },
-        ],
-      },
-    },
-  };
+          action: {
+            buttons: [
+              {
+                type: "reply",
+                reply: {
+                  id: "pickup_now",
+                  title: "Now",
+                },
+              },
+              // {
+              // type: "reply",
+              // reply: {
+              //   id: "pickup_later",
+              //    title: "Later",
+              //   },
+              //  },
+            ],
+          },
+        },
+      };
 
-    await sendWhatsAppMessage(phone, requestTimePayload, phoneNumberId);
-    
-   
-    userContext.stage = "EXPECTING_NOW_LATER";
-    userContexts.set(phone, userContext);
+      await sendWhatsAppMessage(phone, requestTimePayload, phoneNumberId);
+
+      userContext.stage = "EXPECTING_NOW_LATER";
+      userContexts.set(phone, userContext);
     } else if (userContext.stage === "EXPECTING_PICKUP_ADDRESS_GOODS") {
-
       // Retrieve the order from userContext
-    const userContext = userContexts.get(phone);
+      const userContext = userContexts.get(phone);
 
       userContext.pickupAddress = location.address || "";
-      userContext.pickupLatitude = location.latitude; 
+      userContext.pickupLatitude = location.latitude;
       userContext.pickupLongitude = location.longitude;
-      
-    // Send location request message
-    const locationRequestPayload = {
-      type: "interactive",
-      interactive: {
-        type: "location_request_message",
-        body: {
-          text: "Share your drop off address",
-        },
-        action: {
-          name: "send_location",
-        },
-      },
-    };
 
-    await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
-    
-  
-    userContext.stage = "EXPECTING_DROPOFF_ADDRESS_GOODS";
-    userContexts.set(phone, userContext);
-      
+      // Send location request message
+      const locationRequestPayload = {
+        type: "interactive",
+        interactive: {
+          type: "location_request_message",
+          body: {
+            text: "Share your drop off address",
+          },
+          action: {
+            name: "send_location",
+          },
+        },
+      };
+
+      await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
+
+      userContext.stage = "EXPECTING_DROPOFF_ADDRESS_GOODS";
+      userContexts.set(phone, userContext);
     } else if (userContext.stage === "EXPECTING_DROPOFF_ADDRESS_GOODS") {
-
       // Send location request message
       const userContext = userContexts.get(phone);
 
       userContext.dropoffAddress = location.address || "";
-      userContext.dropoffLatitude = location.latitude; 
-      userContext.dropoffLongitude = location.longitude; 
-    
-      const requestTimePayload = {
-    type: "interactive",
-    interactive: {
-      type: "button",
-      body: {
-        text: "When do you want to be picked up?",
-      },
-      action: {
-        buttons: [
-          {
-            type: "reply",
-            reply: {
-              id: "pickup_now",
-              title: "Now",
-            },
-          },
-          {
-            type: "reply",
-            reply: {
-              id: "pickup_later",
-              title: "Later",
-            },
-          },
-        ],
-      },
-    },
-  };
+      userContext.dropoffLatitude = location.latitude;
+      userContext.dropoffLongitude = location.longitude;
 
-    await sendWhatsAppMessage(phone, requestTimePayload, phoneNumberId);
-    
-   
-    userContext.stage = "EXPECTING_NOW_LATER_GOODS";
-    userContexts.set(phone, userContext);
-      
+      const requestTimePayload = {
+        type: "interactive",
+        interactive: {
+          type: "button",
+          body: {
+            text: "When do you want to be picked up?",
+          },
+          action: {
+            buttons: [
+              {
+                type: "reply",
+                reply: {
+                  id: "pickup_now",
+                  title: "Now",
+                },
+              },
+              {
+                type: "reply",
+                reply: {
+                  id: "pickup_later",
+                  title: "Later",
+                },
+              },
+            ],
+          },
+        },
+      };
+
+      await sendWhatsAppMessage(phone, requestTimePayload, phoneNumberId);
+
+      userContext.stage = "EXPECTING_NOW_LATER_GOODS";
+      userContexts.set(phone, userContext);
     } else {
       console.log("Not the correct stage");
     }
@@ -1294,48 +1287,48 @@ const handleLocation = async (location, phone, phoneNumberId) => {
   }
 };
 
-
-
 // Add this function to handle driver selection
 async function handleDriverSelection(message, phone, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
-  
-  if (userContext.stage === "DISPLAYING_DRIVERS" && 
-      message.interactive?.type === "list_reply") {
-    
+
+  if (
+    userContext.stage === "DISPLAYING_DRIVERS" &&
+    message.interactive?.type === "list_reply"
+  ) {
     const selectedDriverId = message.interactive.list_reply.id;
-    
+
     // Find the selected driver from stored context
     const selectedDriver = userContext.availableDrivers.find(
-      driver => driver.id === selectedDriverId
+      (driver) => driver.id === selectedDriverId
     );
 
     if (selectedDriver && userContext.rideRequestId) {
       // Update the ride request with selected driver info
-      await firestore.collection('whatsappRides').doc(userContext.rideRequestId).update({
-        rider: selectedDriver.driverId,
-        offerpool: selectedDriver.id,
-        price: selectedDriver.price
-      });
+      await firestore
+        .collection("whatsappRides")
+        .doc(userContext.rideRequestId)
+        .update({
+          rider: selectedDriver.driverId,
+          offerpool: selectedDriver.id,
+          price: selectedDriver.price,
+        });
 
       // Send confirmation message to user
       const confirmationPayload = {
         type: "text",
         text: {
-          body: `Your ride has been booked!\n\nDriver Details:\nVehicle: ${selectedDriver.vehicle}\nPlate Number: ${selectedDriver.plateno}\nPrice: ${selectedDriver.price}RWF\n\nYour driver will contact you shortly.`
-        }
+          body: `Your ride has been booked!\n\nDriver Details:\nVehicle: ${selectedDriver.vehicle}\nPlate Number: ${selectedDriver.plateno}\nPrice: ${selectedDriver.price}RWF\n\nYour driver will contact you shortly.`,
+        },
       };
-      
+
       await sendWhatsAppMessage(phone, confirmationPayload, phoneNumberId);
-      
+
       // Update user context
       userContext.stage = "RIDE_BOOKED";
       userContexts.set(phone, userContext);
     }
   }
 }
-
-
 
 const processedMessages = new Set();
 
@@ -1444,9 +1437,9 @@ async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
       }
       break;
 
-      case "interactive":
+    case "interactive":
       const interactiveType = message.interactive.type;
-      
+
       switch (interactiveType) {
         case "list_reply":
           const userContext = userContexts.get(phone) || {};
@@ -1454,11 +1447,11 @@ async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
             await handleDriverSelection(message, phone, phoneNumberId);
           }
           break;
-          
+
         case "nfm_reply":
           await handleNFMReply(message, phone, phoneNumberId);
           break;
-          
+
         case "button_reply":
           const buttonId = message.interactive.button_reply.id;
           await handlePaymentTermsReply(
@@ -1469,7 +1462,7 @@ async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
           );
           await handleInteractiveMessages(message, phone, phoneNumberId);
           break;
-          
+
         default:
           await handleInteractiveMessages(message, phone, phoneNumberId);
       }
@@ -1627,8 +1620,8 @@ async function sendCustomPickupTimeMessage(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Please enter your preferred pickup time in either format:\n12:00PM or 13:00"
-    }
+      body: "Please enter your preferred pickup time in either format:\n12:00PM or 13:00",
+    },
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
@@ -1643,8 +1636,8 @@ async function sendCustomPickupTimeMessageGoods(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Please enter your preferred pickup time in either format:\n12:00PM or 13:00"
-    }
+      body: "Please enter your preferred pickup time in either format:\n12:00PM or 13:00",
+    },
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
@@ -1662,31 +1655,31 @@ async function sendSeatSelectionMessage(phone, phoneNumberId) {
       type: "button",
       header: {
         type: "text",
-        text: "Select Number of Seats"
+        text: "Select Number of Seats",
       },
       body: {
-        text: "How many seats would you like to book?"
+        text: "How many seats would you like to book?",
       },
       footer: {
-        text: "Maximum 5 seats per booking"
+        text: "Maximum 5 seats per booking",
       },
       action: {
         buttons: [
           {
             type: "reply",
-            reply: { id: "seats_1", title: "1 Seat" }
+            reply: { id: "seats_1", title: "1 Seat" },
           },
           {
             type: "reply",
-            reply: { id: "seats_2", title: "2 Seats" }
+            reply: { id: "seats_2", title: "2 Seats" },
           },
           {
             type: "reply",
-            reply: { id: "seats_more", title: "More" }
-          }
-        ]
-      }
-    }
+            reply: { id: "seats_more", title: "More" },
+          },
+        ],
+      },
+    },
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
@@ -1702,25 +1695,25 @@ async function sendAdditionalSeatsMessage(phone, phoneNumberId) {
     interactive: {
       type: "button",
       body: {
-        text: "More seats:"
+        text: "More seats:",
       },
       action: {
         buttons: [
           {
             type: "reply",
-            reply: { id: "seats_3", title: "3 Seats" }
+            reply: { id: "seats_3", title: "3 Seats" },
           },
           {
             type: "reply",
-            reply: { id: "seats_4", title: "4 Seats" }
+            reply: { id: "seats_4", title: "4 Seats" },
           },
           {
             type: "reply",
-            reply: { id: "seats_5", title: "5 Seats" }
-          }
-        ]
-      }
-    }
+            reply: { id: "seats_5", title: "5 Seats" },
+          },
+        ],
+      },
+    },
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
@@ -1738,31 +1731,31 @@ async function sendQuantitySelectionMessage(phone, phoneNumberId) {
       type: "button",
       header: {
         type: "text",
-        text: "Select Number of Quantity"
+        text: "Select Number of Quantity",
       },
       body: {
-        text: "How much would you like to transport?"
+        text: "How much would you like to transport?",
       },
       footer: {
-        text: "Maximum 100Tons per booking"
+        text: "Maximum 100Tons per booking",
       },
       action: {
         buttons: [
           {
             type: "reply",
-            reply: { id: "quantity_1", title: "500 Kg" }
+            reply: { id: "quantity_1", title: "500 Kg" },
           },
           {
             type: "reply",
-            reply: { id: "quantity_2", title: "1 Ton" }
+            reply: { id: "quantity_2", title: "1 Ton" },
           },
           {
             type: "reply",
-            reply: { id: "quantity_more", title: "More" }
-          }
-        ]
-      }
-    }
+            reply: { id: "quantity_more", title: "More" },
+          },
+        ],
+      },
+    },
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
@@ -1773,31 +1766,31 @@ async function sendAdditionalQuantityMessage(phone, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
   userContext.stage = "EXPECTING_QUANTITY_GOODS";
   userContexts.set(phone, userContext);
-  
+
   const payload = {
     type: "interactive",
     interactive: {
       type: "button",
       body: {
-        text: "More Quantities:"
+        text: "More Quantities:",
       },
       action: {
         buttons: [
           {
             type: "reply",
-            reply: { id: "quantity_3", title: "2 Tons" }
+            reply: { id: "quantity_3", title: "2 Tons" },
           },
           {
             type: "reply",
-            reply: { id: "quantity_4", title: "3 Tons" }
+            reply: { id: "quantity_4", title: "3 Tons" },
           },
           {
             type: "reply",
-            reply: { id: "quantity_5", title: "4 Tons" }
-          }
-        ]
-      }
-    }
+            reply: { id: "quantity_5", title: "4 Tons" },
+          },
+        ],
+      },
+    },
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
@@ -1831,34 +1824,43 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
     pickupLocation: {
       address: userContext.pickupAddress || "",
       latitude: userContext.pickupLatitude || 0,
-      longitude: userContext.pickupLongitude || 0
+      longitude: userContext.pickupLongitude || 0,
     },
     dropoffLocation: {
       address: userContext.dropoffAddress || "",
       latitude: userContext.dropoffLatitude || 0,
-      longitude: userContext.dropoffLongitude || 0
+      longitude: userContext.dropoffLongitude || 0,
     },
-    seats: userContext.serviceType === "passengers" ? parseInt(userContext.seats) || 0 : null,
-    quantity: userContext.serviceType === "goods" ? userContext.quantity || null : null,
-    measure: null
+    seats:
+      userContext.serviceType === "passengers"
+        ? parseInt(userContext.seats) || 0
+        : null,
+    quantity:
+      userContext.serviceType === "goods" ? userContext.quantity || null : null,
+    measure: null,
   };
 
   // Save to Firebase
-  const docRef = await firestore.collection('whatsappRides').add(rideData);
-  console.log('Ride request saved with ID: ', docRef.id);
+  const docRef = await firestore.collection("whatsappRides").add(rideData);
+  console.log("Ride request saved with ID: ", docRef.id);
 
   // Update user context with Firebase document ID
   userContext.rideRequestId = docRef.id;
   userContexts.set(phone, userContext);
 
   // Fetch available drivers from offerPool
-  let offerPoolQuery = firestore.collection('offerPool')
-    .where('completed', '==', false)
-    .where('type', '==', userContext.serviceType);
+  let offerPoolQuery = firestore
+    .collection("offerPool")
+    .where("completed", "==", false)
+    .where("type", "==", userContext.serviceType);
 
   // Add seats filter for passenger service
-  if (userContext.serviceType === 'passengers' && userContext.seats) {
-    offerPoolQuery = offerPoolQuery.where('emptySeat', '==', parseInt(userContext.seats));
+  if (userContext.serviceType === "passengers" && userContext.seats) {
+    offerPoolQuery = offerPoolQuery.where(
+      "emptySeat",
+      "==",
+      parseInt(userContext.seats)
+    );
   }
 
   const offerPoolSnapshot = await offerPoolQuery.get();
@@ -1867,23 +1869,23 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
   // Process each offer and fetch corresponding vehicle details
   for (const doc of offerPoolSnapshot.docs) {
     const offerData = doc.data();
-    
+
     // Fetch vehicle details for the driver
     const vehicleDoc = await firestore
-      .collection('vehicles')
-      .where('userId', '==', offerData.user)
+      .collection("vehicles")
+      .where("userId", "==", offerData.user)
       .get();
 
     if (!vehicleDoc.empty) {
       const vehicleData = vehicleDoc.docs[0].data();
-      
+
       availableDrivers.push({
         id: doc.id,
         plateno: vehicleData.vehicleRegNumber,
         vehicle: vehicleData.vehicleMake,
         seats: offerData.selectedSeat,
         eta: "~10 mins", // You might want to calculate this based on actual distance
-        price: offerData.pricePerSeat
+        price: offerData.pricePerSeat,
       });
     }
   }
@@ -1892,7 +1894,6 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
   userContext.availableDrivers = availableDrivers;
   userContexts.set(phone, userContext);
 
-
   // Prepare the WhatsApp message payload
   const payload = {
     type: "interactive",
@@ -1900,32 +1901,32 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
       type: "list",
       header: {
         type: "text",
-        text: "Available Drivers"
+        text: "Available Drivers",
       },
       body: {
-        text: `Select a driver to proceed with your ${userContext.serviceType} booking:`
+        text: `Select a driver to proceed with your ${userContext.serviceType} booking:`,
       },
       footer: {
-        text: "Tap to view driver details"
+        text: "Tap to view driver details",
       },
       action: {
         button: "View Drivers",
         sections: [
           {
             title: "Nearby Drivers",
-            rows: availableDrivers.map(driver => ({
+            rows: availableDrivers.map((driver) => ({
               id: driver.id,
               title: `${driver.plateno}`,
               description: `Vehicle: ${driver.vehicle} | ${
-                userContext.serviceType === 'passengers' 
-                  ? `Seats: ${driver.seats}` 
-                  : 'Goods Transport'
-              } | Price: ${driver.price}RWF`
-            }))
-          }
-        ]
-      }
-    }
+                userContext.serviceType === "passengers"
+                  ? `Seats: ${driver.seats}`
+                  : "Goods Transport"
+              } | Price: ${driver.price}RWF`,
+            })),
+          },
+        ],
+      },
+    },
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
@@ -1936,55 +1937,59 @@ async function sendAvailableDriversMessageOld(phone, phoneNumberId) {
   userContext.stage = "DISPLAYING_DRIVERS";
   userContexts.set(phone, userContext);
 
-// **********************************************
+  // **********************************************
   // Prepare data for Firebase
-    const rideData = {
-      // Required fields with default values
-      accepted: false,
-      cancelled: false,
-      completed: false,
-      country_code: "RW",
-      createdAt: admin.firestore.Timestamp.now(),
-      dropoff: false,
-      pickup: false,
-      paid: false,
-      price: 0,
-      rejected: false,
-      offerpool: "",
-      rider: "",
+  const rideData = {
+    // Required fields with default values
+    accepted: false,
+    cancelled: false,
+    completed: false,
+    country_code: "RW",
+    createdAt: admin.firestore.Timestamp.now(),
+    dropoff: false,
+    pickup: false,
+    paid: false,
+    price: 0,
+    rejected: false,
+    offerpool: "",
+    rider: "",
 
-      // Fields from userContext
-      type: userContext.serviceType || "passengers", // from initial selection
-      requestedBy: phone,
-      requestedTime: admin.firestore.Timestamp.fromDate(
-        userContext.pickupTime ? new Date(userContext.pickupTime) : new Date()
-      ),
+    // Fields from userContext
+    type: userContext.serviceType || "passengers", // from initial selection
+    requestedBy: phone,
+    requestedTime: admin.firestore.Timestamp.fromDate(
+      userContext.pickupTime ? new Date(userContext.pickupTime) : new Date()
+    ),
 
-      // Location data
-      pickupLocation: {
-        address: userContext.pickupAddress || "",
-        latitude: userContext.pickupLatitude || 0,
-        longitude: userContext.pickupLongitude || 0
-      },
-      dropoffLocation: {
-        address: userContext.dropoffAddress || "",
-        latitude: userContext.dropoffLatitude || 0,
-        longitude: userContext.dropoffLongitude || 0
-      },
+    // Location data
+    pickupLocation: {
+      address: userContext.pickupAddress || "",
+      latitude: userContext.pickupLatitude || 0,
+      longitude: userContext.pickupLongitude || 0,
+    },
+    dropoffLocation: {
+      address: userContext.dropoffAddress || "",
+      latitude: userContext.dropoffLatitude || 0,
+      longitude: userContext.dropoffLongitude || 0,
+    },
 
-      // Service-specific fields
-      seats: userContext.serviceType === "passengers" ? parseInt(userContext.seats) || 0 : null,
-      quantity: userContext.serviceType === "goods" ? userContext.quantity || null : null,
-      measure: null
-    };
+    // Service-specific fields
+    seats:
+      userContext.serviceType === "passengers"
+        ? parseInt(userContext.seats) || 0
+        : null,
+    quantity:
+      userContext.serviceType === "goods" ? userContext.quantity || null : null,
+    measure: null,
+  };
 
-    // Save to Firebase
-    const docRef = await firestore.collection('whatsappRides').add(rideData);
-    console.log('Ride request saved with ID: ', docRef.id);
+  // Save to Firebase
+  const docRef = await firestore.collection("whatsappRides").add(rideData);
+  console.log("Ride request saved with ID: ", docRef.id);
 
-    // Update user context with Firebase document ID
-    userContext.rideRequestId = docRef.id;
-    userContexts.set(phone, userContext);
+  // Update user context with Firebase document ID
+  userContext.rideRequestId = docRef.id;
+  userContexts.set(phone, userContext);
 
   // **********************************************
 
@@ -1995,36 +2000,36 @@ async function sendAvailableDriversMessageOld(phone, phoneNumberId) {
       plateno: "RAB894T",
       vehicle: "Toyota Corolla",
       seats: "5",
-      eta: "5 mins"
+      eta: "5 mins",
     },
     {
       id: "driver_2",
       plateno: "RAT340I",
       vehicle: "Honda Civic",
       seats: "2",
-      eta: "7 mins"
+      eta: "7 mins",
     },
     {
       id: "driver_3",
       plateno: "RAC234P",
       vehicle: "Suzuki Swift",
       seats: "5",
-      eta: "10 mins"
+      eta: "10 mins",
     },
     {
       id: "driver_4",
       plateno: "RAE847I",
       vehicle: "Nissan Note",
       seats: "5",
-      eta: "12 mins"
+      eta: "12 mins",
     },
     {
       id: "driver_5",
       plateno: "RAA894E",
       vehicle: "Mazda Demio",
       seats: "4",
-      eta: "15 mins"
-    }
+      eta: "15 mins",
+    },
   ];
 
   const payload = {
@@ -2033,28 +2038,28 @@ async function sendAvailableDriversMessageOld(phone, phoneNumberId) {
       type: "list",
       header: {
         type: "text",
-        text: "Available Drivers"
+        text: "Available Drivers",
       },
       body: {
-        text: "Select a driver to proceed with your booking:"
+        text: "Select a driver to proceed with your booking:",
       },
       footer: {
-        text: "Tap to view driver details"
+        text: "Tap to view driver details",
       },
       action: {
         button: "View Drivers",
         sections: [
           {
             title: "Nearby Drivers",
-            rows: drivers.map(driver => ({
+            rows: drivers.map((driver) => ({
               id: driver.id,
               title: `${driver.plateno}`,
-              description: `Vehicle: ${driver.vehicle}| Seats: ${driver.seats} | ETA: ${driver.eta}`
-            }))
-          }
-        ]
-      }
-    }
+              description: `Vehicle: ${driver.vehicle}| Seats: ${driver.seats} | ETA: ${driver.eta}`,
+            })),
+          },
+        ],
+      },
+    },
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
@@ -2063,46 +2068,58 @@ async function sendAvailableDriversMessageOld(phone, phoneNumberId) {
 // Handler for time validation
 async function handleTimeValidation(message, phone, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
-  
+
   if (userContext.stage === "EXPECTING_CUSTOM_TIME") {
     const timeInput = message.text.body.trim();
     const is24HourFormat = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeInput);
-    const is12HourFormat = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*[AaPp][Mm]$/.test(timeInput);
+    const is12HourFormat = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*[AaPp][Mm]$/.test(
+      timeInput
+    );
 
     if (is24HourFormat || is12HourFormat) {
       userContext.pickupTime = timeInput;
       userContext.stage = "EXPECTING_SEATS";
       userContexts.set(phone, userContext);
-      
+
       // Proceed to seat selection
       await sendSeatSelectionMessage(phone, phoneNumberId);
     } else {
-      await sendWhatsAppMessage(phone, {
-        type: "text",
-        text: {
-          body: "Invalid time format. Please enter time as 12:00 PM or 13:00"
-        }
-      }, phoneNumberId);
+      await sendWhatsAppMessage(
+        phone,
+        {
+          type: "text",
+          text: {
+            body: "Invalid time format. Please enter time as 12:00 PM or 13:00",
+          },
+        },
+        phoneNumberId
+      );
     }
   } else if (userContext.stage === "EXPECTING_CUSTOM_TIME_GOODS") {
     const timeInput = message.text.body.trim();
     const is24HourFormat = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeInput);
-    const is12HourFormat = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*[AaPp][Mm]$/.test(timeInput);
+    const is12HourFormat = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*[AaPp][Mm]$/.test(
+      timeInput
+    );
 
     if (is24HourFormat || is12HourFormat) {
       userContext.pickupTime = timeInput;
       userContext.stage = "EXPECTING_QUANTITY_GOODS";
       userContexts.set(phone, userContext);
-      
+
       // Proceed to quantity selection
       await sendQuantitySelectionMessage(phone, phoneNumberId);
     } else {
-      await sendWhatsAppMessage(phone, {
-        type: "text",
-        text: {
-          body: "Invalid time format. Please enter time as 12:00 PM or 13:00"
-        }
-      }, phoneNumberId);
+      await sendWhatsAppMessage(
+        phone,
+        {
+          type: "text",
+          text: {
+            body: "Invalid time format. Please enter time as 12:00 PM or 13:00",
+          },
+        },
+        phoneNumberId
+      );
     }
   }
 }
