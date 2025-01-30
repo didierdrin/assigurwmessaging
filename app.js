@@ -1446,7 +1446,7 @@ async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
         // Only process if MENU pay
         const userContext = userContexts.get(phone) || {};
 
-        await handleDriverSelection(message, phone, phoneNumberId);
+        
 
         await handlePaymentTermsReply(
           buttonId,
@@ -1458,6 +1458,7 @@ async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
         return;
       } else {
         await handleInteractiveMessages(message, phone, phoneNumberId);
+        await handleDriverSelection(message, phone, phoneNumberId);
       }
       break;
 
