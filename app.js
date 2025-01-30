@@ -326,12 +326,12 @@ const handlePaymentTermsReply = async (
 
       break;
       case "seats_1":
-      if (userContext.stage === "EXPECTING_SEATS") {
+      //if (userContext.stage === "EXPECTING_SEATS") {
         await sendAvailableDriversMessage(phone, phoneNumberId);
         userContext.seats = "1"; 
         userContexts.set(phone, userContext); 
-        return;
-      }
+      //  return;
+     // }
 
       break;
     case "seats_2":
@@ -1641,6 +1641,9 @@ async function sendSeatSelectionMessage(phone, phoneNumberId) {
 
 // Additional seats options (since WhatsApp limits buttons to 3)
 async function sendAdditionalSeatsMessage(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_SEATS";
+  userContexts.set(phone, userContext);
   const payload = {
     type: "interactive",
     interactive: {
@@ -1714,6 +1717,10 @@ async function sendQuantitySelectionMessage(phone, phoneNumberId) {
 
 // Additional quantity options (limits buttons to 3)
 async function sendAdditionalQuantityMessage(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_QUANTITY_GOODS";
+  userContexts.set(phone, userContext);
+  
   const payload = {
     type: "interactive",
     interactive: {
