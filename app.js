@@ -1749,6 +1749,128 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
   userContext.stage = "DISPLAYING_DRIVERS";
   userContexts.set(phone, userContext);
 
+  // Prepare data for Firebase
+  const rideData = {
+    accepted: false,
+    cancelled: false,
+    completed: false,
+    country_code: "RW",
+    createdAt: admin.firestore.Timestamp.now(),
+    dropoff: false,
+    pickup: false,
+    paid: false,
+    price: 0,
+    rejected: false,
+    offerpool: "",
+    rider: "",
+    type: userContext.serviceType || "passengers",
+    requestedBy: phone,
+    requestedTime: admin.firestore.Timestamp.fromDate(
+      userContext.pickupTime ? new Date(userContext.pickupTime) : new Date()
+    ),
+    pickupLocation: {
+      address: userContext.pickupAddress || "",
+      latitude: userContext.pickupLatitude || 0,
+      longitude: userContext.pickupLongitude || 0
+    },
+    dropoffLocation: {
+      address: userContext.dropoffAddress || "",
+      latitude: userContext.dropoffLatitude || 0,
+      longitude: userContext.dropoffLongitude || 0
+    },
+    seats: userContext.serviceType === "passengers" ? parseInt(userContext.seats) || 0 : null,
+    quantity: userContext.serviceType === "goods" ? userContext.quantity || null : null,
+    measure: null
+  };
+
+  // Save to Firebase
+  const docRef = await firestore.collection('whatsappRides').add(rideData);
+  console.log('Ride request saved with ID: ', docRef.id);
+
+  // Update user context with Firebase document ID
+  userContext.rideRequestId = docRef.id;
+  userContexts.set(phone, userContext);
+
+  // Fetch available drivers from offerPool
+  let offerPoolQuery = firestore.collection('offerPool')
+    .where('completed', '==', false)
+    .where('type', '==', userContext.serviceType);
+
+  // Add seats filter for passenger service
+  if (userContext.serviceType === 'passengers' && userContext.seats) {
+    offerPoolQuery = offerPoolQuery.where('emptySeat', '==', parseInt(userContext.seats));
+  }
+
+  const offerPoolSnapshot = await offerPoolQuery.get();
+  const availableDrivers = [];
+
+  // Process each offer and fetch corresponding vehicle details
+  for (const doc of offerPoolSnapshot.docs) {
+    const offerData = doc.data();
+    
+    // Fetch vehicle details for the driver
+    const vehicleDoc = await firestore
+      .collection('vehicles')
+      .where('userId', '==', offerData.user)
+      .get();
+
+    if (!vehicleDoc.empty) {
+      const vehicleData = vehicleDoc.docs[0].data();
+      
+      availableDrivers.push({
+        id: doc.id,
+        plateno: vehicleData.vehicleRegNumber,
+        vehicle: vehicleData.vehicleMake,
+        seats: offerData.selectedSeat,
+        eta: "~10 mins", // You might want to calculate this based on actual distance
+        price: offerData.pricePerSeat
+      });
+    }
+  }
+
+  // Prepare the WhatsApp message payload
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Available Drivers"
+      },
+      body: {
+        text: `Select a driver to proceed with your ${userContext.serviceType} booking:`
+      },
+      footer: {
+        text: "Tap to view driver details"
+      },
+      action: {
+        button: "View Drivers",
+        sections: [
+          {
+            title: "Nearby Drivers",
+            rows: availableDrivers.map(driver => ({
+              id: driver.id,
+              title: `${driver.plateno}`,
+              description: `Vehicle: ${driver.vehicle} | ${
+                userContext.serviceType === 'passengers' 
+                  ? `Seats: ${driver.seats}` 
+                  : 'Goods Transport'
+              } | Price: ${driver.price}RWF`
+            }))
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+// Step 7. old version
+async function sendAvailableDriversMessageOld(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "DISPLAYING_DRIVERS";
+  userContexts.set(phone, userContext);
+
 // **********************************************
   // Prepare data for Firebase
     const rideData = {
