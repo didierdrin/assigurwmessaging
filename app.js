@@ -1927,11 +1927,11 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
             rows: availableDrivers.map((driver) => ({
               id: driver.id,
               title: `${driver.plateno}`,
-              description: `Vehicle: ${driver.vehicle} | ${
+              description: `${driver.vehicle} | ${
                 userContext.serviceType === "passengers"
                   ? `Seats: ${driver.seats}`
                   : "Goods Transport"
-              } | Price: ${driver.price.toLocaleString()} RWF | Trip Started: ${driver.dateTime}`,
+              } |${driver.price.toLocaleString()} RWF|${driver.dateTime}`,
             })),
           },
         ],
