@@ -1875,6 +1875,9 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
     if (!vehicleDoc.empty) {
       const vehicleData = vehicleDoc.docs[0].data();
 
+      // Format datetime
+      const formattedDateTimeDriver = formatDateTimeDrivers(offerData.dateTime);
+
       availableDrivers.push({
         id: doc.id,
         plateno: vehicleData.vehicleRegNumber,
@@ -1882,6 +1885,7 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
         seats: offerData.selectedSeat,
         driverId: offerData.user,
         price: offerData.pricePerSeat,
+        dateTime: formattedDateTimeDriver,
       });
     }
   }
@@ -1889,6 +1893,16 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
   // Store available drivers in user context for later reference
   userContext.availableDrivers = availableDrivers;
   userContexts.set(phone, userContext);
+
+  // Check if no drivers are available
+  if (availableDrivers.length === 0) {
+    const noDriversPayload = {
+      type: "text",
+      text: "Oops, no drivers available currently. Your ride has been booked, a driver will call you after accepting the ride.",
+    };
+    await sendWhatsAppMessage(phone, noDriversPayload, phoneNumberId);
+    return;
+  }
 
   // Prepare the WhatsApp message payload
   const payload = {
@@ -1917,7 +1931,7 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
                 userContext.serviceType === "passengers"
                   ? `Seats: ${driver.seats}`
                   : "Goods Transport"
-              } | Price: ${driver.price.toLocaleString()} RWF`,
+              } | Price: ${driver.price.toLocaleString()} RWF | Trip Started: ${driver.dateTime}`,
             })),
           },
         ],
@@ -1927,138 +1941,27 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
 }
-// Step 7. old version
-async function sendAvailableDriversMessageOld(phone, phoneNumberId) {
-  const userContext = userContexts.get(phone) || {};
-  userContext.stage = "DISPLAYING_DRIVERS";
-  userContexts.set(phone, userContext);
 
-  // **********************************************
-  // Prepare data for Firebase
-  const rideData = {
-    // Required fields with default values
-    accepted: false,
-    cancelled: false,
-    completed: false,
-    country_code: "RW",
-    createdAt: admin.firestore.Timestamp.now(),
-    dropoff: false,
-    pickup: false,
-    paid: false,
-    price: 0,
-    rejected: false,
-    offerpool: "",
-    rider: "",
 
-    // Fields from userContext
-    type: userContext.serviceType || "passengers", // from initial selection
-    requestedBy: phone,
-    requestedTime: admin.firestore.Timestamp.fromDate(
-      userContext.pickupTime ? new Date(userContext.pickupTime) : new Date()
-    ),
-
-    // Location data
-    pickupLocation: {
-      address: userContext.pickupAddress || "",
-      latitude: userContext.pickupLatitude || 0,
-      longitude: userContext.pickupLongitude || 0,
-    },
-    dropoffLocation: {
-      address: userContext.dropoffAddress || "",
-      latitude: userContext.dropoffLatitude || 0,
-      longitude: userContext.dropoffLongitude || 0,
-    },
-
-    // Service-specific fields
-    seats:
-      userContext.serviceType === "passengers"
-        ? parseInt(userContext.seats) || 0
-        : null,
-    quantity:
-      userContext.serviceType === "goods" ? userContext.quantity || null : null,
-    measure: null,
+// Helper function to format datetime
+function formatDateTimeDrivers(timestamp) {
+  if (!timestamp) return "N/A";
+  
+  // If timestamp is a Firestore Timestamp, convert to Date
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  
+  // Format options
+  const options = {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Africa/Kigali', // Adjust to your specific timezone
   };
-
-  // Save to Firebase
-  const docRef = await firestore.collection("whatsappRides").add(rideData);
-  console.log("Ride request saved with ID: ", docRef.id);
-
-  // Update user context with Firebase document ID
-  userContext.rideRequestId = docRef.id;
-  userContexts.set(phone, userContext);
-
-  // **********************************************
-
-  // Hardcoded sample drivers
-  const drivers = [
-    {
-      id: "driver_1",
-      plateno: "RAB894T",
-      vehicle: "Toyota Corolla",
-      seats: "5",
-      eta: "5 mins",
-    },
-    {
-      id: "driver_2",
-      plateno: "RAT340I",
-      vehicle: "Honda Civic",
-      seats: "2",
-      eta: "7 mins",
-    },
-    {
-      id: "driver_3",
-      plateno: "RAC234P",
-      vehicle: "Suzuki Swift",
-      seats: "5",
-      eta: "10 mins",
-    },
-    {
-      id: "driver_4",
-      plateno: "RAE847I",
-      vehicle: "Nissan Note",
-      seats: "5",
-      eta: "12 mins",
-    },
-    {
-      id: "driver_5",
-      plateno: "RAA894E",
-      vehicle: "Mazda Demio",
-      seats: "4",
-      eta: "15 mins",
-    },
-  ];
-
-  const payload = {
-    type: "interactive",
-    interactive: {
-      type: "list",
-      header: {
-        type: "text",
-        text: "Available Drivers",
-      },
-      body: {
-        text: "Select a driver to proceed with your booking:",
-      },
-      footer: {
-        text: "Tap to view driver details",
-      },
-      action: {
-        button: "View Drivers",
-        sections: [
-          {
-            title: "Nearby Drivers",
-            rows: drivers.map((driver) => ({
-              id: driver.id,
-              title: `${driver.plateno}`,
-              description: `Vehicle: ${driver.vehicle}| Seats: ${driver.seats} | ETA: ${driver.eta}`,
-            })),
-          },
-        ],
-      },
-    },
-  };
-
-  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+  
+  // Format the date
+  return date.toLocaleString('en-US', options);
 }
 
 // Handler for time validation
