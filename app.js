@@ -1878,6 +1878,22 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
       // Format datetime
       const formattedDateTimeDriver = formatDateTimeDrivers(offerData.dateTime);
 
+      // Calculate distance
+      let distance = "N/A";
+      if (
+        userContext.pickupLatitude && 
+        userContext.pickupLongitude && 
+        offerData.pickupLocation?.latitude && 
+        offerData.pickupLocation?.longitude
+      ) {
+        distance = calculateDistance(
+          userContext.pickupLatitude, 
+          userContext.pickupLongitude,
+          offerData.pickupLocation.latitude, 
+          offerData.pickupLocation.longitude
+        );
+      }
+
       availableDrivers.push({
         id: doc.id,
         plateno: vehicleData.vehicleRegNumber,
@@ -1885,6 +1901,7 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
         seats: offerData.selectedSeat,
         driverId: offerData.user,
         price: offerData.pricePerSeat,
+        distance: `${distance} km`,
         dateTime: formattedDateTimeDriver,
       });
     }
@@ -1931,7 +1948,7 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
                 userContext.serviceType === "passengers"
                   ? `Seats: ${driver.seats}`
                   : "Goods Transport"
-              } |${driver.price.toLocaleString()} RWF|${driver.dateTime}`,
+              } | ${driver.price.toLocaleString()} RWF | ${driver.dateTime} | ${driver.distance}`,
             })),
           },
         ],
@@ -1962,6 +1979,25 @@ function formatDateTimeDrivers(timestamp) {
   
   // Format the date
   return date.toLocaleString('en-US', options);
+}
+
+// Haversine formula to calculate distance between two points on Earth
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c;
+  return distance.toFixed(2); // Return distance in kilometers with 2 decimal places
+}
+
+// Helper function to convert degrees to radians
+function toRadians(degrees) {
+  return degrees * (Math.PI / 180);
 }
 
 // Handler for time validation
