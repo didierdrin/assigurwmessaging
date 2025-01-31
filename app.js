@@ -1305,7 +1305,7 @@ async function handleDriverSelection(message, phone, phoneNumberId) {
     if (selectedDriver && userContext.rideRequestId) {
       // Update the ride request with selected driver info
       await firestore
-        .collection("requestRiders")    //whatsappRides
+        .collection("whatsappRides")    //whatsappRides requestRiders
         .doc(userContext.rideRequestId)
         .update({
           rider: selectedDriver.driverId,
@@ -1836,7 +1836,7 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
   };
 
   // Save to Firebase
-  const docRef = await firestore.collection("requestRiders").add(rideData);
+  const docRef = await firestore.collection("whatsappRides").add(rideData);
   console.log("Ride request saved with ID: ", docRef.id);
 
   // Update user context with Firebase document ID
@@ -1979,7 +1979,7 @@ async function sendAvailableDriversMessageOld(phone, phoneNumberId) {
   };
 
   // Save to Firebase
-  const docRef = await firestore.collection("requestRiders").add(rideData);
+  const docRef = await firestore.collection("whatsappRides").add(rideData);
   console.log("Ride request saved with ID: ", docRef.id);
 
   // Update user context with Firebase document ID
