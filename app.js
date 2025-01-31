@@ -1251,13 +1251,13 @@ const handleLocation = async (location, phone, phoneNumberId) => {
                   title: "Now",
                 },
               },
-              {
-                type: "reply",
-                reply: {
-                  id: "pickup_later",
-                  title: "Later",
-                },
-              },
+           //   {
+           //     type: "reply",
+           //     reply: {
+           //       id: "pickup_later",
+           //       title: "Later",
+           //     },
+           //   },
             ],
           },
         },
@@ -1947,7 +1947,7 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
               description: `${driver.vehicle} | ${
                 userContext.serviceType === "passengers"
                   ? `Seats: ${driver.seats}`
-                  : "Goods Transport"
+                  : "Goods"
               } | ${driver.price.toLocaleString()} RWF | ${driver.dateTime} | ${driver.distance}`,
             })),
           },
