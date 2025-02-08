@@ -92,7 +92,7 @@ const validateDate = (dateString) => {
 //// From here - readable modular functions.
 
 const handlePlateNumberValidation = async (message, phone, phoneNumberId) => {
-  const userContext = userContexts.get(phone);
+  const userContext = userContexts.get(phone) || {};
   const messageText = message.text.body.trim().toLowerCase();
   const PLATE_NUMBER_REGEX = /^[a-zA-Z]{3}\s?\d{3}[a-zA-Z]?$/i;
 
@@ -564,7 +564,7 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
 };
 
 const handleTextMessages = async (message, phone, phoneNumberId) => {
-  const userContext = userContexts.get(phone);
+  const userContext = userContexts.get(phone) || {};
   const messageText = message.text.body.trim().toLowerCase();
   
   // Handle table selection stage
@@ -1282,7 +1282,7 @@ const handleLocation = async (location, phone, phoneNumberId) => {
   try {
     if (userContext.stage === "EXPECTING_PICKUP_ADDRESS") {
       // Retrieve the order from userContext
-      const userContext = userContexts.get(phone);
+      const userContext = userContexts.get(phone) || {};
 
       userContext.pickupLatitude = location.latitude;
       userContext.pickupLongitude = location.longitude;
@@ -1350,7 +1350,7 @@ const handleLocation = async (location, phone, phoneNumberId) => {
       userContexts.set(phone, userContext);
     } else if (userContext.stage === "EXPECTING_PICKUP_ADDRESS_GOODS") {
       // Retrieve the order from userContext
-      const userContext = userContexts.get(phone);
+      const userContext = userContexts.get(phone) || {};
 
       userContext.pickupAddress = location.address || "";
       userContext.pickupLatitude = location.latitude;
@@ -1376,7 +1376,7 @@ const handleLocation = async (location, phone, phoneNumberId) => {
       userContexts.set(phone, userContext);
     } else if (userContext.stage === "EXPECTING_DROPOFF_ADDRESS_GOODS") {
       // Send location request message
-      const userContext = userContexts.get(phone);
+      const userContext = userContexts.get(phone) || {};
 
       userContext.dropoffAddress = location.address || "";
       userContext.dropoffLatitude = location.latitude;
@@ -3299,7 +3299,7 @@ async function sendOrderSummary(phone, phoneNumberId) {
 
 // This function creates a new order document in Firestore using the data collected in userContext.
 async function createWhatsappOrder(phone) {
-  let userContext = userContexts.get(phone);
+  let userContext = userContexts.get(phone) || {};
   if (!userContext) return;
   
   const order = userContext.order || [];
@@ -3347,7 +3347,7 @@ async function createWhatsappOrder(phone) {
 
 // Payment Information
 async function sendPaymentInfo(phone, phoneNumberId) {
-  const userContext = userContexts.get(phone);
+  const userContext = userContexts.get(phone) || {};
   if (!userContext) {
     console.log("No user context found for phone:", phone);
     return;
