@@ -565,7 +565,42 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
   }
 };
 
+
+// Updated handleTextMessages function
 const handleTextMessages = async (message, phone, phoneNumberId) => {
+  let userContext = userContexts.get(phone) || {};
+
+  // Handle table selection stage
+  if (userContext.stage === "TABLE_SELECTION") {
+    const table = message.text.body.trim();
+    userContext.table = table;
+    await sendOrderSummary(phone, phoneNumberId);
+    userContexts.set(phone, userContext);
+    return;
+  }
+
+  const messageText = message.text.body.trim().toLowerCase();
+  
+  // Check if we have a handler for this message
+  const handler = textMessageCases.get(messageText);
+  
+  if (handler) {
+    if (typeof handler === 'function') {
+      // Execute function handler
+      await handler(userContext, phone, phoneNumberId);
+    } else if (handler.vendorId) {
+      // Handle menu/vendor selection
+      await sendClassSelectionMessage(phone, phoneNumberId);
+      userContext.vendorId = handler.vendorId;
+      userContext.stage = "CLASS_SELECTION";
+      userContexts.set(phone, userContext);
+    }
+  } else {
+    console.log(`Received unrecognized text message: ${messageText}`);
+  }
+};
+
+const handleTextMessagesOld = async (message, phone, phoneNumberId) => {
   const userContext = userContexts.get(phone) || {};
   const messageText = message.text.body.trim().toLowerCase();
   
@@ -624,29 +659,7 @@ const handleTextMessages = async (message, phone, phoneNumberId) => {
   }
 };
 
-const handleTextMessages2 = async (message, phone, phoneNumberId) => {
-  const messageText = message.text.body.trim().toLowerCase();
 
-  switch (messageText) {
-    case "adminclear":
-      userContexts.clear();
-      console.log("All user contexts reset.");
-      break;
-
-    case "clear":
-      userContexts.delete(phone);
-      console.log("User context reset.");
-      break;
-
-    case "insurance":
-      console.log("User requested insurance options.");
-      await sendWelcomeMessage(phone, phoneNumberId);
-      break;
-
-    default:
-      console.log(`Received unrecognized message: ${messageText}`);
-  }
-};
 
 const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
   const interactiveType = message.interactive.type;
@@ -2857,6 +2870,15 @@ const initializeDefaultCases = () => {
       phoneNumberId
     );
   });
+
+  textMessageCases.set('insurance', async (userContext, phone, phoneNumberId) => {
+    await sendWelcomeMessage(phone, phoneNumberId);
+  });
+  
+  textMessageCases.set('lifuti', async (userContext, phone, phoneNumberId) => {
+    await sendLifutiWelcomeMessage(phone, phoneNumberId);
+  });
+
   
   // Add your existing static cases
   textMessageCases.set('menu1', {
