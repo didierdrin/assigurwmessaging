@@ -1609,7 +1609,8 @@ async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
         const userContext = userContexts.get(phone) || {};
 
         
-
+        await handleSecondInteractiveMessages(message, phone, phoneNumberId);
+        
         await handlePaymentTermsReply(
           buttonId,
           phone,
@@ -1620,7 +1621,6 @@ async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
         return;
       } else {
         await handleInteractiveMessages(message, phone, phoneNumberId);
-        await handleSecondInteractiveMessages(message, phone, phoneNumberId);
         await handleDriverSelection(message, phone, phoneNumberId);
       }
       break;
