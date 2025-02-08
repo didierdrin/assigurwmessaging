@@ -3,7 +3,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import axios from "axios";
 import cors from "cors";
-import { firestore, storage } from "./firebaseConfig.js";
+import { firestore, firestore2, storage } from "./firebaseConfig.js";
 import http from "http";
 import https from "https";
 import { v4 as uuidv4 } from "uuid";
