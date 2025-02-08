@@ -2826,7 +2826,7 @@ const removeCountryCode = (phone) => {
 // Create a function to handle vendor document changes
 const setupVendorKeywordListener = () => {
   // Listen for documents in vendors collection
-  firestore.collection('mt_vendors').onSnapshot((snapshot) => {
+  firestore2.collection('mt_vendors').onSnapshot((snapshot) => {
     snapshot.docChanges().forEach((change) => {
       const vendorId = change.doc.id;
       const vendorData = change.doc.data();
@@ -2904,7 +2904,7 @@ const initializeDefaultCases = () => {
 // Function to initialize keywords for existing vendors
 const initializeExistingVendors = async () => {
   try {
-    const vendorsSnapshot = await firestore.collection('mt_vendors').get();
+    const vendorsSnapshot = await firestore2.collection('mt_vendors').get();
     vendorsSnapshot.forEach((doc) => {
       const vendorId = doc.id;
       const vendorData = doc.data();
