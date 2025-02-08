@@ -2,26 +2,38 @@ import admin from 'firebase-admin';
 import { readFileSync } from 'fs';
 import path from 'path';
 
-// Path to the service account key stored in Render secrets
+// Path to both service account keys
 const serviceAccountPath = '/etc/secrets/serviceAccountKey.json';
+const serviceAccount2Path = '/etc/secrets/serviceAccountKey2.json';
 
-// Read and parse the service account JSON file
+// Read and parse both service account JSON files
 const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+const serviceAccount2 = JSON.parse(readFileSync(serviceAccount2Path, 'utf8'));
 
-
+// Initialize first Firebase app
 if (!admin.apps.length) {
     try {
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
-            //databaseURL: "https://assignrw.firebaseio.com"
-        });
-        console.log('Firebase Admin successfully initialized!!!!!!!!!!!!!!!!!');
+        }, 'app1'); // Name the first app instance
+        console.log('First Firebase Admin successfully initialized!');
     } catch (error) {
-        console.error('Firebase Admin initialization error:', error);
+        console.error('First Firebase Admin initialization error:', error);
     }
 }
 
+// Initialize second Firebase app
+try {
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount2),
+    }, 'app2'); // Name the second app instance
+    console.log('Second Firebase Admin successfully initialized!');
+} catch (error) {
+    console.error('Second Firebase Admin initialization error:', error);
+}
 
-// Export the Firestore instance
-export const firestore = admin.firestore();
-export const storage = admin.storage();
+// Export both Firestore instances
+export const firestore = admin.app('app1').firestore();
+export const firestore2 = admin.app('app2').firestore();
+export const storage = admin.app('app1').storage();
+
