@@ -53,7 +53,9 @@ const VERSION = "v22.0";
 
 // Global in-memory store for user contexts
 const userContexts = new Map();
-//userContexts.clear()
+// Function to dynamically add new cases to handleTextMessages
+const textMessageCases = new Map();
+
 
 // Add request logging middleware
 app.use((req, res, next) => {
@@ -2834,8 +2836,7 @@ const setupVendorKeywordListener = () => {
   });
 };
 
-// Function to dynamically add new cases to handleTextMessages
-const textMessageCases = new Map();
+
 
 // Initialize default cases
 const initializeDefaultCases = () => {
@@ -3406,9 +3407,21 @@ async function sendPaymentInfo(phone, phoneNumberId) {
 
 
 
-// Start the server
-const port = process.env.PORT || 5000;
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-  testWhatsAppConnection();
-});
+
+
+
+// --- 12. Start the Server ---
+const startServer = async () => {
+  try {
+    const port = process.env.PORT || 5000;
+    app.listen(port, () => {
+      testWhatsAppConnection();
+      console.log(`Server running on port ${port}`);
+    });
+  } catch (error) {
+    console.error("Server startup failed:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
