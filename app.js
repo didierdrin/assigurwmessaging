@@ -1753,8 +1753,8 @@ async function sendLifutiWelcomeMessage(phone, phoneNumberId) {
             rows: [
               {
                 id: "passenger",
-                title: "Passenger(Taxi/Cab)",
-                description: "Get a ride",
+                title: "Get a ride",
+                description: "Passenger(Taxi/Cab)",
               },
               {
                 id: "goods",
