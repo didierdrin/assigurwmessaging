@@ -1479,7 +1479,7 @@ async function handleDriverSelection(message, phone, phoneNumberId) {
       const confirmationPayload = {
         type: "text",
         text: {
-          body: `*Your ride has been booked!*\n\nDriver Details:\nVehicle: ${selectedDriver.vehicle}\nPlate Number: ${selectedDriver.plateno}\nPrice: RWF${selectedDriver.price}\nDriver's WhatsApp Phone No: {selectedDriver.user}\n\nYour driver will contact you shortly.`,
+          body: `*Your ride has been booked!*\n\nDriver Details:\nVehicle: ${selectedDriver.vehicle}\nPlate Number: ${selectedDriver.plateno}\nPrice: RWF${selectedDriver.price}\nDriver's WhatsApp Phone No: ${selectedDriver.user}\n\nYour driver will contact you shortly.`,
         },
       };
 
@@ -2084,7 +2084,7 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
     const noDriversPayload = {
       type: "text",
       text: {
-        body: "Oops, no drivers available currently. Your ride has been booked, a driver will call you after accepting the ride."
+        body: `*Oops, no drivers available currently.* \nYour ride has been booked, a driver will call you after accepting the ride.`
       }
     };
     await sendWhatsAppMessage(phone, noDriversPayload, phoneNumberId);
