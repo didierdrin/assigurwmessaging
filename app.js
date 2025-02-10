@@ -2476,7 +2476,7 @@ async function selectInsuranceCoverType(phone, phoneNumberId) {
           parameters: [
             {
               type: "payload",
-              payload: "1447544269553719", 
+              payload: "597083186423112", 
             },
           ],
         },
