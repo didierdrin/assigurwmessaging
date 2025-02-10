@@ -2008,11 +2008,15 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
   userContext.rideRequestId = docRef.id;
   userContexts.set(phone, userContext);
 
+  // Set queryTime to now (i.e., only future or current available drivers)
+  const queryTime = admin.firestore.Timestamp.now();
+
   // Fetch available drivers from offerPool
   let offerPoolQuery = firestore
     .collection("offerPool")
     .where("completed", "==", false)
-    .where("type", "==", userContext.serviceType);
+    .where("type", "==", userContext.serviceType)
+    .where("dateTime", ">=", queryTime);
 
   // Add seats filter for passenger service
   if (userContext.serviceType === "passengers" && userContext.seats) {
