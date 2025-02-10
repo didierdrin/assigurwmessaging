@@ -2457,7 +2457,7 @@ async function selectInsuranceCoverType(phone, phoneNumberId) {
     //to: formattedPhone,
     type: "template",
     template: {
-      name: "insurancecovermessage", //"welcomeseven",//"welcome_message_icupa", // Replace with your approved template name
+      name: "insurancecovermessage", 
       language: {
         code: "en_US", // Replace with the appropriate language code
       },
@@ -2469,7 +2469,7 @@ async function selectInsuranceCoverType(phone, phoneNumberId) {
           parameters: [
             {
               type: "payload",
-              payload: "914493983862695", //"3789913271338518" //"598565352606792" // "889862899961785" //"1532505954094165" //"welcomeone"// "d056b889862899961785" //"889862899961785" //  "d056b889862899961785"
+              payload: "1447544269553719", 
             },
           ],
         },
