@@ -2022,7 +2022,7 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
   if (userContext.serviceType === "passengers" && userContext.seats) {
     offerPoolQuery = offerPoolQuery.where(
       "emptySeat",
-      "==",
+      ">=",
       parseInt(userContext.seats)
     );
   }
