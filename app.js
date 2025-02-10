@@ -2083,7 +2083,9 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
   if (availableDrivers.length === 0) {
     const noDriversPayload = {
       type: "text",
-      text: "Oops, no drivers available currently. Your ride has been booked, a driver will call you after accepting the ride.",
+      text: {
+        body: "Oops, no drivers available currently. Your ride has been booked, a driver will call you after accepting the ride."
+      }
     };
     await sendWhatsAppMessage(phone, noDriversPayload, phoneNumberId);
     return;
