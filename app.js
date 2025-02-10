@@ -3,7 +3,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import axios from "axios";
 import cors from "cors";
-import { firestore, firestore2, storage } from "./firebaseConfig.js";
+import { firestore, firestore2, firestore3, storage } from "./firebaseConfig.js";
 import http from "http";
 import https from "https";
 import { v4 as uuidv4 } from "uuid";
@@ -1028,7 +1028,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
 
     // 6. Save to Firestore
     try {
-      const docRef = await firestore
+      const docRef = await firestore3
         .collection("whatsappInsuranceOrders")
         .add(insuranceData);
       console.log("Document reference saved to Firestore");
@@ -1130,7 +1130,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
         validDocument = true;
 
         // Save the extracted data to Firestore
-        await firestore
+        await firestore3
           .collection("whatsappInsuranceOrders")
           .doc(userContext.insuranceDocId)
           .update({
@@ -2798,7 +2798,7 @@ async function processPayment(phone, paymentPlan, phoneNumberId) {
   };
 
   try {
-    const docRef = await firestore
+    const docRef = await firestore3
       .collection("whatsappInsuranceOrders")
       .add(insuranceOrderData);
     console.log(
