@@ -2069,6 +2069,7 @@ async function sendAvailableDriversMessage(phone, phoneNumberId) {
         seats: offerData.selectedSeat,
         driverId: offerData.user,
         price: offerData.pricePerSeat,
+        user: offerData.user,
         distance: `${distance} km`,
         dateTime: formattedDateTimeDriver,
       });
