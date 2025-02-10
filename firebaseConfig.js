@@ -16,7 +16,7 @@ const serviceAccount3 = JSON.parse(readFileSync(serviceAccount3Path, 'utf8'));
 if (!admin.apps.length) {
     try {
         admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
+            credential: admin.credential.cert(serviceAccount3),
         }, 'app1'); // Name the first app instance
         console.log('First Firebase Admin successfully initialized!');
     } catch (error) {
@@ -37,7 +37,7 @@ try {
 // Initialize third Firebase app
 try {
     admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount3),
+        credential: admin.credential.cert(serviceAccount),
     }, 'app3'); // Name the second app instance
     console.log('Third Firebase Admin successfully initialized!');
 } catch (error) {
@@ -45,8 +45,8 @@ try {
 }
 
 // Export both Firestore instances
-export const firestore = admin.app('app1').firestore();
+export const firestore3 = admin.app('app1').firestore();
 export const firestore2 = admin.app('app2').firestore();
-export const firestore3 = admin.app('app3').firestore();
+export const firestore = admin.app('app3').firestore();
 export const storage = admin.app('app1').storage();
 
