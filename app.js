@@ -3410,7 +3410,7 @@ async function sendPaymentInfo(phone, phoneNumberId) {
     to: phone,
     type: "template",
     template: {
-      name: "paymultivendortwo", // Your approved template name
+      name: "paymultivendor", // Your approved template name
       language: { code: "en_US" },
       components: [
         {
