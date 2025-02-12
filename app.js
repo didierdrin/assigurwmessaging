@@ -176,7 +176,7 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
             await sendWhatsAppMessage(phone, {
               type: "text",
               text: {
-                body: "End date must be after the start date. Please enter a valid end date with format DD/MM/YYYY e.g: 15/12/2024",
+                body: "End date must be after the start date. Please enter a valid end date with format DD/MM/YYYY e.g: 15/12/2100",
               }
             }, phoneNumberId);
             return;
@@ -207,7 +207,7 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
         const errorPayload = {
           type: "text",
           text: {
-            body: "Invalid date. Please enter a valid future date in DD/MM/YYYY format. For example: 15/12/2024",
+            body: "Invalid date. Please enter a valid future date in DD/MM/YYYY format. For example: 15/12/2100",
           },
         };
         await sendWhatsAppMessage(phone, errorPayload, phoneNumberId);
@@ -2401,7 +2401,7 @@ async function startDate(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: `Provide inception date.(e.g: DD/MM/YYYY, 02/01/2025)`,
+      body: `Provide inception date.(e.g: DD/MM/YYYY, 02/01/2100)`,
     },
   };
 
