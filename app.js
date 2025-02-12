@@ -135,6 +135,105 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
   // Validate date format
   if (DATE_REGEX.test(messageText)) {
     try {
+      // Parse input date
+      const [day, month, year] = messageText.split("/").map(Number);
+      const inputDate = new Date(year, month - 1, day);
+      const currentDate = new Date();
+      
+      // Check if date is valid and not in the past
+      const isValidDate =
+        inputDate.getFullYear() === year &&
+        inputDate.getMonth() === month - 1 &&
+        inputDate.getDate() === day &&
+        inputDate >= currentDate;
+
+      if (!isValidDate) {
+        await sendWhatsAppMessage(phone, {
+          type: "text",
+          text: {
+            body: "Invalid date. Please enter a valid future date in DD/MM/YYYY format. For example: 15/12/2024",
+          },
+        }, phoneNumberId);
+        return;
+      }
+
+      console.log("Date Validation Result:", {
+        input: messageText,
+        isValid: true,
+        formattedDate: messageText,
+      });
+
+      // Get or initialize user context
+      const userContext = userContexts.get(phone) || {};
+
+      // Handle different stages
+      switch (userContext.stage) {
+        case "EXPECTING_START_DATE":
+          userContext.insuranceStartDate = inputDate;
+          userContext.stage = "EXPECTING_END_DATE";
+          userContexts.set(phone, userContext);
+          await endDate(phone, phoneNumberId);
+          break;
+
+        case "EXPECTING_END_DATE":
+          const startDate = userContext.insuranceStartDate;
+          
+          // Check if end date is after start date
+          if (inputDate <= startDate) {
+            await sendWhatsAppMessage(phone, {
+              type: "text",
+              text: {
+                body: "End date must be after the start date. Please enter a valid end date.",
+              }
+            }, phoneNumberId);
+            return;
+          }
+
+          userContext.insuranceEndDate = inputDate;
+          userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
+          userContexts.set(phone, userContext);
+          await selectInsuranceCoverType(phone, phoneNumberId);
+          break;
+
+        case "CUSTOM_DATE_INPUT":
+          userContext.insuranceStartDate = inputDate;
+          userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
+          userContexts.set(phone, userContext);
+          await selectInsuranceCoverType(phone, phoneNumberId);
+          break;
+
+        default:
+          console.log("Unexpected stage for date input:", userContext.stage);
+          break;
+      }
+
+    } catch (error) {
+      console.error("Date validation error:", error);
+      await sendWhatsAppMessage(phone, {
+        type: "text",
+        text: {
+          body: "There was an error processing the date. Please try again with a valid date in DD/MM/YYYY format.",
+        },
+      }, phoneNumberId);
+    }
+  } else {
+    // Invalid date format
+    await sendWhatsAppMessage(phone, {
+      type: "text",
+      text: {
+        body: "Please enter the date in DD/MM/YYYY format. For example: 15/12/2024",
+      },
+    }, phoneNumberId);
+  }
+};
+
+const handleDateValidationOld = async (message, phone, phoneNumberId) => {
+  const DATE_REGEX = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+  const messageText = message.text.body.trim();
+
+  // Validate date format
+  if (DATE_REGEX.test(messageText)) {
+    try {
       // Additional validation for date validity
       const [day, month, year] = messageText.split("/").map(Number);
       const inputDate = new Date(year, month - 1, day);
