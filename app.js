@@ -2714,18 +2714,20 @@ async function numberOfCoveredPeople(phone, phoneNumberId) {
 
 
 
-async function selectPaymentPlan(phone, phoneNumberId, insuranceData) {
+async function selectPaymentPlan(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  
   // Format numbers with commas
   const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   
   // Calculate the breakdown based on insurance type (Rwanda or COMESA)
-  const getBreakdown = (data) => {
-    const isComesa = data.coverType === 'COMESA';
-    const baseAmount = isComesa ? 0 : 78000;
-    const occupantFee = (data.numberOfCoveredPeople || 4) * (isComesa ? 0 : 1000);
-    const comesaMedicalFee = isComesa ? 0 : 0;
-    const netPremium = baseAmount + occupantFee;
-    const adminFee = isComesa ? 0 : 2500;
+  const getBreakdown = () => {
+    const isComesa = userContext.coverType === 'COMESA';
+    const baseAmount = isComesa ? userContext.thirdPartyComesaCost || 10000 : 78000;
+    const occupantFee = (userContext.numberOfCoveredPeople || 4) * (isComesa ? 0 : 1000);
+    const comesaMedicalFee = isComesa ? 10000 : 0;
+    const netPremium = baseAmount + occupantFee + comesaMedicalFee;
+    const adminFee = isComesa ? 5000 : 2500; // Yellow card fee for COMESA
     const vat = Math.round(netPremium * 0.18);
     const sgf = Math.round(netPremium * 0.09);
     const total = netPremium + adminFee + vat + sgf;
@@ -2742,22 +2744,38 @@ async function selectPaymentPlan(phone, phoneNumberId, insuranceData) {
     };
   };
 
-  const breakdown = getBreakdown(insuranceData);
+  // Ensure we have required context data
+  if (!userContext.coverType || !userContext.numberOfCoveredPeople) {
+    console.error("Missing required context data");
+    await sendWhatsAppMessage(
+      phone,
+      {
+        type: "text",
+        text: {
+          body: "Sorry, we're missing some required information. Please start over."
+        }
+      },
+      phoneNumberId
+    );
+    return;
+  }
+
+  const breakdown = getBreakdown();
   
   // Create the detailed breakdown text
   const breakdownText = `Insurance Premium Breakdown:
 
-Type of Cover         Rwanda    COMESA
-TPL                   ${formatNumber(breakdown.tpl)}    0
-Occupant(${insuranceData.numberOfCoveredPeople || 4})  ${formatNumber(breakdown.occupantFee)}     0
-COMESA Medical Fee    -         0
-NET PREMIUM          ${formatNumber(breakdown.netPremium)}    0
-Adm.fee/Yellow Card  ${formatNumber(breakdown.adminFee)}     0
-VAT(18%)             ${formatNumber(breakdown.vat)}    0
-SGF(9%)              ${formatNumber(breakdown.sgf)}     0
-TOTAL PREMIUM        ${formatNumber(breakdown.total)}    0
+Type of Cover         ${userContext.coverType}    
+TPL                   ${formatNumber(breakdown.tpl)}    
+Occupant(${userContext.numberOfCoveredPeople})  ${formatNumber(breakdown.occupantFee)}     
+COMESA Medical Fee    ${formatNumber(breakdown.comesaMedicalFee)}     
+NET PREMIUM          ${formatNumber(breakdown.netPremium)}    
+Adm.fee/Yellow Card  ${formatNumber(breakdown.adminFee)}     
+VAT(18%)             ${formatNumber(breakdown.vat)}    
+SGF(9%)              ${formatNumber(breakdown.sgf)}     
+TOTAL PREMIUM        ${formatNumber(breakdown.total)}    
 
-TOTAL TO PAY         ${formatNumber(breakdown.total)}    0
+TOTAL TO PAY         ${formatNumber(breakdown.total)}    
 
 Please select your preferred payment plan:`;
 
@@ -2810,8 +2828,26 @@ Please select your preferred payment plan:`;
     },
   };
 
+  // Save the calculated total to userContext
+  userContext.calculatedTotal = breakdown.total;
+  userContexts.set(phone, userContext);
+
+  // Also update Firestore with the calculated amounts
+  await firestore3
+    .collection("whatsappInsuranceOrders")
+    .doc(userContext.insuranceDocId)
+    .update({
+      totalCost: breakdown.total,
+      netPremium: breakdown.netPremium,
+      adminFee: breakdown.adminFee,
+      vat: breakdown.vat,
+      sgf: breakdown.sgf
+    });
+
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
 }
+
+
 
 // Payment Installment Options - added
 async function selectPaymentPlanOld(phone, phoneNumberId) {
