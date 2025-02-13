@@ -129,8 +129,111 @@ const handlePlateNumberValidation = async (message, phone, phoneNumberId) => {
 };
 
 
-
 const handleDateValidation = async (message, phone, phoneNumberId) => {
+  const DATE_REGEX = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+  const messageText = message.text.body.trim();
+
+  // Validate date format
+  if (DATE_REGEX.test(messageText)) {
+    try {
+      // Additional validation for date validity
+      const [day, month, year] = messageText.split("/").map(Number);
+      const inputDate = new Date(year, month - 1, day);
+      inputDate.setHours(0, 0, 0, 0); // Reset time part to ensure clean date comparison
+
+      // Check if date is valid and not in the past
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time part for today's date
+
+      const isValidDate =
+        inputDate.getFullYear() === year &&
+        inputDate.getMonth() === month - 1 &&
+        inputDate.getDate() === day &&
+        inputDate >= today;
+
+      if (isValidDate) {
+        console.log("Date Validation Result:", {
+          input: messageText,
+          isValid: true,
+          formattedDate: messageText,
+        });
+
+        // Get or create user context
+        const userContext = userContexts.get(phone) || {};
+
+        // Handle different stages
+        switch (userContext.stage) {
+          case "EXPECTING_START_DATE":
+            userContext.insuranceStartDate = inputDate;
+            userContext.stage = "EXPECTING_END_DATE";
+            userContexts.set(phone, userContext);
+            await endDate(phone, phoneNumberId);
+            break;
+
+          case "EXPECTING_END_DATE":
+            const startDate = new Date(userContext.insuranceStartDate);
+            startDate.setHours(0, 0, 0, 0); // Reset time part for start date
+
+            // Debug logging
+            console.log("Date comparison:", {
+              startDate: startDate.toISOString(),
+              inputDate: inputDate.toISOString(),
+              comparison: inputDate > startDate
+            });
+
+            // Check if end date is after start date
+            if (inputDate <= startDate) {
+              await sendWhatsAppMessage(phone, {
+                type: "text",
+                text: {
+                  body: "End date must be after the start date. Please enter a valid end date with format DD/MM/YYYY e.g: 15/12/2100",
+                }
+              }, phoneNumberId);
+              return;
+            }
+
+            userContext.insuranceEndDate = inputDate;
+            userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
+            userContexts.set(phone, userContext);
+            await selectInsuranceCoverType(phone, phoneNumberId);
+            break;
+
+          case "CUSTOM_DATE_INPUT":
+            userContext.insuranceStartDate = inputDate;
+            userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
+            userContexts.set(phone, userContext);
+            await selectInsuranceCoverType(phone, phoneNumberId);
+            break;
+
+          default:
+            console.log("Unexpected stage for date input:", userContext.stage);
+            break;
+        }
+
+      } else {
+        // Send error message for invalid date
+        const errorPayload = {
+          type: "text",
+          text: {
+            body: "Invalid date. Please enter a valid future date in DD/MM/YYYY format. For example: 15/12/2100",
+          },
+        };
+        await sendWhatsAppMessage(phone, errorPayload, phoneNumberId);
+      }
+    } catch (error) {
+      console.error("Date validation error:", error);
+      const errorPayload = {
+        type: "text",
+        text: {
+          body: "There was an error processing the date. Please try again with a valid date in DD/MM/YYYY format.",
+        },
+      };
+      await sendWhatsAppMessage(phone, errorPayload, phoneNumberId);
+    }
+  }
+};
+
+const handleDateValidationOld = async (message, phone, phoneNumberId) => {
   const DATE_REGEX = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
   const messageText = message.text.body.trim();
 
