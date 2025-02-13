@@ -2749,7 +2749,7 @@ async function selectPaymentPlan(phone, phoneNumberId) {
               {
                 id: "installment_cat4",
                 title: "CAT 4 Installment",
-                description: "1M (25%) FRW 1.000.000, 3M (35%), 8M (40%)",
+                description: "1M (25%), 3M (35%), 8M (40%)",
               },
               {
                 id: "full_payment",
