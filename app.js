@@ -2711,8 +2711,110 @@ async function numberOfCoveredPeople(phone, phoneNumberId) {
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
 }
 
+
+
+
+async function selectPaymentPlan(phone, phoneNumberId, insuranceData) {
+  // Format numbers with commas
+  const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  
+  // Calculate the breakdown based on insurance type (Rwanda or COMESA)
+  const getBreakdown = (data) => {
+    const isComesa = data.coverType === 'COMESA';
+    const baseAmount = isComesa ? 0 : 78000;
+    const occupantFee = (data.numberOfCoveredPeople || 4) * (isComesa ? 0 : 1000);
+    const comesaMedicalFee = isComesa ? 0 : 0;
+    const netPremium = baseAmount + occupantFee;
+    const adminFee = isComesa ? 0 : 2500;
+    const vat = Math.round(netPremium * 0.18);
+    const sgf = Math.round(netPremium * 0.09);
+    const total = netPremium + adminFee + vat + sgf;
+
+    return {
+      tpl: baseAmount,
+      occupantFee,
+      comesaMedicalFee,
+      netPremium,
+      adminFee,
+      vat,
+      sgf,
+      total
+    };
+  };
+
+  const breakdown = getBreakdown(insuranceData);
+  
+  // Create the detailed breakdown text
+  const breakdownText = `Insurance Premium Breakdown:
+
+Type of Cover         Rwanda    COMESA
+TPL                   ${formatNumber(breakdown.tpl)}    0
+Occupant(${insuranceData.numberOfCoveredPeople || 4})  ${formatNumber(breakdown.occupantFee)}     0
+COMESA Medical Fee    -         0
+NET PREMIUM          ${formatNumber(breakdown.netPremium)}    0
+Adm.fee/Yellow Card  ${formatNumber(breakdown.adminFee)}     0
+VAT(18%)             ${formatNumber(breakdown.vat)}    0
+SGF(9%)              ${formatNumber(breakdown.sgf)}     0
+TOTAL PREMIUM        ${formatNumber(breakdown.total)}    0
+
+TOTAL TO PAY         ${formatNumber(breakdown.total)}    0
+
+Please select your preferred payment plan:`;
+
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Payment Plans",
+      },
+      body: {
+        text: breakdownText,
+      },
+      action: {
+        button: "Select Payment Plan",
+        sections: [
+          {
+            title: "Payment Options",
+            rows: [
+              {
+                id: "installment_cat1",
+                title: "CAT 1 Installment",
+                description: `1M (${formatNumber(Math.round(breakdown.total * 0.25))}), 2M (${formatNumber(Math.round(breakdown.total * 0.25))}), 9M (${formatNumber(Math.round(breakdown.total * 0.5))})`,
+              },
+              {
+                id: "installment_cat2",
+                title: "CAT 2 Installment",
+                description: `3M (${formatNumber(Math.round(breakdown.total * 0.5))}), 9M (${formatNumber(Math.round(breakdown.total * 0.5))})`,
+              },
+              {
+                id: "installment_cat3",
+                title: "CAT 3 Installment",
+                description: `6M (${formatNumber(Math.round(breakdown.total * 0.75))}), 6M (${formatNumber(Math.round(breakdown.total * 0.25))})`,
+              },
+              {
+                id: "installment_cat4",
+                title: "CAT 4 Installment",
+                description: `1M (${formatNumber(Math.round(breakdown.total * 0.25))}), 3M (${formatNumber(Math.round(breakdown.total * 0.35))}), 8M (${formatNumber(Math.round(breakdown.total * 0.4))})`,
+              },
+              {
+                id: "full_payment",
+                title: "Full Payment",
+                description: `Pay ${formatNumber(breakdown.total)} upfront`,
+              },
+            ],
+          },
+        ],
+      },
+    },
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
 // Payment Installment Options - added
-async function selectPaymentPlan(phone, phoneNumberId) {
+async function selectPaymentPlanOld(phone, phoneNumberId) {
   const payload = {
     type: "interactive",
     interactive: {
