@@ -2797,8 +2797,8 @@ async function selectVehicleBodyType(phone, phoneNumberId) {
             rows: [
               {
                 id: "side_cars_motor_bikes",
-                title: "Side Cars & Motor Bikes, Tricycles",
-                description: "Small and nimble vehicles.",
+                title: "Small & nimble vehicles",
+                description: "Side Cars & Motor Bikes, Tricycles",
               },
               {
                 id: "car_voiture",
@@ -2812,8 +2812,8 @@ async function selectVehicleBodyType(phone, phoneNumberId) {
               },
               {
                 id: "pickup",
-                title: "Pickup_Camionnenette (small lorry (< 5 tonnes))",
-                description: "Small lorries under 5 tonnes.",
+                title: "Small lorries under 5TN",
+                description: "Pickup_Camionnenette (small lorry (< 5 tonnes))",
               },
               {
                 id: "minibus_van",
@@ -2832,18 +2832,18 @@ async function selectVehicleBodyType(phone, phoneNumberId) {
               },
               {
                 id: "trailer_semi_trailer",
-                title: "Trailer (Remorque) & Semi-Trailer (Semi- Remorque)",
-                description: "Trailers and semi-trailers.",
+                title: "Trailers & semi-trailers",
+                description: "Trailer (Remorque) & Semi-Trailer (Semi- Remorque)",
               },
               {
                 id: "howo_shacman_fuso_faw",
-                title: "HOWO, SHACMAN, FUSO, FAW",
-                description: "Heavy-duty trucks.",
+                title: "Heavy-duty trucks",
+                description: "HOWO, SHACMAN, FUSO, FAW",
               },
               {
                 id: "truck_tractor_lorry",
-                title: "Truck (Camion) & Tractor, Lorry>= 5 tonnes – Camionnette",
-                description: "Large lorries and tractors over 5 tonnes.",
+                title: "Large lorries & tractors",
+                description: "Truck (Camion) & Tractor, Lorry>= 5 TN – Camionnette",
               },
             ],
           },
