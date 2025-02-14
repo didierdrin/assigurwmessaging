@@ -2722,7 +2722,7 @@ async function selectPaymentPlan(phone, phoneNumberId) {
   
   // Calculate the breakdown based on insurance type (Rwanda or COMESA)
   const getBreakdown = () => {
-    const isComesa = userContext.coverType === 'COMESA';
+    const isComesa = userContext.selectedCoverType === 'COMESA';
     const baseAmount = isComesa ? userContext.thirdPartyComesaCost || 10000 : 78000;
     const occupantFee = (userContext.numberOfCoveredPeople || 4) * (isComesa ? 0 : 1000);
     const comesaMedicalFee = isComesa ? 10000 : 0;
@@ -2744,8 +2744,13 @@ async function selectPaymentPlan(phone, phoneNumberId) {
     };
   };
 
+  
+  // Use default values if required data is missing
+  const coverType = userContext.coverType || 'Rwanda';
+  const numberOfCoveredPeople = userContext.numberOfCoveredPeople || 1;
+  
   // Ensure we have required context data
-  if (!userContext.coverType || !userContext.numberOfCoveredPeople) {
+  if (!userContext.selectedCoverType || numberOfCoveredPeople) {
     console.error("Missing required context data");
     await sendWhatsAppMessage(
       phone,
@@ -2827,6 +2832,8 @@ Please select your preferred payment plan:`;
       },
     },
   };
+
+  
 
   // Save the calculated total to userContext
   userContext.calculatedTotal = breakdown.total;
