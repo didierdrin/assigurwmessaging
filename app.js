@@ -2972,8 +2972,8 @@ function parseDate(dateStr) {
  //   end.setFullYear(end.getFullYear() + 1);
  // }
 
-  start = parseDate(userContext.insuranceStartDate);
-  end = parseDate(userContext.insuranceEndDate);
+  let start = parseDate(userContext.insuranceStartDate);
+  let end = parseDate(userContext.insuranceEndDate);
 
   
 
