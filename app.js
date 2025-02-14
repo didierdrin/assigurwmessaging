@@ -2744,9 +2744,21 @@ async function selectPaymentPlan(phone, phoneNumberId) {
 
   // Parse a date string in DD/MM/YYYY format
 function parseDate(dateStr) {
-  const [day, month, year] = dateStr.split('/');
-  return new Date(year, month - 1, day);
+  // Force conversion to string, in case it's not already a string
+  dateStr = String(dateStr);
+  
+  const parts = dateStr.split('/');
+  if (parts.length !== 3) {
+    throw new Error("Invalid date format: expected DD/MM/YYYY");
+  }
+  const [day, month, year] = parts;
+  // Parse integer values for day, month, and year
+  const d = parseInt(day, 10);
+  const m = parseInt(month, 10) - 1; // month is 0-indexed in Date
+  const y = parseInt(year, 10);
+  return new Date(y, m, d);
 }
+
 
 // Then in your code:
 const start = parseDate(userContext.insuranceStartDate);
