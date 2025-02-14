@@ -354,12 +354,14 @@ const handleNFMReply = async (message, phone, phoneNumberId) => {
     // Process specific cover type
     if (selectedCoverTypes.includes("0_Third-Party_Cover_")) {
       userContext.thirdPartyComesaCost = 14000;
+      userContext.coverType = 'Rwanda'; 
       await selectToAddPersonalAccidentCover(phone, phoneNumberId);
     }
 
     // Process specific cover type
     if (selectedCoverTypes.includes("1_COMESA_Cover")) {
       userContext.thirdPartyComesaCost = 10000;
+      userContext.coverType = 'COMESA'; 
       await selectToAddPersonalAccidentCover(phone, phoneNumberId);
     }
 
@@ -2722,7 +2724,7 @@ async function selectPaymentPlan(phone, phoneNumberId) {
   
   // Calculate the breakdown based on insurance type (Rwanda or COMESA)
   const getBreakdown = () => {
-    const isComesa = userContext.selectedCoverType === 'COMESA';
+    const isComesa = userContext.coverType === 'COMESA';
     const baseAmount = isComesa ? userContext.thirdPartyComesaCost || 10000 : 78000;
     const occupantFee = (userContext.numberOfCoveredPeople || 4) * (isComesa ? 0 : 1000);
     const comesaMedicalFee = isComesa ? 10000 : 0;
@@ -2750,7 +2752,7 @@ async function selectPaymentPlan(phone, phoneNumberId) {
   const numberOfCoveredPeople = userContext.numberOfCoveredPeople || 1;
   
   // Ensure we have required context data
-  if (!userContext.selectedCoverType || numberOfCoveredPeople) {
+  if (!userContext.coverType || !numberOfCoveredPeople) {
     console.error("Missing required context data");
     await sendWhatsAppMessage(
       phone,
