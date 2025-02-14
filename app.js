@@ -2749,8 +2749,8 @@ function parseDate(dateStr) {
 }
 
 // Then in your code:
-const start = parseDate(userContext.startDate);
-const end = parseDate(userContext.endDate);
+const start = parseDate(userContext.insuranceStartDate);
+const end = parseDate(userContext.insuranceEndDate);
 
   // Calculate pricing using the imported CalculatePricing class
   const pricingObj = new CalculatePricing(vehicle, start, end, false);
@@ -3145,8 +3145,8 @@ async function processPayment(phone, paymentPlan, phoneNumberId) {
     policyStatus: "pending", // Initial status
     licensedToCarry: userContext.numberOfCoveredPeople ? Number(userContext.numberOfCoveredPeople) : 0,
     instalment: userContext.selectedInstallment,
-    startTime: userContext.startDate, // Use current date as a placeholder
-    endTime: userContext.endDate, // Placeholder for 1 year from now
+    startTime: userContext.insuranceStartDate, // Use current date as a placeholder
+    endTime: userContext.insuranceEndDate, // Placeholder for 1 year from now
     transactionId: `WHATSAPP_${Date.now()}_${phone.slice(-4)}`,
     insuranceCompanyName: userContext.insuranceCompany || "Insurance Provider"
   };
