@@ -2946,31 +2946,34 @@ function parseDate(dateStr) {
   });
 
   // Set default dates if missing
-  let start, end;
-  try {
+ // let start, end;
+ // try {
     // Only try to parse if dates exist
-    if (userContext.insuranceStartDate) {
-      start = parseDate(userContext.insuranceStartDate);
-    } else {
+  //  if (userContext.insuranceStartDate) {
+  //    start = parseDate(userContext.insuranceStartDate);
+      
+  //  } else {
       // Default: Today
-      start = new Date();
-    }
+  //    start = new Date();
+  //  }
     
-    if (userContext.insuranceEndDate) {
-      end = parseDate(userContext.insuranceEndDate);
-    } else {
+  //  if (userContext.insuranceEndDate) {
+  //    end = parseDate(userContext.insuranceEndDate);
+  //  } else {
       // Default: One year from today
-      end = new Date();
-      end.setFullYear(end.getFullYear() + 1);
-    }
-  } catch (error) {
-    console.error("Date parsing error:", error.message);
+   //   end = new Date();
+  //    end.setFullYear(end.getFullYear() + 1);
+ //   }
+ // } catch (error) {
+ //   console.error("Date parsing error:", error.message);
     // Set default dates on error
-    start = new Date();
-    end = new Date();
-    end.setFullYear(end.getFullYear() + 1);
-  }
+ //   start = new Date();
+ //   end = new Date();
+ //   end.setFullYear(end.getFullYear() + 1);
+ // }
 
+  start = parseDate(userContext.insuranceStartDate);
+  end = parseDate(userContext.insuranceEndDate);
 
   
 
