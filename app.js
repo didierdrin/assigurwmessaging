@@ -2964,7 +2964,7 @@ function parseDate(dateStr) {
   // Calculate the breakdown based on insurance type (Rwanda or COMESA)
   const getBreakdown = () => {
     const isComesa = userContext.coverType === 'COMESA';
-    const baseAmount = calculatedTotalPerVehicle; //isComesa ? userContext.thirdPartyComesaCost || 10000 : 78000;
+    const baseAmount = calculatedTotalPerVehicle; 
     const occupantFee = (userContext.numberOfCoveredPeople || 4) * (isComesa ? 0 : 1000);
     const comesaMedicalFee = isComesa ? 10000 : 0;
     const netPremium = baseAmount + occupantFee + comesaMedicalFee;
@@ -3009,21 +3009,7 @@ function parseDate(dateStr) {
   const breakdown = getBreakdown();
   
   // Create the detailed breakdown text
-  const breakdownText = `Insurance Premium Breakdown:
-
-Type of Cover         ${userContext.coverType}    
-TPL                   ${formatNumber(breakdown.tpl)}    
-Occupant(${userContext.numberOfCoveredPeople})  ${formatNumber(breakdown.occupantFee)}     
-COMESA Medical Fee    ${formatNumber(breakdown.comesaMedicalFee)}     
-NET PREMIUM          ${formatNumber(breakdown.netPremium)}    
-Adm.fee/Yellow Card  ${formatNumber(breakdown.adminFee)}     
-VAT(18%)             ${formatNumber(breakdown.vat)}    
-SGF(9%)              ${formatNumber(breakdown.sgf)}     
-TOTAL PREMIUM        ${formatNumber(breakdown.total)}    
-
-TOTAL TO PAY         ${formatNumber(breakdown.total)}    
-
-Please select your preferred payment plan:`;
+  const breakdownText = `Insurance Premium Breakdown:\nType of Cover         ${userContext.coverType}\nTPL                   ${formatNumber(breakdown.tpl)}\nOccupant              ${userContext.numberOfCoveredPeople}\nCOMESA Medical Fee    ${formatNumber(breakdown.comesaMedicalFee)}\nNET PREMIUM           ${formatNumber(breakdown.netPremium)}\nAdm.fee/Yellow Card   ${formatNumber(breakdown.adminFee)}\nVAT(18%)              ${formatNumber(breakdown.vat)}\nSGF(9%)               ${formatNumber(breakdown.sgf)}\nTOTAL PREMIUM         ${formatNumber(breakdown.total)}\n\nTOTAL TO PAY          ${formatNumber(breakdown.total)}\nPlease select your preferred payment plan:`;
 
   const payload = {
     type: "interactive",
@@ -3155,7 +3141,7 @@ async function selectPaymentPlanOld(phone, phoneNumberId) {
 async function confirmAndPay(phone, selectedInstallmentChoice, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
 
-  const totalCost = userContext.totalCost || 0;
+  const totalCost = userContext.calculatedTotal || 0; //userContext.totalCost || 0;
   const formatNum = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   
   let installmentBreakdown = "";
