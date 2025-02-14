@@ -2742,45 +2742,41 @@ async function selectPaymentPlan(phone, phoneNumberId) {
 
 
 
-  // Parse a date string in DD/MM/YYYY format
-function parseDate(dateStr) {
-  if (!dateStr) {
-    throw new Error("Date string is required");
+  
+  // Debug: Log the date values
+  console.log("Insurance dates received:", {
+    startDate: userContext.insuranceStartDate,
+    endDate: userContext.insuranceEndDate
+  });
+
+  // Set default dates if missing
+  let start, end;
+  try {
+    // Only try to parse if dates exist
+    if (userContext.insuranceStartDate) {
+      start = parseDate(userContext.insuranceStartDate);
+    } else {
+      // Default: Today
+      start = new Date();
+    }
+    
+    if (userContext.insuranceEndDate) {
+      end = parseDate(userContext.insuranceEndDate);
+    } else {
+      // Default: One year from today
+      end = new Date();
+      end.setFullYear(end.getFullYear() + 1);
+    }
+  } catch (error) {
+    console.error("Date parsing error:", error.message);
+    // Set default dates on error
+    start = new Date();
+    end = new Date();
+    end.setFullYear(end.getFullYear() + 1);
   }
-  
-  dateStr = String(dateStr);
-  const parts = dateStr.split('/');
-  
-  if (parts.length !== 3) {
-    throw new Error("Invalid date format: expected DD/MM/YYYY");
-  }
-  
-  const day = parseInt(parts[0], 10);
-  const month = parseInt(parts[1], 10) - 1;
-  const year = parseInt(parts[2], 10);
-  
-  if (isNaN(day) || isNaN(month) || isNaN(year)) {
-    throw new Error("Date parts must be numeric");
-  }
-  
-  if (day < 1 || day > 31 || month < 0 || month > 11 || year < 2000) {
-    throw new Error("Date values out of valid range");
-  }
-  
-  const date = new Date(year, month, day);
-  
-  // Check if the date is valid (e.g., not Feb 30)
-  if (date.getDate() !== day || date.getMonth() !== month || date.getFullYear() !== year) {
-    throw new Error("Invalid date combination");
-  }
-  
-  return date;
-}
 
 
-// Then in your code:
-const start = parseDate(userContext.insuranceStartDate);
-const end = parseDate(userContext.insuranceEndDate);
+  
 
   // Calculate pricing using the imported CalculatePricing class
   const pricingObj = new CalculatePricing(vehicle, start, end, false);
