@@ -648,7 +648,7 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
         userContext.numberOfCoveredPeople = numberOfPeople;
         userContexts.set(phone, userContext);
 
-        await selectPaymentPlan(phone, phoneNumberId);
+        await selectVehicleBodyType(phone, phoneNumberId); //await selectPaymentPlan(phone, phoneNumberId);
       } catch (error) {
         console.error("Processing error:", error);
         await sendWhatsAppMessage(
@@ -839,6 +839,67 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       await initiateClaimProcess(phone, phoneNumberId);
       break;
 
+
+    case "side_cars_motor_bikes":
+      userContext.bodyType = "Side Cars & Motor Bikes, Tricycles"; 
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "car_voiture":
+      userContext.bodyType = "Car/Voiture"; 
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "jeep_suv":
+      userContext.bodyType = "Jeep/SUV"; 
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "pickup":
+      userContext.bodyType = "Pickup_Camionnenette (small lorry (< 5 tonnes))"; 
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "minibus_van":
+      userContext.bodyType = "Minibus/Van"; 
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "school_bus":
+      userContext.bodyType = "School bus"; 
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "bus":
+      userContext.bodyType = "Bus"; 
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+      
+    case "trailer_semi_trailer":
+      userContext.bodyType = "Trailer (Remorque) & Semi-Trailer (Semi- Remorque)"; 
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "howo_shacman_fuso_faw":
+      userContext.bodyType = "HOWO, SHACMAN, FUSO, FAW"; 
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "truck_tractor_lorry":
+      userContext.bodyType = "Truck (Camion) & Tractor, Lorry>= 5 tonnes – Camionnette"; 
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+      
     case "cat_1":
       userContext.selectedCoverage = 1000000; // Price for CAT 1
       userContexts.set(phone, userContext);
@@ -2716,6 +2777,85 @@ async function numberOfCoveredPeople(phone, phoneNumberId) {
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
 }
 
+async function selectVehicleBodyType(phone, phoneNumberId) {
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Select Vehicle Body Type",
+      },
+      body: {
+        text: "Choose the body type of your vehicle from the options below:",
+      },
+      action: {
+        button: "Select Body Type",
+        sections: [
+          {
+            title: "Body Types",
+            rows: [
+              {
+                id: "side_cars_motor_bikes",
+                title: "Side Cars & Motor Bikes, Tricycles",
+                description: "Small and nimble vehicles.",
+              },
+              {
+                id: "car_voiture",
+                title: "Car/Voiture",
+                description: "Standard passenger cars.",
+              },
+              {
+                id: "jeep_suv",
+                title: "Jeep/SUV",
+                description: "Sport Utility Vehicles.",
+              },
+              {
+                id: "pickup",
+                title: "Pickup_Camionnenette (small lorry (< 5 tonnes))",
+                description: "Small lorries under 5 tonnes.",
+              },
+              {
+                id: "minibus_van",
+                title: "Minibus/Van",
+                description: "Minibuses and vans for more passengers.",
+              },
+              {
+                id: "school_bus",
+                title: "School bus",
+                description: "Buses used for school transportation.",
+              },
+              {
+                id: "bus",
+                title: "Bus",
+                description: "Large passenger buses.",
+              },
+              {
+                id: "trailer_semi_trailer",
+                title: "Trailer (Remorque) & Semi-Trailer (Semi- Remorque)",
+                description: "Trailers and semi-trailers.",
+              },
+              {
+                id: "howo_shacman_fuso_faw",
+                title: "HOWO, SHACMAN, FUSO, FAW",
+                description: "Heavy-duty trucks.",
+              },
+              {
+                id: "truck_tractor_lorry",
+                title: "Truck (Camion) & Tractor, Lorry>= 5 tonnes – Camionnette",
+                description: "Large lorries and tractors over 5 tonnes.",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+
 
 
 
@@ -2732,7 +2872,7 @@ async function selectPaymentPlan(phone, phoneNumberId) {
     "", //userContext.model,
     "", //userContext.vin,
     userContext.plateNumber,
-    "Jeep/SUV", //userContext.bodyType,
+    userContext.bodyType,
     userContext.extractedData && userContext.extractedData.usageType ? String(userContext.extractedData.usageType) : "Private", //userContext.usageType,
     "", //userContext.fuelType,
     "", //userContext.vehicleValue,
