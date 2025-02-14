@@ -2981,8 +2981,197 @@ async function confirmAndPay(phone, selectedInstallmentChoice, phoneNumberId) {
   userContexts.set(phone, userContext);
 }
 
-// Last message - get insurance
+
+
+// Last message 
 async function processPayment(phone, paymentPlan, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+
+  userContext.userPhone = phone;
+  userContexts.set(phone, userContext);
+
+  const totalCost = userContext.calculatedTotal || userContext.totalCost || 0;
+
+  let installmentBreakdown = "";
+
+  switch (paymentPlan) {
+    case "installment_cat1":
+    case "i_cat1":
+      installmentBreakdown = `1M: FRW ${Math.round(totalCost * 0.25)}`;
+      userContext.selectedInstallment = "CAT 1";
+      break;
+    case "installment_cat2":
+    case "i_cat2":
+      installmentBreakdown = `3M: FRW ${Math.round(totalCost * 0.5)}`;
+      userContext.selectedInstallment = "CAT 2";
+      break;
+    case "installment_cat3":
+    case "i_cat3":
+      installmentBreakdown = `6M: FRW ${Math.round(totalCost * 0.75)}`;
+      userContext.selectedInstallment = "CAT 3";
+      break;
+    case "installment_cat4":
+    case "i_cat4":
+      installmentBreakdown = `1M: FRW ${Math.round(totalCost * 0.25)}, 3M: FRW ${Math.round(totalCost * 0.35)}`;
+      userContext.selectedInstallment = "CAT 4";
+      break;
+    case "full_payment":
+    case "i_catf":
+      installmentBreakdown = `Full payment: FRW ${totalCost}`;
+      userContext.selectedInstallment = "FULL";
+      break;
+    default:
+      installmentBreakdown = "Unknown payment plan.";
+      userContext.selectedInstallment = "UNKNOWN";
+  }
+
+  // Ensure we have the latest total cost in the context
+  userContext.totalCost = totalCost;
+
+  const paymentPayload = {
+    type: "text",
+    text: {
+      body: `Please pay with \nMoMo/Airtel to ${250788767816}\nName: Ikanisa\n_______________________\nYour purchase for ${installmentBreakdown} is being processed after your payment is received, you will receive a confirmation shortly.`,
+    },
+  };
+
+  console.log("Processing payment for:", phone, paymentPlan);
+
+  // Simulate Payment
+  await sendWhatsAppMessage(phone, paymentPayload, phoneNumberId);
+
+  const todayFirebase = new Date();
+  const formattedDateFirebase = `${todayFirebase
+    .getDate()
+    .toString()
+    .padStart(2, "0")}/${(todayFirebase.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}/${todayFirebase.getFullYear()}`;
+
+  // Prepare data for main whatsappInsuranceOrders collection
+  const insuranceOrderData = {
+    userPhone: userContext.userPhone ? String(userContext.userPhone) : "",
+    plateNumber: userContext.plateNumber ? String(userContext.plateNumber) : "",
+    insuranceStartDate: userContext.insuranceStartDate
+      ? String(userContext.insuranceStartDate)
+      : "",
+    selectedCoverTypes: userContext.selectedCoverTypes
+      ? String(userContext.selectedCoverTypes)
+      : "",
+    selectedPersonalAccidentCoverage: userContext.selectedCoverage
+      ? parseFloat(userContext.selectedCoverage)
+      : 0.0,
+    totalCost: totalCost,
+    numberOfCoveredPeople: userContext.numberOfCoveredPeople
+      ? parseFloat(userContext.numberOfCoveredPeople)
+      : 0.0,
+    selectedInstallment: userContext.selectedInstallment,
+    insuranceDocumentUrl: userContext.insuranceDocumentUrl
+      ? String(userContext.insuranceDocumentUrl)
+      : "",
+    extractedData: userContext.extractedData ? userContext.extractedData : {},
+    creationDate: formattedDateFirebase,
+  };
+
+  // Prepare data for vehiclesWhatsapp collection
+  const vehicleData = {
+    licensePlate: userContext.plateNumber ? String(userContext.plateNumber) : "",
+    make: userContext.extractedData && userContext.extractedData.marca ? String(userContext.extractedData.marca) : "",
+    model: userContext.extractedData && userContext.extractedData.model ? String(userContext.extractedData.model) : "",
+    usageType: userContext.extractedData && userContext.extractedData.usageType ? String(userContext.extractedData.usageType) : "Private",
+    userId: Number(phone) || 0,
+    bodyType: userContext.extractedData && userContext.extractedData.bodyType ? String(userContext.extractedData.bodyType) : "",
+    engineSize: userContext.extractedData && userContext.extractedData.engineSize ? Number(userContext.extractedData.engineSize) : 0,
+    fuelType: userContext.extractedData && userContext.extractedData.fuelType ? String(userContext.extractedData.fuelType) : "",
+    vin: userContext.extractedData && userContext.extractedData.vin ? String(userContext.extractedData.vin) : "",
+    year: userContext.extractedData && userContext.extractedData.year ? Number(userContext.extractedData.year) : 0,
+    sitNumber: userContext.numberOfCoveredPeople ? Number(userContext.numberOfCoveredPeople) : 0,
+  };
+
+  // Prepare data for quotationsWhatsapp collection
+  const quotationData = {
+    amount: totalCost,
+    registration: userContext.plateNumber ? String(userContext.plateNumber) : "",
+    usage: vehicleData.usageType,
+    userId: Number(phone) || 0,
+    policyHolder: userContext.extractedData && userContext.extractedData.name ? String(userContext.extractedData.name) : "",
+    makeModal: `${vehicleData.make} ${vehicleData.model}`.trim(),
+    coverType: {
+      name: userContext.coverType === 'COMESA' ? "COMESA" : "Third-Party",
+      Personal_Accident: userContext.selectedCoverage ? Number(userContext.selectedCoverage) : 0,
+      damage: 0,
+      fire: 0
+    },
+    totalPaid: "0", // Initially zero until payment is confirmed
+    policyStatus: "pending", // Initial status
+    licensedToCarry: userContext.numberOfCoveredPeople ? Number(userContext.numberOfCoveredPeople) : 0,
+    instalment: userContext.selectedInstallment,
+    startTime: todayFirebase, // Use current date as a placeholder
+    endTime: new Date(todayFirebase.getTime() + 365 * 24 * 60 * 60 * 1000), // Placeholder for 1 year from now
+    transactionId: `WHATSAPP_${Date.now()}_${phone.slice(-4)}`,
+    insuranceCompanyName: userContext.insuranceCompany || "Insurance Provider"
+  };
+
+  try {
+    // 1. Save to main whatsappInsuranceOrders collection
+    const orderDocRef = await firestore3
+      .collection("whatsappInsuranceOrders")
+      .add(insuranceOrderData);
+    console.log(
+      "Insurance order data successfully saved to Firestore with ID:",
+      orderDocRef.id
+    );
+    
+    // Update context with the new document ID
+    userContext.insuranceDocId = orderDocRef.id;
+    userContexts.set(phone, userContext);
+
+    // 2. Save to vehiclesWhatsapp collection
+    // Use licensePlate as document ID if available
+    if (vehicleData.licensePlate) {
+      await firestore3
+        .collection("vehiclesWhatsapp")
+        .doc(vehicleData.licensePlate)
+        .set(vehicleData);
+      console.log(
+        "Vehicle data successfully saved to vehiclesWhatsapp with ID:",
+        vehicleData.licensePlate
+      );
+    } else {
+      const vehicleDocRef = await firestore3
+        .collection("vehiclesWhatsapp")
+        .add(vehicleData);
+      console.log(
+        "Vehicle data successfully saved to vehiclesWhatsapp with generated ID:",
+        vehicleDocRef.id
+      );
+    }
+
+    // 3. Save to quotationsWhatsapp collection
+    const quotationDocRef = await firestore3
+      .collection("quotationsWhatsapp")
+      .add(quotationData);
+    console.log(
+      "Quotation data successfully saved to quotationsWhatsapp with ID:",
+      quotationDocRef.id
+    );
+
+    // Update insurance order with quotation ID
+    await orderDocRef.update({
+      quotationId: quotationDocRef.id
+    });
+
+  } catch (error) {
+    console.error("Error saving data to Firestore:", error.message);
+  }
+
+  // Add logic to integrate with payment gateway API if needed.
+  console.log("______________________________________");
+  console.log("User context after all flows:", userContext);
+}
+
+// Last message - get insurance
+async function processPaymentOld(phone, paymentPlan, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
 
   userContext.userPhone = phone;
