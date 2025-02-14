@@ -1,5 +1,5 @@
 // vehicle.js
-class VehicleModel {
+export class VehicleModel {
   constructor(
     tin,
     sitNumber,
@@ -82,4 +82,3 @@ class VehicleModel {
   }
 }
 
-export const VehicleModel;
