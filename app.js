@@ -2740,8 +2740,17 @@ async function selectPaymentPlan(phone, phoneNumberId) {
     [] //userContext.images || []
   );
 
-  const start = new Date(userContext.startDate);
-  const end = new Date(userContext.endDate);
+
+
+  // Parse a date string in DD/MM/YYYY format
+function parseDate(dateStr) {
+  const [day, month, year] = dateStr.split('/');
+  return new Date(year, month - 1, day);
+}
+
+// Then in your code:
+const start = parseDate(userContext.startDate);
+const end = parseDate(userContext.endDate);
 
   // Calculate pricing using the imported CalculatePricing class
   const pricingObj = new CalculatePricing(vehicle, start, end, false);
