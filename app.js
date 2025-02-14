@@ -3016,7 +3016,8 @@ async function confirmAndPay(phone, selectedInstallmentChoice, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
 
   const totalCost = userContext.totalCost || 0;
-
+  const formatNum = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  
   let installmentBreakdown = "";
 
   switch (selectedInstallmentChoice) {
@@ -3051,7 +3052,7 @@ async function confirmAndPay(phone, selectedInstallmentChoice, phoneNumberId) {
         text: "Your selected option includes Admin fees, VAT, and SGF. Do you agree to proceed with the payment?",
       },
       footer: {
-        text: `Total: FRW ${installmentBreakdown} for this month`,
+        text: `Total: FRW ${formatNum(installmentBreakdown)} for this month`,
       },
       action: {
         buttons: [
@@ -3090,33 +3091,34 @@ async function processPayment(phone, paymentPlan, phoneNumberId) {
   userContexts.set(phone, userContext);
 
   const totalCost = userContext.calculatedTotal || userContext.totalCost || 0;
-
+const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  
   let installmentBreakdown = "";
 
   switch (paymentPlan) {
     case "installment_cat1":
     case "i_cat1":
-      installmentBreakdown = `1M: FRW ${Math.round(totalCost * 0.25)}`;
+      installmentBreakdown = `1 Months: FRW ${formatNumber(totalCost * 0.25)}`;
       userContext.selectedInstallment = "CAT 1";
       break;
     case "installment_cat2":
     case "i_cat2":
-      installmentBreakdown = `3M: FRW ${Math.round(totalCost * 0.5)}`;
+      installmentBreakdown = `3 Months: FRW ${formatNumber(totalCost * 0.5)}`;
       userContext.selectedInstallment = "CAT 2";
       break;
     case "installment_cat3":
     case "i_cat3":
-      installmentBreakdown = `6M: FRW ${Math.round(totalCost * 0.75)}`;
+      installmentBreakdown = `6 Months: FRW ${formatNumber(totalCost * 0.75)}`;
       userContext.selectedInstallment = "CAT 3";
       break;
     case "installment_cat4":
     case "i_cat4":
-      installmentBreakdown = `1M: FRW ${Math.round(totalCost * 0.25)}, 3M: FRW ${Math.round(totalCost * 0.35)}`;
+      installmentBreakdown = `1 Month: FRW ${formatNumber(totalCost * 0.25)}, 3M: FRW ${formatNumber(totalCost * 0.35)}`;
       userContext.selectedInstallment = "CAT 4";
       break;
     case "full_payment":
     case "i_catf":
-      installmentBreakdown = `Full payment: FRW ${totalCost}`;
+      installmentBreakdown = `Full payment: FRW ${formatNumber(totalCost)}`;
       userContext.selectedInstallment = "FULL";
       break;
     default:
@@ -3126,6 +3128,8 @@ async function processPayment(phone, paymentPlan, phoneNumberId) {
 
   // Ensure we have the latest total cost in the context
   userContext.totalCost = totalCost;
+  
+  
 
   const paymentPayload = {
     type: "text",
