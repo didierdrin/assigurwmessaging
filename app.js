@@ -2744,19 +2744,37 @@ async function selectPaymentPlan(phone, phoneNumberId) {
 
   // Parse a date string in DD/MM/YYYY format
 function parseDate(dateStr) {
-  // Force conversion to string, in case it's not already a string
-  dateStr = String(dateStr);
+  if (!dateStr) {
+    throw new Error("Date string is required");
+  }
   
+  dateStr = String(dateStr);
   const parts = dateStr.split('/');
+  
   if (parts.length !== 3) {
     throw new Error("Invalid date format: expected DD/MM/YYYY");
   }
-  const [day, month, year] = parts;
-  // Parse integer values for day, month, and year
-  const d = parseInt(day, 10);
-  const m = parseInt(month, 10) - 1; // month is 0-indexed in Date
-  const y = parseInt(year, 10);
-  return new Date(y, m, d);
+  
+  const day = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const year = parseInt(parts[2], 10);
+  
+  if (isNaN(day) || isNaN(month) || isNaN(year)) {
+    throw new Error("Date parts must be numeric");
+  }
+  
+  if (day < 1 || day > 31 || month < 0 || month > 11 || year < 2000) {
+    throw new Error("Date values out of valid range");
+  }
+  
+  const date = new Date(year, month, day);
+  
+  // Check if the date is valid (e.g., not Feb 30)
+  if (date.getDate() !== day || date.getMonth() !== month || date.getFullYear() !== year) {
+    throw new Error("Invalid date combination");
+  }
+  
+  return date;
 }
 
 
