@@ -1,5 +1,5 @@
 // pricing.js
-import { VehicleModel } from "./vehicle";
+import { VehicleModel } from "./vehicle.js";
 
 class VehicleClasses {
   constructor() {
