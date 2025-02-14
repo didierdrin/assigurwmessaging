@@ -240,8 +240,10 @@ const pricing = [
   new VehiclePricing(vehicleClasses.commercialGoods, "Truck (Camion) & Tractor, Lorry>= 5 tonnes – Camionnette", 0.28, 0.42, 0.28, 150900),
 ];
 
-module.exports = {
-  VehicleClasses: vehicleClasses,
+
+
+export {
+  vehicleClasses as VehicleClasses,
   PersonalCoverage,
   Instalment,
   VehiclePricing,
