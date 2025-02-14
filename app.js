@@ -3098,7 +3098,7 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
   switch (paymentPlan) {
     case "installment_cat1":
     case "i_cat1":
-      installmentBreakdown = `1 Months: FRW ${formatNumber(totalCost * 0.25)}`;
+      installmentBreakdown = `1 Month: FRW ${formatNumber(totalCost * 0.25)}`;
       userContext.selectedInstallment = "CAT 1";
       break;
     case "installment_cat2":
