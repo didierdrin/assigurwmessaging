@@ -167,14 +167,24 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
         // Handle different stages
         switch (userContext.stage) {
           case "EXPECTING_START_DATE":
-            userContext.insuranceStartDate = inputDate;
+            const formattedDate = `${today
+          .getDate()
+          .toString()
+          .padStart(2, "0")}/${(today.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}/${today.getFullYear()}`;
+
+            userContext.insuranceStartDate = messageText; //inputDate;
             userContext.stage = "EXPECTING_END_DATE";
             userContexts.set(phone, userContext);
             await endDate(phone, phoneNumberId);
             break;
 
           case "EXPECTING_END_DATE":
-            const startDate = new Date(userContext.insuranceStartDate);
+            //const startDate = new Date(userContext.insuranceStartDate);
+            const startDate = new Date(
+              userContext.insuranceStartDate.split("/").reverse().join("-")
+            );
             startDate.setHours(0, 0, 0, 0); // Reset time part for start date
 
             // Debug logging
@@ -195,7 +205,7 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
               return;
             }
 
-            userContext.insuranceEndDate = inputDate;
+            userContext.insuranceEndDate =  messageText; //inputDate;
             userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
             userContexts.set(phone, userContext);
             await selectInsuranceCoverType(phone, phoneNumberId);
@@ -587,6 +597,18 @@ const handlePaymentTermsReply = async (
           .padStart(2, "0")}/${(today.getMonth() + 1)
           .toString()
           .padStart(2, "0")}/${today.getFullYear()}`;
+
+        // Calculate the insurance end date by adding one year
+    const insuranceEndDate = new Date(today);
+    insuranceEndDate.setFullYear(insuranceEndDate.getFullYear() + 1);
+    const formattedEndDate = `${insuranceEndDate
+      .getDate()
+      .toString()
+      .padStart(2, "0")}/${(insuranceEndDate.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}/${insuranceEndDate.getFullYear()}`;
+        
+    userContext.insuranceEndDate = formattedEndDate;
         userContext.insuranceStartDate = formattedDate;
         userContexts.set(phone, userContext);
         await selectInsuranceCoverType(phone, phoneNumberId);
