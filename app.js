@@ -9,8 +9,8 @@ import https from "https";
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
 import admin from "firebase-admin";
-import { CalculatePricing } from './pricing';
-import { VehicleModel } from './vehicle';
+import { CalculatePricing } from './pricing.js';
+import { VehicleModel } from './vehicle.js';
 
 //import { extractImageData } from './imageExtraction.js';
 const bucketName = "assigurw.appspot.com";
@@ -2732,7 +2732,7 @@ async function selectPaymentPlan(phone, phoneNumberId) {
     "", //userContext.model,
     "", //userContext.vin,
     userContext.plateNumber,
-    "", //userContext.bodyType,
+    "Jeep/SUV", //userContext.bodyType,
     userContext.extractedData && userContext.extractedData.usageType ? String(userContext.extractedData.usageType) : "Private", //userContext.usageType,
     "", //userContext.fuelType,
     "", //userContext.vehicleValue,
