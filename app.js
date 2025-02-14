@@ -9,6 +9,9 @@ import https from "https";
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
 import admin from "firebase-admin";
+import { CalculatePricing } from './pricing';
+import { VehicleModel } from './vehicle';
+
 //import { extractImageData } from './imageExtraction.js';
 const bucketName = "assigurw.appspot.com";
 const bucket = storage.bucket(bucketName);
@@ -2718,6 +2721,33 @@ async function numberOfCoveredPeople(phone, phoneNumberId) {
 
 async function selectPaymentPlan(phone, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
+
+  
+  // Create a VehicleModel instance from stored data
+  const vehicle = new VehicleModel(
+    "", //userContext.tin,
+    userContext.numberOfCoveredPeople, // or sitNumber
+    "", //userContext.year,
+    "", //userContext.make,
+    "", //userContext.model,
+    "", //userContext.vin,
+    userContext.plateNumber,
+    "", //userContext.bodyType,
+    userContext.extractedData && userContext.extractedData.usageType ? String(userContext.extractedData.usageType) : "Private", //userContext.usageType,
+    "", //userContext.fuelType,
+    "", //userContext.vehicleValue,
+    "", //userContext.engineSize,
+    [] //userContext.images || []
+  );
+
+  const start = new Date(userContext.startDate);
+  const end = new Date(userContext.endDate);
+
+  // Calculate pricing using the imported CalculatePricing class
+  const pricingObj = new CalculatePricing(vehicle, start, end, false);
+
+  // Choose the total cost as needed – for example, full comprehensive premium:
+  const calculatedTotalPerVehicle = pricingObj.comesa;
   
   // Format numbers with commas
   const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -2725,7 +2755,7 @@ async function selectPaymentPlan(phone, phoneNumberId) {
   // Calculate the breakdown based on insurance type (Rwanda or COMESA)
   const getBreakdown = () => {
     const isComesa = userContext.coverType === 'COMESA';
-    const baseAmount = isComesa ? userContext.thirdPartyComesaCost || 10000 : 78000;
+    const baseAmount = calculatedTotalPerVehicle; //isComesa ? userContext.thirdPartyComesaCost || 10000 : 78000;
     const occupantFee = (userContext.numberOfCoveredPeople || 4) * (isComesa ? 0 : 1000);
     const comesaMedicalFee = isComesa ? 10000 : 0;
     const netPremium = baseAmount + occupantFee + comesaMedicalFee;
@@ -3106,8 +3136,8 @@ async function processPayment(phone, paymentPlan, phoneNumberId) {
     policyStatus: "pending", // Initial status
     licensedToCarry: userContext.numberOfCoveredPeople ? Number(userContext.numberOfCoveredPeople) : 0,
     instalment: userContext.selectedInstallment,
-    startTime: todayFirebase, // Use current date as a placeholder
-    endTime: new Date(todayFirebase.getTime() + 365 * 24 * 60 * 60 * 1000), // Placeholder for 1 year from now
+    startTime: userContext.startDate, // Use current date as a placeholder
+    endTime: userContext.endDate, // Placeholder for 1 year from now
     transactionId: `WHATSAPP_${Date.now()}_${phone.slice(-4)}`,
     insuranceCompanyName: userContext.insuranceCompany || "Insurance Provider"
   };
