@@ -3034,8 +3034,24 @@ function parseDate(dateStr) {
   const breakdown = getBreakdown();
   
   // Create the detailed breakdown text
-  const breakdownText = `Insurance Premium Breakdown:\nType of Cover         ${userContext.coverType}\nTPL                   ${formatNumber(breakdown.tpl)}\nOccupant              ${userContext.numberOfCoveredPeople}\nCOMESA Medical Fee    ${formatNumber(breakdown.comesaMedicalFee)}\nNET PREMIUM           ${formatNumber(breakdown.netPremium)}\nAdm.fee/Yellow Card   ${formatNumber(breakdown.adminFee)}\nVAT(18%)              ${formatNumber(breakdown.vat)}\nSGF(9%)               ${formatNumber(breakdown.sgf)}\nTOTAL PREMIUM         ${formatNumber(breakdown.total)}\n\nTOTAL TO PAY          ${formatNumber(breakdown.total)}\nPlease select your preferred payment plan:`;
+ // const breakdownText = `Insurance Premium Breakdown:\nType of Cover         ${userContext.coverType}\nTPL                   ${formatNumber(breakdown.tpl)}\nOccupant              ${userContext.numberOfCoveredPeople}\nCOMESA Medical Fee    ${formatNumber(breakdown.comesaMedicalFee)}\nNET PREMIUM           ${formatNumber(breakdown.netPremium)}\nAdm.fee/Yellow Card   ${formatNumber(breakdown.adminFee)}\nVAT(18%)              ${formatNumber(breakdown.vat)}\nSGF(9%)               ${formatNumber(breakdown.sgf)}\nTOTAL PREMIUM         ${formatNumber(breakdown.total)}\n\nTOTAL TO PAY          ${formatNumber(breakdown.total)}\nPlease select your preferred payment plan:`;
 
+  const breakdownText = `Insurance Premium Breakdown:
+
+Type of Cover         ${userContext.coverType.padEnd(15)}
+TPL                   ${formatNumber(breakdown.tpl).padStart(15)}
+Occupant(${userContext.numberOfCoveredPeople})           ${formatNumber(breakdown.occupantFee).padStart(15)}
+COMESA Medical Fee    ${formatNumber(breakdown.comesaMedicalFee).padStart(15)}
+NET PREMIUM           ${formatNumber(breakdown.netPremium).padStart(15)}
+Adm.fee/Yellow Card   ${formatNumber(breakdown.adminFee).padStart(15)}
+VAT(18%)             ${formatNumber(breakdown.vat).padStart(15)}
+SGF(9%)              ${formatNumber(breakdown.sgf).padStart(15)}
+TOTAL PREMIUM        ${formatNumber(breakdown.total).padStart(15)}
+
+TOTAL TO PAY         ${formatNumber(breakdown.total).padStart(15)}
+
+Please select your preferred payment plan:`;
+  
   const payload = {
     type: "interactive",
     interactive: {
