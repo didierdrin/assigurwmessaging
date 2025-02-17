@@ -3057,13 +3057,13 @@ const breakdownText = `Insurance Premium Breakdown:
 
 Type of Cover${' '.repeat(longestLabelLength - 'Type of Cover'.length)}         ${userContext.coverType}
 TPL${' '.repeat(longestLabelLength - 'TPL'.length)}                   ${formatNumber(breakdown.tpl)}
-Occupant${' '.repeat(longestLabelLength - 'Occupant'.length)}   ${formatNumber(userContext.numberOfCoveredPeople)} 
+Occupant${' '.repeat(longestLabelLength - 'Occupant'.length)}              ${formatNumber(userContext.numberOfCoveredPeople)} 
 COMESA Medical Fee    ${formatNumber(breakdown.comesaMedicalFee)}
-NET PREMIUM${' '.repeat(longestLabelLength - 'NET PREMIUM'.length)}           ${formatNumber(breakdown.netPremium)}
-Adm.fee/Yellow Card${' '.repeat(longestLabelLength - 'Adm.fee/Yellow Card'.length)}   ${formatNumber(breakdown.adminFee)}
-VAT(18%)${' '.repeat(longestLabelLength - 'VAT(18%)'.length)}             ${formatNumber(breakdown.vat)}
-SGF(9%)${' '.repeat(longestLabelLength - 'SGF(9%)'.length)}              ${formatNumber(breakdown.sgf)}
-TOTAL PREMIUM${' '.repeat(longestLabelLength - 'TOTAL PREMIUM'.length)}         ${formatNumber(breakdown.total)}
+NET PREMIUM${' '.repeat(longestLabelLength - 'NET PREMIUM'.length)}          ${formatNumber(breakdown.netPremium)}
+Adm.fee/Yellow Card${' '.repeat(longestLabelLength - 'Adm.fee/Yellow Card'.length)}    ${formatNumber(breakdown.adminFee)}
+VAT(18%)${' '.repeat(longestLabelLength - 'VAT(18%)'.length)}              ${formatNumber(breakdown.vat)}
+SGF(9%)${' '.repeat(longestLabelLength - 'SGF(9%)'.length)}               ${formatNumber(breakdown.sgf)}
+TOTAL PREMIUM${' '.repeat(longestLabelLength - 'TOTAL PREMIUM'.length)}        ${formatNumber(breakdown.total)}
 
 TOTAL TO PAY${' '.repeat(longestLabelLength - 'TOTAL TO PAY'.length)}          ${formatNumber(breakdown.total)}
 
@@ -3075,7 +3075,7 @@ Please select your preferred payment plan:`;
       type: "list",
       header: {
         type: "text",
-        text: "Payment Plans",
+        text: "Premium Summary",
       },
       body: {
         text: breakdownText,
