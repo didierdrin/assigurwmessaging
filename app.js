@@ -2959,7 +2959,7 @@ function parseDate(dateStr) {
 
   // Choose the total cost as needed – for example, full comprehensive premium:
   //const calculatedTotalPerVehicle = pricingObj.comesa;
-  if (userContext.selectedCoverType === "COMESA") {
+  if (userContext.coverType === "COMESA") {
     calculatedTotalPerVehicle = pricingObj.comesa;
   } else {
     calculatedTotalPerVehicle = pricingObj.premium;
