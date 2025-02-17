@@ -1342,6 +1342,8 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
           });
 
         userContext.formattedPlate = plateNumber; // Update with storage URL
+        userContext.licensedToCarryNumber = licensedToCarryNo;
+        userContext.markAndTypeValue = markAndType;
         userContexts.set(phone, userContext);
       } else {
         console.error("Data extraction failed:", extractionResponse.data);
@@ -2888,7 +2890,7 @@ async function selectPaymentPlan(phone, phoneNumberId) {
   // Create a VehicleModel instance from stored data
   const vehicle = new VehicleModel(
     "", //userContext.tin,
-    userContext.numberOfCoveredPeople, // or sitNumber
+    userContext.licensedToCarryNumber, // or sitNumber
     "", //userContext.year,
     "", //userContext.make,
     "", //userContext.model,
@@ -3060,10 +3062,10 @@ TPL${' '.repeat(longestLabelLength - 'TPL'.length)}                   ${formatNu
 Occupant${' '.repeat(longestLabelLength - 'Occupant'.length)}              ${formatNumber(userContext.numberOfCoveredPeople)} 
 COMESA Medical Fee    ${formatNumber(breakdown.comesaMedicalFee)}
 NET PREMIUM${' '.repeat(longestLabelLength - 'NET PREMIUM'.length)}          ${formatNumber(breakdown.netPremium)}
-Adm.fee/Yellow Card${' '.repeat(longestLabelLength - 'Adm.fee/Yellow Card'.length)}    ${formatNumber(breakdown.adminFee)}
-VAT(18%)${' '.repeat(longestLabelLength - 'VAT(18%)'.length)}              ${formatNumber(breakdown.vat)}
-SGF(9%)${' '.repeat(longestLabelLength - 'SGF(9%)'.length)}               ${formatNumber(breakdown.sgf)}
-TOTAL PREMIUM${' '.repeat(longestLabelLength - 'TOTAL PREMIUM'.length)}        ${formatNumber(breakdown.total)}
+Adm.fee/Yellow Card${' '.repeat(longestLabelLength - 'Adm.fee/Yellow Card'.length)}     ${formatNumber(breakdown.adminFee)}
+VAT(18%)${' '.repeat(longestLabelLength - 'VAT(18%)'.length)}               ${formatNumber(breakdown.vat)}
+SGF(9%)${' '.repeat(longestLabelLength - 'SGF(9%)'.length)}                ${formatNumber(breakdown.sgf)}
+TOTAL PREMIUM${' '.repeat(longestLabelLength - 'TOTAL PREMIUM'.length)}       ${formatNumber(breakdown.total)}
 
 TOTAL TO PAY${' '.repeat(longestLabelLength - 'TOTAL TO PAY'.length)}          ${formatNumber(breakdown.total)}
 
@@ -3357,14 +3359,15 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
       ? String(userContext.insuranceDocumentUrl)
       : "",
     extractedData: userContext.extractedData ? userContext.extractedData : {},
+    sitNumber: userContext.licensedToCarryNumber ? userContext.licensedToCarryNumber : 0,
     creationDate: formattedDateFirebase,
   };
 
   // Prepare data for vehiclesWhatsapp collection
   const vehicleData = {
     licensePlate: userContext.plateNumber ? String(userContext.plateNumber) : "",
-    make: userContext.extractedData && userContext.extractedData.marca ? String(userContext.extractedData.marca) : "",
-    model: userContext.extractedData && userContext.extractedData.model ? String(userContext.extractedData.model) : "",
+    make: userContext.markAndTypeValue, 
+    model: userContext.markAndTypeValue,
     usageType: userContext.extractedData && userContext.extractedData.usageType ? String(userContext.extractedData.usageType) : "Private",
     userId: Number(phone) || 0,
     bodyType: userContext.extractedData && userContext.extractedData.bodyType ? String(userContext.extractedData.bodyType) : "",
@@ -3372,7 +3375,7 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
     fuelType: userContext.extractedData && userContext.extractedData.fuelType ? String(userContext.extractedData.fuelType) : "",
     vin: userContext.extractedData && userContext.extractedData.vin ? String(userContext.extractedData.vin) : "",
     year: userContext.extractedData && userContext.extractedData.year ? Number(userContext.extractedData.year) : 0,
-    sitNumber: userContext.numberOfCoveredPeople ? Number(userContext.numberOfCoveredPeople) : 0,
+    sitNumber: userContext.licensedToCarryNumber ? Number(userContext.licensedToCarryNumber) : 0,
   };
 
   // Prepare data for quotationsWhatsapp collection
@@ -3382,7 +3385,7 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
     usage: vehicleData.usageType,
     userId: Number(phone) || 0,
     policyHolder: userContext.extractedData && userContext.extractedData.name ? String(userContext.extractedData.name) : "",
-    makeModal: `${vehicleData.make} ${vehicleData.model}`.trim(),
+    makeModal: userContext.markAndTypeValue,
     coverType: {
       name: userContext.coverType === 'COMESA' ? "COMESA" : "Third-Party",
       Personal_Accident: userContext.selectedCoverage ? Number(userContext.selectedCoverage) : 0,
@@ -3391,7 +3394,7 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
     },
     totalPaid: "0", // Initially zero until payment is confirmed
     policyStatus: "pending", // Initial status
-    licensedToCarry: userContext.numberOfCoveredPeople ? Number(userContext.numberOfCoveredPeople) : 0,
+    licensedToCarry: userContext.licensedToCarryNumber ? Number(userContext.licensedToCarryNumber) : 0,
     instalment: userContext.selectedInstallment,
     startTime: userContext.insuranceStartDate, // Use current date as a placeholder
     endTime: userContext.insuranceEndDate, // Placeholder for 1 year from now
