@@ -3036,19 +3036,36 @@ function parseDate(dateStr) {
   // Create the detailed breakdown text
  // const breakdownText = `Insurance Premium Breakdown:\nType of Cover         ${userContext.coverType}\nTPL                   ${formatNumber(breakdown.tpl)}\nOccupant              ${userContext.numberOfCoveredPeople}\nCOMESA Medical Fee    ${formatNumber(breakdown.comesaMedicalFee)}\nNET PREMIUM           ${formatNumber(breakdown.netPremium)}\nAdm.fee/Yellow Card   ${formatNumber(breakdown.adminFee)}\nVAT(18%)              ${formatNumber(breakdown.vat)}\nSGF(9%)               ${formatNumber(breakdown.sgf)}\nTOTAL PREMIUM         ${formatNumber(breakdown.total)}\n\nTOTAL TO PAY          ${formatNumber(breakdown.total)}\nPlease select your preferred payment plan:`;
 
-  const breakdownText = `Insurance Premium Breakdown:
+  // Calculate the longest label length
+const labels = [
+  'Type of Cover',
+  'TPL',
+  'Occupant',
+  'COMESA Medical Fee',  
+  'NET PREMIUM',
+  'Adm.fee/Yellow Card', // Longest label - will be our reference
+  'VAT(18%)',
+  'SGF(9%)',
+  'TOTAL PREMIUM',
+  'TOTAL TO PAY'
+];
 
-Type of Cover         ${userContext.coverType.padEnd(15)}
-TPL                   ${formatNumber(breakdown.tpl).padStart(15)}
-Occupant(${userContext.numberOfCoveredPeople})           ${formatNumber(breakdown.occupantFee).padStart(15)}
-COMESA Medical Fee    ${formatNumber(breakdown.comesaMedicalFee).padStart(15)}
-NET PREMIUM           ${formatNumber(breakdown.netPremium).padStart(15)}
-Adm.fee/Yellow Card   ${formatNumber(breakdown.adminFee).padStart(15)}
-VAT(18%)             ${formatNumber(breakdown.vat).padStart(15)}
-SGF(9%)              ${formatNumber(breakdown.sgf).padStart(15)}
-TOTAL PREMIUM        ${formatNumber(breakdown.total).padStart(15)}
+const longestLabelLength = 'Adm.fee/Yellow Card'.length;
 
-TOTAL TO PAY         ${formatNumber(breakdown.total).padStart(15)}
+// Create the detailed breakdown text with properly aligned values
+const breakdownText = `Insurance Premium Breakdown:
+
+Type of Cover${' '.repeat(longestLabelLength - 'Type of Cover'.length)}         ${userContext.coverType}
+TPL${' '.repeat(longestLabelLength - 'TPL'.length)}                   ${formatNumber(breakdown.tpl)}
+Occupant${' '.repeat(longestLabelLength - 'Occupant'.length)}   ${formatNumber(userContext.numberOfCoveredPeople)} 
+COMESA Medical Fee    ${formatNumber(breakdown.comesaMedicalFee)}
+NET PREMIUM${' '.repeat(longestLabelLength - 'NET PREMIUM'.length)}           ${formatNumber(breakdown.netPremium)}
+Adm.fee/Yellow Card${' '.repeat(longestLabelLength - 'Adm.fee/Yellow Card'.length)}   ${formatNumber(breakdown.adminFee)}
+VAT(18%)${' '.repeat(longestLabelLength - 'VAT(18%)'.length)}             ${formatNumber(breakdown.vat)}
+SGF(9%)${' '.repeat(longestLabelLength - 'SGF(9%)'.length)}              ${formatNumber(breakdown.sgf)}
+TOTAL PREMIUM${' '.repeat(longestLabelLength - 'TOTAL PREMIUM'.length)}         ${formatNumber(breakdown.total)}
+
+TOTAL TO PAY${' '.repeat(longestLabelLength - 'TOTAL TO PAY'.length)}          ${formatNumber(breakdown.total)}
 
 Please select your preferred payment plan:`;
   
