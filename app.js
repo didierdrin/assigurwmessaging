@@ -2947,43 +2947,23 @@ function parseDate(dateStr) {
     endDate: userContext.insuranceEndDate
   });
 
-  // Set default dates if missing
- // let start, end;
- // try {
-    // Only try to parse if dates exist
-  //  if (userContext.insuranceStartDate) {
-  //    start = parseDate(userContext.insuranceStartDate);
-      
-  //  } else {
-      // Default: Today
-  //    start = new Date();
-  //  }
-    
-  //  if (userContext.insuranceEndDate) {
-  //    end = parseDate(userContext.insuranceEndDate);
-  //  } else {
-      // Default: One year from today
-   //   end = new Date();
-  //    end.setFullYear(end.getFullYear() + 1);
- //   }
- // } catch (error) {
- //   console.error("Date parsing error:", error.message);
-    // Set default dates on error
- //   start = new Date();
- //   end = new Date();
- //   end.setFullYear(end.getFullYear() + 1);
- // }
+  
 
   let start = parseDate(userContext.insuranceStartDate);
   let end = parseDate(userContext.insuranceEndDate);
-
+  let calculatedTotalPerVehicle;
   
 
   // Calculate pricing using the imported CalculatePricing class
   const pricingObj = new CalculatePricing(vehicle, start, end, false);
 
   // Choose the total cost as needed – for example, full comprehensive premium:
-  const calculatedTotalPerVehicle = pricingObj.comesa;
+  //const calculatedTotalPerVehicle = pricingObj.comesa;
+  if (userContext.selectedCoverType === "COMESA") {
+    calculatedTotalPerVehicle = pricingObj.comesa;
+  } else {
+    calculatedTotalPerVehicle = pricingObj.premium;
+  }
   
   // Format numbers with commas
   const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
