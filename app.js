@@ -40,7 +40,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://assigurwmessaging-1u57.onrender.com"],
+    origin: ["http://localhost:3000", "https://assigurwmessaging.onrender.com"],
     methods: ["GET", "POST"],
     credentials: true,
   })
@@ -1242,7 +1242,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     // 8. Make POST request to extract data endpoint
     try {
       const extractionResponse = await axios.post(
-        "https://assigurwmessaging-1u57.onrender.com/extract-data",
+        "https://assigurwmessaging.onrender.com/extract-data",
         {
           imageUrl: publicUrl, // Use the storage URL for extraction
         }
