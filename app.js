@@ -3724,9 +3724,82 @@ async function sendClassSelectionMessage(phone, phoneNumberId) {
 
 
 // --- 2. Send Category Selection Message ---
+async function sendCategorySelectionMessage(phone, phoneNumberId, selectedClass) {
+  try {
+    // Fetch sub-categories from "mt_subCategories" and products from "mt_products"
+    const subCategoriesData = await fetchData("mt_subCategories");
+    const productsData = await fetchData("mt_products");
+
+    // Get the vendor ID from the user context.
+    let userContext = userContexts.get(phone) || { order: [], page: 0 };
+    const vendorId = userContext.vendorId;
+
+    // Filter sub-categories whose "classes" field matches the selected class.
+    // Then, keep only those that have at least one active product (from mt_products)
+    // with matching class, (if set) vendor, and that use this sub-category.
+    const filteredSubCategories = Object.values(subCategoriesData)
+      .filter((subCat) => subCat.classes.toLowerCase() === selectedClass.toLowerCase())
+      .filter((subCat) => {
+        return Object.values(productsData).some((prod) => {
+          if (prod.active !== true) return false;
+          if (prod.classes.toLowerCase() !== selectedClass.toLowerCase()) return false;
+          if (vendorId && prod.vendor !== vendorId) return false;
+          return prod.subcategory === subCat.id; // product references this sub-category
+        });
+      });
+
+    // Map the filtered sub-categories to interactive list rows (with title and description truncation)
+    const allRows = filteredSubCategories.map((subCat) => {
+      return {
+        id: subCat.id,
+        title: truncateString(subCat.name, MAX_TITLE_LENGTH),
+        description: truncateString(subCat.description, MAX_DESCRIPTION_LENGTH)
+      };
+    });
+
+    // Paginate rows (maximum 9 rows per page)
+    const currentPage = userContext.page || 0;
+    let rows = paginateRows(allRows, currentPage, 9);
+    const hasMore = (currentPage + 1) * 9 < allRows.length;
+    if (hasMore) {
+      rows.push({
+        id: "MORE_ITEMS",
+        title: "More Items",
+        description: "Tap to see more subcategories"
+      });
+    }
+
+    const payload = {
+      type: "interactive",
+      interactive: {
+        type: "list",
+        header: { type: "text", text: "What’s your flavor today?" },
+        body: { text: "🍔🍹 Pick a subcategory!" },
+        action: {
+          button: "Select Subcategory",
+          sections: [
+            {
+              title: "Subcategories",
+              rows: rows
+            }
+          ]
+        }
+      }
+    };
+
+    userContext.stage = "CATEGORY_SELECTION";
+    userContexts.set(phone, userContext);
+    await sendWhatsAppMessage(phone, payload, phoneNumberId);
+  } catch (error) {
+    console.error("Error in sendCategorySelectionMessage:", error.message);
+  }
+}
+
+
+
 // Based on the chosen class, fetch categories from "mt_categories" and send only those
 // that have products available (for the given vendor) in that category.
-async function sendCategorySelectionMessage(phone, phoneNumberId, selectedClass) {
+async function sendCategorySelectionMessageSecondDraft(phone, phoneNumberId, selectedClass) {
   try {
     // Fetch categories, products, and sub-categories from Firestore.
     const [categoriesData, productsData, subCategoriesData] = await Promise.all([
@@ -3866,8 +3939,99 @@ async function sendCategorySelectionMessageDraft(phone, phoneNumberId, selectedC
 
 
 // --- 3. Send Product Selection Message ---
+async function sendProductSelectionMessage(phone, phoneNumberId, selectedClass, selectedSubCategory) {
+  let userContext = userContexts.get(phone) || { order: [], page: 0 };
+  try {
+    // Fetch products from "mt_products"
+    const productsData = await fetchData("mt_products");
+    // (Fetching subCategories is optional here if you need it elsewhere)
+    const subCategoriesData = await fetchData("mt_subCategories");
+
+    const vendorId = userContext.vendorId;
+
+    // Filter products that:
+    // - are active,
+    // - have a matching "classes" value,
+    // - (if vendorId is set) belong to that vendor, and
+    // - whose subcategory equals the selected subcategory.
+    const filteredProducts = Object.values(productsData).filter((prod) => {
+      if (prod.active !== true) return false;
+      if (prod.classes.toLowerCase() !== selectedClass.toLowerCase()) return false;
+      if (vendorId && prod.vendor !== vendorId) return false;
+      return prod.subcategory === selectedSubCategory;
+    });
+
+    // If there are no products, notify the user.
+    if (filteredProducts.length === 0) {
+      await sendWhatsAppMessage(
+        phone,
+        {
+          type: "text",
+          text: { body: "There are no products available in this subcategory." }
+        },
+        phoneNumberId
+      );
+      return;
+    }
+
+    // Create a mapping from product id to its data for later lookup
+    const productData = {};
+    // Map products to interactive list rows (with title and description truncation)
+    const allRows = filteredProducts.map((prod) => {
+      productData[prod.id] = { price: prod.price, name: prod.name };
+      const fullDescription = `Price: €${prod.price} | ${prod.description}`;
+      
+      return {
+        id: prod.id,
+        title: truncateString(prod.name, MAX_TITLE_LENGTH),
+        description: truncateString(fullDescription, MAX_DESCRIPTION_LENGTH)
+      };
+    });
+
+    // Save product data in the user context for later lookup.
+    userContext.productData = productData;
+
+    // Use pagination (9 rows per page)
+    const currentPage = userContext.page || 0;
+    let rows = paginateRows(allRows, currentPage, 9);
+    const hasMore = (currentPage + 1) * 9 < allRows.length;
+    if (hasMore) {
+      rows.push({
+        id: "MORE_ITEMS",
+        title: "More Items",
+        description: "Tap to see more products"
+      });
+    }
+
+    const payload = {
+      type: "interactive",
+      interactive: {
+        type: "list",
+        header: { type: "text", text: "Ready to treat yourself?" },
+        body: { text: "Select your favorite. 😋" },
+        action: {
+          button: "Select Product",
+          sections: [
+            {
+              title: "Products",
+              rows: rows
+            }
+          ]
+        }
+      }
+    };
+
+    userContext.stage = "PRODUCT_SELECTION";
+    userContexts.set(phone, userContext);
+    await sendWhatsAppMessage(phone, payload, phoneNumberId);
+  } catch (error) {
+    console.error("Error in sendProductSelectionMessage:", error.message);
+  }
+}
+
+
 // Based on the selected class and category, fetch products from "mt_products" and filter using data from "mt_subCategories".
-async function sendProductSelectionMessage(phone, phoneNumberId, selectedClass, selectedCategory) {
+async function sendProductSelectionMessageDraft(phone, phoneNumberId, selectedClass, selectedCategory) {
   let userContext = userContexts.get(phone) || { order: [], page: 0 };
   try {
     // Fetch products from "mt_products"
