@@ -3738,11 +3738,11 @@ async function sendCategorySelectionMessage(phone, phoneNumberId, selectedClass)
     // Then, keep only those that have at least one active product (from mt_products)
     // with matching class, (if set) vendor, and that use this sub-category.
     const filteredSubCategories = Object.values(subCategoriesData)
-      .filter((subCat) => subCat.classes.toLowerCase() === selectedClass.toLowerCase())
+      .filter((subCat) => (subCat.classes || "").toLowerCase() === selectedClass.toLowerCase())
       .filter((subCat) => {
         return Object.values(productsData).some((prod) => {
           if (prod.active !== true) return false;
-          if (prod.classes.toLowerCase() !== selectedClass.toLowerCase()) return false;
+          if ((prod.classes || "").toLowerCase() !== selectedClass.toLowerCase()) return false;
           if (vendorId && prod.vendor !== vendorId) return false;
           return prod.subcategory === subCat.id; // product references this sub-category
         });
