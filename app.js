@@ -565,6 +565,7 @@ const handlePaymentTermsReply = async (
       userContexts.set(phone, userContext);
 
       await selectPaymentPlan(phone, phoneNumberId);
+        return;
       }
       break;
     case "agree_to_terms":
