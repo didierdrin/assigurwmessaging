@@ -368,7 +368,8 @@ const handleNFMReply = async (message, phone, phoneNumberId) => {
     if (selectedCoverTypes.includes("0_Third-Party_Cover_")) {
       userContext.thirdPartyComesaCost = 14000; // Not this private 5,000 commercial 10,000
       userContext.coverType = 'Rwanda'; 
-      await selectToAddPersonalAccidentCover(phone, phoneNumberId);
+      await selectVehicleBodyType(phone, phoneNumberId); 
+      //await selectToAddPersonalAccidentCover(phone, phoneNumberId);
     }
 
     // Process specific cover type
