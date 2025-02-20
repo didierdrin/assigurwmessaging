@@ -868,30 +868,98 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
 
     case "side_cars_motor_bikes":
       userContext.bodyType = "Side Cars & Motor Bikes, Tricycles"; 
+      userContext.usageTypeManual = "Private";
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "side_cars_motor_bikes_commercial":
+      userContext.bodyType = "Side Cars & Motor Bikes, Tricycles"; 
+      userContext.usageTypeManual = "Commercial Passenger"; 
       userContexts.set(phone, userContext);
       await selectPaymentPlan(phone, phoneNumberId);
       break;
 
     case "car_voiture":
       userContext.bodyType = "Car/Voiture"; 
+      userContext.usageTypeManual = "Private";
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "car_voiture_commercial":
+      userContext.bodyType = "Car/Voiture";
+      userContext.usageTypeManual = "Commercial Passenger";
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "car_voiture_goods":
+      userContext.bodyType = "Car/Voiture";
+      userContext.usageTypeManual = "Commercial Goods";
       userContexts.set(phone, userContext);
       await selectPaymentPlan(phone, phoneNumberId);
       break;
 
     case "jeep_suv":
       userContext.bodyType = "Jeep/SUV"; 
+      userContext.usageTypeManual = "Private";
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "jeep_suv_commercial":
+      userContext.bodyType = "Jeep/SUV";
+      userContext.usageTypeManual = "Commercial Passenger";
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "jeep_suv_goods":
+      userContext.bodyType = "Jeep/SUV"; 
+      userContext.usageTypeManual = "Commercial Goods";
       userContexts.set(phone, userContext);
       await selectPaymentPlan(phone, phoneNumberId);
       break;
 
     case "pickup":
       userContext.bodyType = "Pickup_Camionnenette (small lorry (< 5 tonnes))"; 
+      userContext.usageTypeManual = "Private"; 
       userContexts.set(phone, userContext);
       await selectPaymentPlan(phone, phoneNumberId);
       break;
 
+    case "pickup_commercial":
+      userContext.bodyType = "Pickup_Camionnenette (small lorry (< 5 tonnes))"; 
+      userContext.usageTypeManual = "Commercial Passenger";
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "pickup_goods":
+      userContext.bodyType = "Pickup_Camionnenette (small lorry (< 5 tonnes))"; 
+      userContext.usageTypeManual = "Commercial Goods";
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+      
     case "minibus_van":
       userContext.bodyType = "Minibus/Van"; 
+      userContext.usageTypeManual = "Private";
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "minibus_van_commercial":
+      userContext.bodyType = "Minibus/Van";
+      userContext.usageTypeManual = "Commercial Passenger";
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "minibus_van_goods":
+      userContext.bodyType = "Minibus/Van";
+      userContext.usageTypeManual = "Commercial Goods";
       userContexts.set(phone, userContext);
       await selectPaymentPlan(phone, phoneNumberId);
       break;
@@ -910,6 +978,13 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       
     case "trailer_semi_trailer":
       userContext.bodyType = "Trailer (Remorque) & Semi-Trailer (Semi- Remorque)"; 
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+      
+    case "trailer_semi_trailer_goods":
+      userContext.bodyType = "Trailer (Remorque) & Semi-Trailer (Semi- Remorque)"; 
+      userContext.usageTypeManual = "Commercial Goods";
       userContexts.set(phone, userContext);
       await selectPaymentPlan(phone, phoneNumberId);
       break;
@@ -3030,7 +3105,7 @@ async function selectPaymentPlan(phone, phoneNumberId) {
     "", //userContext.vin,
     userContext.plateNumber,
     userContext.bodyType,
-    userContext.extractedData && userContext.extractedData.usageType ? String(userContext.extractedData.usageType) : "Private", //userContext.usageType,
+    userContext.usageTypeManual,
     "", //userContext.fuelType,
     "", //userContext.vehicleValue,
     "", //userContext.engineSize,
