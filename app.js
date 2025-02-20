@@ -895,6 +895,13 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       await selectPaymentPlan(phone, phoneNumberId);
       break;
 
+    case "car_voiture_taxi":
+      userContext.bodyType = "Car/Voiture";
+      userContext.usageTypeManual = "Commercial Passenger";
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
     case "car_voiture_goods":
       userContext.bodyType = "Car/Voiture";
       userContext.usageTypeManual = "Commercial Goods";
@@ -910,6 +917,14 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       break;
 
     case "jeep_suv_commercial":
+      userContext.bodyType = "Jeep/SUV";
+      userContext.usageTypeManual = "Commercial Passenger";
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+
+    case "jeep_suv_taxi":
       userContext.bodyType = "Jeep/SUV";
       userContext.usageTypeManual = "Commercial Passenger";
       userContexts.set(phone, userContext);
@@ -952,6 +967,13 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       break;
 
     case "minibus_van_commercial":
+      userContext.bodyType = "Minibus/Van";
+      userContext.usageTypeManual = "Commercial Passenger";
+      userContexts.set(phone, userContext);
+      await selectPaymentPlan(phone, phoneNumberId);
+      break;
+
+    case "minibus_van_taxi":
       userContext.bodyType = "Minibus/Van";
       userContext.usageTypeManual = "Commercial Passenger";
       userContexts.set(phone, userContext);
@@ -2910,7 +2932,7 @@ async function selectVehicleBodyType(phone, phoneNumberId) {
                 description: "Sedan/Saloon for private use"
               },
               {
-                id: "car_voiture_commercial",
+                id: "car_voiture_taxi",
                 title: "Car/Voiture - Taxi",
                 description: "Sedan/Saloon for taxi service"
               },
@@ -2935,7 +2957,7 @@ async function selectVehicleBodyType(phone, phoneNumberId) {
                 description: "SUV for private use"
               },
               {
-                id: "jeep_suv_commercial",
+                id: "jeep_suv_taxi",
                 title: "Jeep/SUV - Taxi",
                 description: "SUV for taxi service"
               },
@@ -2982,7 +3004,7 @@ async function selectVehicleBodyType(phone, phoneNumberId) {
             title: "Commercial Vehicles",
             rows: [
               {
-                id: "minibus_van_commercial",
+                id: "minibus_van_taxi",
                 title: "Minibus/Van - Taxi",
                 description: "For taxi service"
               },
