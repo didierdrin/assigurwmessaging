@@ -3037,20 +3037,20 @@ const labels = [
 
 const longestLabelLength = 'Adm.fee/Yellow Card'.length;
 
-// Create the detailed breakdown text with properly aligned values
+// Create the detailed breakdown text with properly aligned values ${' '.repeat(longestLabelLength - 'Type of Cover'.length)}
 const breakdownText = `Insurance Premium Breakdown:
 
-Type of Cover:${' '.repeat(longestLabelLength - 'Type of Cover'.length)} ${userContext.coverType}
-TPL:${' '.repeat(longestLabelLength - 'TPL'.length)} ${formatNumber(breakdown.tpl)}
-Occupant:${' '.repeat(longestLabelLength - 'Occupant'.length)} ${formatNumber(userContext.licensedToCarryNumber)} 
+Type of Cover: ${userContext.coverType}
+TPL: ${formatNumber(breakdown.tpl)}
+Occupant: ${formatNumber(userContext.licensedToCarryNumber)} 
 COMESA Medical Fee: ${formatNumber(breakdown.comesaMedicalFee)}
-NET PREMIUM:${' '.repeat(longestLabelLength - 'NET PREMIUM'.length)} ${formatNumber(breakdown.netPremium)}
-Adm.fee/Yellow Card:${' '.repeat(longestLabelLength - 'Adm.fee/Yellow Card'.length)} ${formatNumber(breakdown.adminFee)}
-VAT(18%):${' '.repeat(longestLabelLength - 'VAT(18%)'.length)} ${formatNumber(breakdown.vat)}
-SGF:${' '.repeat(longestLabelLength - 'SGF(9%)'.length)} ${formatNumber(breakdown.sgf)}
-TOTAL PREMIUM:${' '.repeat(longestLabelLength - 'TOTAL PREMIUM'.length)} ${formatNumber(breakdown.total)}
+NET PREMIUM: ${formatNumber(breakdown.netPremium)}
+Adm.fee/Yellow Card: ${formatNumber(breakdown.adminFee)}
+VAT(18%): ${formatNumber(breakdown.vat)}
+SGF: ${formatNumber(breakdown.sgf)}
+TOTAL PREMIUM: ${formatNumber(breakdown.total)}
 
-TOTAL TO PAY:${' '.repeat(longestLabelLength - 'TOTAL TO PAY'.length)} ${formatNumber(breakdown.total)}
+TOTAL TO PAY: ${formatNumber(breakdown.total)}
 
 Please select your preferred payment plan:`;
   
