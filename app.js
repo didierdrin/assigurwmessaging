@@ -555,6 +555,7 @@ const handlePaymentTermsReply = async (
     case "add_no":
       // Calculate total cost
       //const coverageCost = userContext.selectedCoverage || 0;
+      if (userContext.stage === "PERSONAL_ACCIDENT_COVER") {
       userContext.selectedCoverage = 0; // Price for CAT 0 None
       const coverageCost = userContext.thirdPartyComesaCost;
       userContext.totalCost = 1 * coverageCost;
@@ -564,6 +565,7 @@ const handlePaymentTermsReply = async (
       userContexts.set(phone, userContext);
 
       await selectPaymentPlan(phone, phoneNumberId);
+      }
       break;
     case "agree_to_terms":
       console.log("User agreed to the terms. Proceeding with payment.");
