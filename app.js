@@ -3037,13 +3037,11 @@ const labels = [
 
 const longestLabelLength = 'Adm.fee/Yellow Card'.length;
 
-// Create the detailed breakdown text with properly aligned values ${' '.repeat(longestLabelLength - 'Type of Cover'.length)}
+// Create the detailed breakdown text with properly aligned values ${' '.repeat(longestLabelLength - 'Type of Cover'.length)} //Occupant: ${formatNumber(userContext.licensedToCarryNumber)} COMESA Medical Fee: ${formatNumber(breakdown.comesaMedicalFee)}
 const breakdownText = `Insurance Premium Breakdown:
 
 Type of Cover: ${userContext.coverType}
 TPL: ${formatNumber(breakdown.tpl)}
-Occupant: ${formatNumber(userContext.licensedToCarryNumber)} 
-COMESA Medical Fee: ${formatNumber(breakdown.comesaMedicalFee)}
 NET PREMIUM: ${formatNumber(breakdown.netPremium)}
 Adm.fee/Yellow Card: ${formatNumber(breakdown.adminFee)}
 VAT(18%): ${formatNumber(breakdown.vat)}
