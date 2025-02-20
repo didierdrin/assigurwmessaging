@@ -3042,7 +3042,7 @@ const breakdownText = `Insurance Premium Breakdown:
 
 Type of Cover:${' '.repeat(longestLabelLength - 'Type of Cover'.length)} ${userContext.coverType}
 TPL:${' '.repeat(longestLabelLength - 'TPL'.length)} ${formatNumber(breakdown.tpl)}
-Occupant:${' '.repeat(longestLabelLength - 'Occupant'.length)} ${formatNumber(userContext.numberOfCoveredPeople)} 
+Occupant:${' '.repeat(longestLabelLength - 'Occupant'.length)} ${formatNumber(userContext.licensedToCarryNumber)} 
 COMESA Medical Fee: ${formatNumber(breakdown.comesaMedicalFee)}
 NET PREMIUM:${' '.repeat(longestLabelLength - 'NET PREMIUM'.length)} ${formatNumber(breakdown.netPremium)}
 Adm.fee/Yellow Card:${' '.repeat(longestLabelLength - 'Adm.fee/Yellow Card'.length)} ${formatNumber(breakdown.adminFee)}
