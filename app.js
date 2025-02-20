@@ -564,7 +564,7 @@ const handlePaymentTermsReply = async (
       //userContext.numberOfCoveredPeople = 1;
       userContexts.set(phone, userContext);
 
-      await selectPaymentPlan(phone, phoneNumberId);
+      await selectVehicleBodyType(phone, phoneNumberId); //await selectPaymentPlan(phone, phoneNumberId);
         return;
       }
       break;
