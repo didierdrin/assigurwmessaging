@@ -2978,9 +2978,9 @@ function parseDate(dateStr) {
     const occupantFee = (userContext.numberOfCoveredPeople || 4) * (isComesa ? 0 : 1000);
     const comesaMedicalFee = isComesa ? 10000 : 0;
     const netPremium = baseAmount + occupantFee + comesaMedicalFee;
-    const adminFee = isComesa ? 5000 : 2500; // Yellow card fee for COMESA
+    const adminFee = isComesa ? 10000 : 2500; // Yellow card fee for COMESA
     const vat = Math.round(netPremium * 0.18);
-    const sgf = Math.round(netPremium * 0.09);
+    const sgf = Math.round(netPremium * 0.1);
     const total = netPremium + adminFee + vat + sgf;
 
     return {
