@@ -3230,7 +3230,7 @@ function parseDate(dateStr) {
     const comesaMedicalFee = isComesa ? 10000 : 0;
     const netPremium = baseAmount; //+ occupantFee + comesaMedicalFee;
     const adminFee = isComesa ? 10000 : 2500; // Yellow card fee for COMESA
-    const vat = Math.round(netPremium * 0.18);
+    const vat = Math.round((netPremium + adminFee) * 0.18);
     const sgf = Math.round(netPremium * 0.1);
     const total = netPremium + adminFee + vat + sgf;
 
