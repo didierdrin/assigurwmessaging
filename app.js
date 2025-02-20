@@ -546,8 +546,9 @@ const handlePaymentTermsReply = async (
 
     case "add_yes":
       if (userContext.stage === "PERSONAL_ACCIDENT_COVER") {
-        await selectPersonalAccidentCategory(phone, phoneNumberId);
-        console.log("Expecting CAT1.../FULL PAYMENT button reply");
+        //await selectPersonalAccidentCategory(phone, phoneNumberId);
+        //console.log("Expecting CAT1.../FULL PAYMENT button reply");
+        await selectVehicleBodyType(phone, phoneNumberId); 
         return;
       }
 
@@ -2805,6 +2806,135 @@ async function numberOfCoveredPeople(phone, phoneNumberId) {
 }
 
 async function selectVehicleBodyType(phone, phoneNumberId) {
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Select Vehicle Type"
+      },
+      body: {
+        text: "Choose your vehicle type and purpose from the options below:"
+      },
+      action: {
+        button: "Select Vehicle",
+        sections: [
+          {
+            title: "Motorcycles & Cars",
+            rows: [
+              {
+                id: "side_cars_motor_bikes_commercial",
+                title: "Motorcycle/Tricycle",
+                description: "Commercial/Transport of Goods"
+              },
+              {
+                id: "car_voiture",
+                title: "Car/Voiture - Private",
+                description: "Sedan/Saloon for private use"
+              },
+              {
+                id: "car_voiture_commercial",
+                title: "Car/Voiture - Taxi",
+                description: "Sedan/Saloon for taxi service"
+              },
+              {
+                id: "car_voiture_commercial",
+                title: "Car/Voiture - For Hire",
+                description: "Sedan/Saloon for hire service"
+              },
+              {
+                id: "car_voiture_goods",
+                title: "Car/Voiture - Commercial",
+                description: "Sedan/Saloon for transport of goods"
+              }
+            ]
+          },
+          {
+            title: "SUVs & Vans",
+            rows: [
+              {
+                id: "jeep_suv",
+                title: "Jeep/SUV - Private",
+                description: "SUV for private use"
+              },
+              {
+                id: "jeep_suv_commercial",
+                title: "Jeep/SUV - Taxi",
+                description: "SUV for taxi service"
+              },
+              {
+                id: "jeep_suv_commercial",
+                title: "Jeep/SUV - For Hire",
+                description: "SUV for hire service"
+              },
+              {
+                id: "jeep_suv_goods",
+                title: "Jeep/SUV - Commercial",
+                description: "SUV for transport of goods"
+              },
+              {
+                id: "minibus_van",
+                title: "Minibus/Van - Private",
+                description: "For private use"
+              }
+            ]
+          },
+          {
+            title: "Commercial Vehicles",
+            rows: [
+              {
+                id: "minibus_van_commercial",
+                title: "Minibus/Van - Taxi",
+                description: "For taxi service"
+              },
+              {
+                id: "minibus_van_commercial",
+                title: "Minibus/Van - For Hire",
+                description: "For hire service"
+              },
+              {
+                id: "minibus_van_goods",
+                title: "Minibus/Van - Commercial",
+                description: "For transport of goods"
+              },
+              {
+                id: "pickup",
+                title: "Pickup/Camionnette - Private",
+                description: "For private use"
+              },
+              {
+                id: "pickup_commercial",
+                title: "Pickup/Camionnette - For Hire",
+                description: "For hire service"
+              }
+            ]
+          },
+          {
+            title: "Heavy Vehicles",
+            rows: [
+              {
+                id: "pickup_goods",
+                title: "Pickup/Camionnette - Commercial",
+                description: "For transport of goods"
+              },
+              {
+                id: "trailer_semi_trailer_goods",
+                title: "Truck/Camion - Commercial",
+                description: "For transport of goods (Non-Flammable)"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// draft
+async function selectVehicleBodyTypeDraft(phone, phoneNumberId) {
   const payload = {
     type: "interactive",
     interactive: {
