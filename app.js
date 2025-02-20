@@ -2955,7 +2955,29 @@ async function selectVehicleBodyType(phone, phoneNumberId) {
                 description: "For private use"
               }
             ]
-          },
+          }
+         
+          
+        ]
+      }
+    }
+  };
+
+  const payload2 = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Extra Vehicle Type"
+      },
+      body: {
+        text: "Choose your vehicle type and purpose from the options below:"
+      },
+      action: {
+        button: "More Vehicles",
+        sections: [
+         
           {
             title: "Commercial Vehicles",
             rows: [
@@ -3007,6 +3029,7 @@ async function selectVehicleBodyType(phone, phoneNumberId) {
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
+  await sendWhatsAppMessage(phone, payload2, phoneNumberId);
 }
 
 // draft
