@@ -366,17 +366,17 @@ const handleNFMReply = async (message, phone, phoneNumberId) => {
 
     // Process specific cover type
     if (selectedCoverTypes.includes("0_Third-Party_Cover_")) {
-      userContext.thirdPartyComesaCost = 14000;
+      userContext.thirdPartyComesaCost = 14000; // Not this private 5,000 commercial 10,000
       userContext.coverType = 'Rwanda'; 
       await selectToAddPersonalAccidentCover(phone, phoneNumberId);
     }
 
     // Process specific cover type
-    if (selectedCoverTypes.includes("1_COMESA_Cover")) {
-      userContext.thirdPartyComesaCost = 10000;
-      userContext.coverType = 'COMESA'; 
-      await selectToAddPersonalAccidentCover(phone, phoneNumberId);
-    }
+   // if (selectedCoverTypes.includes("1_COMESA_Cover")) {
+   //   userContext.thirdPartyComesaCost = 10000;
+   //   userContext.coverType = 'COMESA'; 
+   //   await selectToAddPersonalAccidentCover(phone, phoneNumberId);
+   // }
 
     // Update user context
     //const userContext = userContexts.get(phone) || {};
