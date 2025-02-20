@@ -3020,13 +3020,13 @@ async function selectVehicleBodyType(phone, phoneNumberId) {
               },
               {
                 id: "pickup",
-                title: "Pickup/Camionnette - Private",
-                description: "For private use"
+                title: "Pickup/Camion. Private",
+                description: "For private use/Cammionnette"
               },
               {
                 id: "pickup_commercial",
-                title: "Pickup/Camionnette - For Hire",
-                description: "For hire service"
+                title: "Pickup/Camion. For Hire",
+                description: "For hire service/Camionnette"
               }
             ]
           },
@@ -3035,12 +3035,12 @@ async function selectVehicleBodyType(phone, phoneNumberId) {
             rows: [
               {
                 id: "pickup_goods",
-                title: "Pickup/Camionnette - Commercial",
-                description: "For transport of goods"
+                title: "Pickup/Camion.Commercial",
+                description: "For transport of goods/Camionnette"
               },
               {
                 id: "trailer_semi_trailer_goods",
-                title: "Truck/Camion - Commercial",
+                title: "Truck/Camion Commercial",
                 description: "For transport of goods (Non-Flammable)"
               }
             ]
@@ -3228,7 +3228,7 @@ function parseDate(dateStr) {
     const baseAmount = calculatedTotalPerVehicle; 
     const occupantFee = (userContext.numberOfCoveredPeople || 4) * (isComesa ? 0 : 1000);
     const comesaMedicalFee = isComesa ? 10000 : 0;
-    const netPremium = baseAmount + occupantFee + comesaMedicalFee;
+    const netPremium = baseAmount; //+ occupantFee + comesaMedicalFee;
     const adminFee = isComesa ? 10000 : 2500; // Yellow card fee for COMESA
     const vat = Math.round(netPremium * 0.18);
     const sgf = Math.round(netPremium * 0.1);
