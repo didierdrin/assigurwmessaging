@@ -1553,7 +1553,10 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       // After insurance, request yellow card
       await requestYellowCard(phone, phoneNumberId);
     } else if (expectedDocumentType === "yellowCard") {
-      // After yellow card, proceed with insurance flow
+      // After yellow card, request car image
+      await requestCarImage(phone, phoneNumberId);
+    } else if (expectedDocumentType === "carImage") {
+      // After car image, proceed with insurance flow
       await stateInsuranceDuration(
         phone,
         userContext.formattedPlate,
