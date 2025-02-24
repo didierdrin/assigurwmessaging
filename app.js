@@ -1337,11 +1337,11 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       )
         .toString()
         .padStart(2, "0")}/${today.getFullYear()}`;
-      const realCreationDate1 = new admin.firestore.Timestamp.fromDate(formattedDate);
+      //const realCreationDate1 = new admin.firestore.Timestamp.fromDate(formattedDate);
 
       const initialData = {
         userPhone: phone,
-        creationDate: realCreationDate1,
+        creationDate: today,
         // These will be filled in later as needed
         plateNumber: "",
         insuranceStartDate: "",
@@ -1760,12 +1760,12 @@ const handleDocumentUploadDraft2 = async (message, phone, phoneNumberId) => {
     )
       .toString()
       .padStart(2, "0")}/${today.getFullYear()}`;
-    const realCreationDate2 = new admin.firestore.Timestamp.fromDate(formattedDate);
+    //const realCreationDate2 = new admin.firestore.Timestamp.fromDate(formattedDate);
 
     const insuranceData = {
       userPhone: phone,
       insuranceDocumentUrl: publicUrl, // Store the storage URL
-      creationDate: realCreationDate2,
+      creationDate: today,
       plateNumber: "", // Will be filled later
       insuranceStartDate: "", // Will be filled later
       selectedCoverTypes: "",
@@ -4088,7 +4088,7 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
   await sendWhatsAppMessage(phone, paymentPayload, phoneNumberId);
 
   const todayFirebase = new Date();
-  const realCreationDate = new admin.firestore.Timestamp.fromDate(todayFirebase);
+  //const realCreationDate = new admin.firestore.Timestamp.fromDate(todayFirebase);
   const formattedDateFirebase = `${todayFirebase
     .getDate()
     .toString()
@@ -4119,7 +4119,7 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
       : "",
     extractedData: userContext.extractedData ? userContext.extractedData : {},
     sitNumber: userContext.licensedToCarryNumber ? userContext.licensedToCarryNumber : 0,
-    creationDate: realCreationDate, //formattedDateFirebase,
+    creationDate: todayFirebase, //formattedDateFirebase,
   };
 
   // Prepare data for vehiclesWhatsapp collection
@@ -4269,7 +4269,7 @@ async function processPaymentOld(phone, paymentPlan, phoneNumberId) {
     .padStart(2, "0")}/${(todayFirebase.getMonth() + 1)
     .toString()
     .padStart(2, "0")}/${todayFirebase.getFullYear()}`;
-  const realCreationDate3 = new admin.firestore.Timestamp.fromDate(formattedDateFirebase);
+  //const realCreationDate3 = new admin.firestore.Timestamp.fromDate(formattedDateFirebase);
 
   const insuranceOrderData = {
     userPhone: userContext.userPhone ? String(userContext.userPhone) : "",
@@ -4294,7 +4294,7 @@ async function processPaymentOld(phone, paymentPlan, phoneNumberId) {
       ? String(userContext.insuranceDocumentUrl)
       : "",
     extractedData: userContext.extractedData ? userContext.extractedData : {},
-    creationDate: realCreationDate3,
+    creationDate: todayFirebase,
   };
 
   try {
