@@ -859,7 +859,8 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       break;
 
     case "get_insurance":
-      await requestInsuranceDocument(phone, phoneNumberId);
+      await requestNationalId(phone, phoneNumberId);
+      //await requestInsuranceDocument(phone, phoneNumberId);
       break;
 
     case "file_claim":
@@ -1231,8 +1232,433 @@ async function handleSecondInteractiveMessages(message, phone, phoneNumberId) {
   }
 }
 
-// handle document upload
+
+
+
+// 3. Updated document upload handler with new flow order
 const handleDocumentUpload = async (message, phone, phoneNumberId) => {
+  const userContext = userContexts.get(phone) || {};
+
+  // Validate phoneNumberId early
+  if (!phoneNumberId) {
+    console.error("Missing phoneNumberId in handleDocumentUpload");
+    return;
+  }
+
+  // Only process if expecting a document
+  if (userContext.stage !== "EXPECTING_DOCUMENT") {
+    console.log("Not expecting a document at this stage");
+    return;
+  }
+
+  // Check what type of document we're expecting
+  const expectedDocumentType = userContext.expectingDocumentType || "nationalId";
+  
+  const mediaId = message.document?.id || message.image?.id;
+  const mediaMimeType = message.document?.mime_type || message.image?.mime_type;
+
+  // Validate file type
+  if (
+    !mediaId ||
+    !(mediaMimeType === "application/pdf" || mediaMimeType.startsWith("image/"))
+  ) {
+    await sendWhatsAppMessage(
+      phone,
+      {
+        type: "text",
+        text: {
+          body: `Invalid file type. Please upload a clear image or PDF of your ${expectedDocumentType} document.`,
+        },
+      },
+      phoneNumberId
+    );
+    return;
+  }
+
+  try {
+    console.log(`Received a ${expectedDocumentType} document:`, mediaId);
+
+    // 1. Get the media URL from WhatsApp
+    const mediaUrl = await getMediaUrl(mediaId);
+    if (!mediaUrl) {
+      throw new Error("Failed to get media URL from WhatsApp");
+    }
+
+    // 2. Download the media file with proper headers
+    const fileBuffer = await axios
+      .get(mediaUrl, {
+        responseType: "arraybuffer",
+        headers: {
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+        },
+      })
+      .then((res) => Buffer.from(res.data, "binary"));
+
+    const fileExtension = getFileExtension(mediaMimeType);
+    
+    // Define folder based on document type
+    let folderName;
+    switch (expectedDocumentType) {
+      case "nationalId":
+        folderName = "national_id_documents";
+        break;
+      case "yellowCard":
+        folderName = "yellow_card_documents";
+        break;
+      default:
+        folderName = "insurance_documents";
+    }
+    
+    const fileName = `${folderName}/${phone}_${Date.now()}${fileExtension}`;
+
+    // 3. Upload the file to Firebase Storage
+    const file = bucket.file(fileName);
+    await file.save(fileBuffer, {
+      metadata: { contentType: mediaMimeType },
+    });
+
+    // 4. Get the public URL of the uploaded file
+    const [publicUrl] = await file.getSignedUrl({
+      action: "read",
+      expires: "03-09-2491", // Far future date
+    });
+
+    // 5. Initialize or get existing Firestore document
+    let docRef;
+    
+    if (!userContext.insuranceDocId) {
+      // First document being processed - create new record
+      const today = new Date();
+      const formattedDate = `${today.getDate().toString().padStart(2, "0")}/${(
+        today.getMonth() + 1
+      )
+        .toString()
+        .padStart(2, "0")}/${today.getFullYear()}`;
+
+      const initialData = {
+        userPhone: phone,
+        creationDate: formattedDate,
+        // These will be filled in later as needed
+        plateNumber: "",
+        insuranceStartDate: "",
+        selectedCoverTypes: "",
+        numberOfCoveredPeople: 0,
+        selectedPersonalAccidentCoverage: 0,
+        totalCost: 0,
+        selectedInstallment: "",
+      };
+      
+      // Create document and save the reference
+      docRef = await firestore3
+        .collection("whatsappInsuranceOrders")
+        .add(initialData);
+        
+      console.log("New document reference created in Firestore");
+      userContext.insuranceDocId = docRef.id;
+    } else {
+      // Get reference to existing document
+      docRef = firestore3
+        .collection("whatsappInsuranceOrders")
+        .doc(userContext.insuranceDocId);
+    }
+
+    // 6. Update Firestore with document URL based on type
+    const updateData = {};
+    
+    switch (expectedDocumentType) {
+      case "nationalId":
+        updateData.nationalIdDocumentUrl = publicUrl;
+        break;
+      case "yellowCard":
+        updateData.yellowCardDocumentUrl = publicUrl;
+        break;
+      default:
+        updateData.insuranceDocumentUrl = publicUrl;
+    }
+    
+    await docRef.update(updateData);
+    console.log(`Updated Firestore with ${expectedDocumentType} document URL`);
+
+    // 7. Extract data from the document
+    try {
+      const extractionResponse = await axios.post(
+        "https://assigurwmessaging.onrender.com/extract-data",
+        {
+          imageUrl: publicUrl,
+          documentType: expectedDocumentType
+        }
+      );
+      
+      console.log(`${expectedDocumentType} data extraction response:`, extractionResponse.data);
+      
+      if (extractionResponse.data.success) {
+        const rawResponse = extractionResponse.data.data.raw_response;
+        console.log("Raw response before parsing:", rawResponse);
+
+        let extractedData;
+        try {
+          const jsonString = rawResponse.replace(/```json\n|\n```/g, "").trim();
+          console.log("Cleaned JSON string:", jsonString);
+          extractedData = JSON.parse(jsonString);
+          
+          // Check validity based on document type
+          let isValidDocument = false;
+          
+          switch (expectedDocumentType) {
+            case "nationalId":
+              isValidDocument = extractedData.Names && extractedData.National_Id_No;
+              break;
+              
+            case "yellowCard":
+              isValidDocument = extractedData.N0_Immatriculation && extractedData.Nom;
+              break;
+              
+            case "insurance":
+              isValidDocument = extractedData.policyholder_name && 
+                               extractedData.chassis && 
+                               extractedData.insurer;
+              break;
+          }
+          
+          if (!isValidDocument) {
+            // Invalid document - ask for upload again
+            await sendWhatsAppMessage(
+              phone,
+              {
+                type: "text",
+                text: {
+                  body: `The uploaded ${expectedDocumentType} document appears to be invalid. Please ensure it contains all required information and upload again.`,
+                },
+              },
+              phoneNumberId
+            );
+            userContext.stage = "EXPECTING_DOCUMENT";
+            userContext.expectingDocumentType = expectedDocumentType;
+            userContexts.set(phone, userContext);
+            return;
+          }
+          
+          // Process specific document types
+          if (expectedDocumentType === "nationalId") {
+            // Save national ID data
+            await docRef.update({
+              nationalIdNames: extractedData.Names || "",
+              nationalIdNumber: extractedData.National_Id_No || ""
+            });
+            
+            userContext.nationalIdNames = extractedData.Names;
+            userContext.nationalIdNumber = extractedData.National_Id_No;
+            
+          } else if (expectedDocumentType === "yellowCard") {
+            // Save yellow card data
+            await docRef.update({
+              yellowCardImmatriculation: extractedData.N0_Immatriculation || "",
+              yellowCardGenre: extractedData.genre || "",
+              yellowCardMarque: extractedData.Marque || "",
+              yellowCardChassis: extractedData.N0_Du_chassis || "",
+              yellowCardAnnee: extractedData.Annee || "",
+              yellowCardDate: extractedData.Date || "",
+              yellowCardTin: extractedData.Tin || "",
+              yellowCardNom: extractedData.Nom || ""
+            });
+            
+            userContext.yellowCardImmatriculation = extractedData.N0_Immatriculation;
+            userContext.yellowCardNom = extractedData.Nom;
+            
+          } else if (expectedDocumentType === "insurance") {
+            // Save insurance data (similar to original code)
+            const {
+              policyholder_name: policyholderName = "",
+              policy_no: policyNo = "",
+              inception_date: insuranceStartDate = "",
+              expiry_date: expiryDate = "",
+              mark_and_type: markAndType = "",
+              registration_plate_no: plateNumber = "",
+              chassis = "",
+              licensed_to_carry_no: licensedToCarryNo = "",
+              usage = "",
+              insurer = "",
+            } = extractedData;
+            
+            await docRef.update({
+              insuranceStartDate,
+              plateNumber,
+              policyholderName,
+              policyNo,
+              expiryDate,
+              markAndType,
+              chassis,
+              licensedToCarryNo,
+              usage,
+              insurer,
+            });
+            
+            userContext.formattedPlate = plateNumber;
+            userContext.licensedToCarryNumber = licensedToCarryNo;
+            userContext.markAndTypeValue = markAndType;
+          }
+          
+        } catch (parseError) {
+          console.error("JSON parsing error:", parseError);
+          // Send message to user about invalid document
+          await sendWhatsAppMessage(
+            phone,
+            {
+              type: "text",
+              text: {
+                body: `The uploaded ${expectedDocumentType} document appears to be invalid. Please ensure it's clear and readable, then upload again.`,
+              },
+            },
+            phoneNumberId
+          );
+          userContext.stage = "EXPECTING_DOCUMENT";
+          userContext.expectingDocumentType = expectedDocumentType;
+          userContexts.set(phone, userContext);
+          return;
+        }
+      }
+    } catch (extractionError) {
+      console.error(`${expectedDocumentType} data extraction error:`, extractionError);
+    }
+
+    // 8. Determine next step in flow based on document type
+    
+    // Clear current document expectation
+    userContext.stage = null;
+    userContext.expectingDocumentType = null;
+    
+    // Determine next document to request or next step in flow
+    if (expectedDocumentType === "nationalId") {
+      // After national ID, request insurance document
+      await requestInsuranceDocument(phone, phoneNumberId);
+    } else if (expectedDocumentType === "insurance") {
+      // After insurance, request yellow card
+      await requestYellowCard(phone, phoneNumberId);
+    } else if (expectedDocumentType === "yellowCard") {
+      // After yellow card, proceed with insurance flow
+      await stateInsuranceDuration(
+        phone,
+        userContext.formattedPlate,
+        phoneNumberId
+      );
+    }
+    
+    userContexts.set(phone, userContext);
+    
+  } catch (error) {
+    console.error(`Error processing ${expectedDocumentType} document:`, error);
+    await sendWhatsAppMessage(
+      phone,
+      {
+        type: "text",
+        text: {
+          body: "An error occurred while processing your document. Please try again.",
+        },
+      },
+      phoneNumberId
+    );
+  }
+};
+
+
+
+
+
+// 1. Modified extraction function that can handle different document types
+async function extractImageData(imageUrl, documentType) {
+  try {
+    const base64Image = await getBase64FromUrl(imageUrl);
+    
+    // Define extraction prompt based on document type
+    let extractionPrompt = "";
+    
+    switch (documentType) {
+      case "insurance":
+        extractionPrompt = "Extract the following details, policyholder name, policy no, inception date, expiry date, mark & type, registation plate no, chassis, licensed to carry no, usage, insurer. Return these details in JSON format.";
+        break;
+      case "nationalId":
+        extractionPrompt = "Extract the following details from this national ID document: Names, National Id No. Return these details in JSON format.";
+        break;
+      case "yellowCard":
+        extractionPrompt = "Extract the following details from this yellow card document: N0 Immatriculation, genre, Marque, N0 Du chassis, Annee, Date, Tin, Nom. Return these details in JSON format.";
+        break;
+      default:
+        extractionPrompt = "Extract all visible text from this document and return in JSON format.";
+    }
+
+    const response = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: extractionPrompt,
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: base64Image,
+                },
+              },
+            ],
+          },
+        ],
+        max_tokens: 150,
+        temperature: 0.2,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.data.choices && response.data.choices[0]) {
+      const content = response.data.choices[0].message.content;
+      // Return the raw response content without parsing
+      return {
+        raw_response: content,
+      };
+    }
+
+    throw new Error("No valid response from API");
+  } catch (error) {
+    console.error(
+      "Error during extraction:",
+      error.response?.data || error.message
+    );
+    throw new Error(error.response?.data?.error?.message || error.message);
+  }
+}
+
+// 2. Updated endpoint to handle document type
+app.post("/extract-data", async (req, res) => {
+  try {
+    const { imageUrl, documentType = "insurance" } = req.body;
+
+    if (!imageUrl) {
+      return res.status(400).json({ error: "Image URL is required" });
+    }
+
+    const extractedData = await extractImageData(imageUrl, documentType);
+    console.log(`Extracted ${documentType} data:`, extractedData);
+    res.json({ success: true, data: extractedData });
+  } catch (error) {
+    console.error("Error processing request:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message || "Failed to extract data",
+    });
+  }
+});
+
+// handle document upload
+const handleDocumentUploadDraft2 = async (message, phone, phoneNumberId) => {
   const userContext = userContexts.get(phone) || {};
 
   // Validate phoneNumberId early
@@ -1571,7 +1997,7 @@ async function extractImageData(imageUrl) {
   }
 }
 
-app.post("/extract-data", async (req, res) => {
+app.post("/extract-data-old", async (req, res) => {
   try {
     const { imageUrl } = req.body;
 
@@ -2620,8 +3046,64 @@ async function initiateClaimProcess(phone, phoneNumberId) {
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
 }
 
-// Get insurance document
+
+
+// Function to request National ID (starting point in the flow)
+async function requestNationalId(phone, phoneNumberId) {
+  const payload = {
+    type: "text",
+    text: {
+      body: "Please upload a clear image or PDF of your National ID document.",
+    },
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+
+  // Update user context to expect a document
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_DOCUMENT";
+  userContext.expectingDocumentType = "nationalId";
+  userContexts.set(phone, userContext);
+}
+
+// Function to request insurance document (second in flow)
 async function requestInsuranceDocument(phone, phoneNumberId) {
+  const payload = {
+    type: "text",
+    text: {
+      body: "Thank you for your National ID. Now, please upload a clear image or PDF of your current or old insurance certificate.",
+    },
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+
+  // Update user context to expect a document
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_DOCUMENT";
+  userContext.expectingDocumentType = "insurance";
+  userContexts.set(phone, userContext);
+}
+
+// Function to request Yellow Card (last in flow)
+async function requestYellowCard(phone, phoneNumberId) {
+  const payload = {
+    type: "text",
+    text: {
+      body: "Thank you for your insurance certificate. Finally, please upload a clear image or PDF of your Yellow Card.",
+    },
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+
+  // Update user context to expect a document
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_DOCUMENT";
+  userContext.expectingDocumentType = "yellowCard";
+  userContexts.set(phone, userContext);
+}
+
+// Get insurance document
+async function requestInsuranceDocumentOld(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
