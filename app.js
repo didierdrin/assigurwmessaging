@@ -1337,10 +1337,11 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       )
         .toString()
         .padStart(2, "0")}/${today.getFullYear()}`;
+      const realCreationDate1 = new admin.firestore.Timestamp.fromDate(formattedDate);
 
       const initialData = {
         userPhone: phone,
-        creationDate: formattedDate,
+        creationDate: realCreationDate1,
         // These will be filled in later as needed
         plateNumber: "",
         insuranceStartDate: "",
@@ -1759,11 +1760,12 @@ const handleDocumentUploadDraft2 = async (message, phone, phoneNumberId) => {
     )
       .toString()
       .padStart(2, "0")}/${today.getFullYear()}`;
+    const realCreationDate2 = new admin.firestore.Timestamp.fromDate(formattedDate);
 
     const insuranceData = {
       userPhone: phone,
       insuranceDocumentUrl: publicUrl, // Store the storage URL
-      creationDate: formattedDate,
+      creationDate: realCreationDate2,
       plateNumber: "", // Will be filled later
       insuranceStartDate: "", // Will be filled later
       selectedCoverTypes: "",
@@ -4267,6 +4269,7 @@ async function processPaymentOld(phone, paymentPlan, phoneNumberId) {
     .padStart(2, "0")}/${(todayFirebase.getMonth() + 1)
     .toString()
     .padStart(2, "0")}/${todayFirebase.getFullYear()}`;
+  const realCreationDate3 = new admin.firestore.Timestamp.fromDate(formattedDateFirebase);
 
   const insuranceOrderData = {
     userPhone: userContext.userPhone ? String(userContext.userPhone) : "",
@@ -4291,7 +4294,7 @@ async function processPaymentOld(phone, paymentPlan, phoneNumberId) {
       ? String(userContext.insuranceDocumentUrl)
       : "",
     extractedData: userContext.extractedData ? userContext.extractedData : {},
-    creationDate: formattedDateFirebase,
+    creationDate: realCreationDate3,
   };
 
   try {
