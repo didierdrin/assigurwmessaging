@@ -4206,7 +4206,7 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
     );
 
     // Update insurance order with quotation ID
-    await orderDocRef.update({
+    await docRef.update({
       quotationId: quotationDocRef.id
     });
 
