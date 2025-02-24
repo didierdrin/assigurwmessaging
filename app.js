@@ -1577,7 +1577,7 @@ async function extractImageData(imageUrl, documentType) {
         extractionPrompt = "Extract the following details, policyholder name, policy no, inception date, expiry date, mark & type, registation plate no, chassis, licensed to carry no, usage, insurer. Return these details in JSON format.";
         break;
       case "nationalId":
-        extractionPrompt = "Extract the following details from this national ID document: Names, National Id No. Return these details in JSON format.";
+        extractionPrompt = "Extract the following details from this national ID document: Amazina/Names, Indangamuntu/National Id No. Return these details in JSON format.";
         break;
       case "yellowCard":
         extractionPrompt = "Extract the following details from this yellow card document: N0 Immatriculation, genre, Marque, N0 Du chassis, Annee, Date, Tin, Nom. Return these details in JSON format.";
