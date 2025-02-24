@@ -1359,6 +1359,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
         
       console.log("New document reference created in Firestore");
       userContext.insuranceDocId = docRef.id;
+      userContext.insuranceDocRef = docRef;
     } else {
       // Get reference to existing document
       docRef = firestore3
@@ -4163,16 +4164,17 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
 
   try {
     // 1. Save to main whatsappInsuranceOrders collection
-    const orderDocRef = await firestore3
-      .collection("whatsappInsuranceOrders")
-      .add(insuranceOrderData);
+    // const orderDocRef = await firestore3
+    //  .collection("whatsappInsuranceOrders")
+    //  .add(insuranceOrderData);
+    userContext.insuranceDocRef.update(insuranceOrderData);
     console.log(
       "Insurance order data successfully saved to Firestore with ID:",
       orderDocRef.id
     );
     
     // Update context with the new document ID
-    userContext.insuranceDocId = orderDocRef.id;
+    //userContext.insuranceDocId = orderDocRef.id;
     userContexts.set(phone, userContext);
 
     // 2. Save to vehiclesWhatsapp collection
@@ -4206,9 +4208,9 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
     );
 
     // Update insurance order with quotation ID
-  //  await docRef.update({
-  //    quotationId: quotationDocRef.id
-  //  });
+    await userContext.insuranceDocRef.update({
+      quotationId: quotationDocRef.id
+    });
 
   } catch (error) {
     console.error("Error saving data to Firestore:", error.message);
