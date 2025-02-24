@@ -1341,7 +1341,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
 
       const initialData = {
         userPhone: phone,
-        creationDate: today,
+        creationDate: admin.firestore.Timestamp.now(),
         // These will be filled in later as needed
         plateNumber: "",
         insuranceStartDate: "",
@@ -1765,7 +1765,7 @@ const handleDocumentUploadDraft2 = async (message, phone, phoneNumberId) => {
     const insuranceData = {
       userPhone: phone,
       insuranceDocumentUrl: publicUrl, // Store the storage URL
-      creationDate: today,
+      creationDate: admin.firestore.Timestamp.now(),
       plateNumber: "", // Will be filled later
       insuranceStartDate: "", // Will be filled later
       selectedCoverTypes: "",
@@ -4119,7 +4119,7 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
       : "",
     extractedData: userContext.extractedData ? userContext.extractedData : {},
     sitNumber: userContext.licensedToCarryNumber ? userContext.licensedToCarryNumber : 0,
-    creationDate: todayFirebase, //formattedDateFirebase,
+    creationDate: admin.firestore.Timestamp.now(), //formattedDateFirebase,
   };
 
   // Prepare data for vehiclesWhatsapp collection
