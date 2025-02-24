@@ -1406,7 +1406,8 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
           
           switch (expectedDocumentType) {
             case "nationalId":
-              isValidDocument = extractedData.Names && extractedData.National_Id_No;
+              //isValidDocument = extractedData.Names && extractedData.National_Id_No;
+              isValidDocument = extractedData["Amazina/Names"] && extractedData["Indangamuntu/National Id No"];
               break;
               
             case "yellowCard":
