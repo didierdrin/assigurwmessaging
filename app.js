@@ -1943,7 +1943,7 @@ async function getBase64FromUrl(url) {
   return `data:image/jpeg;base64,${buffer.toString("base64")}`;
 }
 
-async function extractImageData(imageUrl) {
+async function extractImageDataOld(imageUrl) {
   try {
     const base64Image = await getBase64FromUrl(imageUrl);
 
