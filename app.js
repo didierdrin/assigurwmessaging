@@ -4206,9 +4206,9 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
     );
 
     // Update insurance order with quotation ID
-    await docRef.update({
-      quotationId: quotationDocRef.id
-    });
+  //  await docRef.update({
+  //    quotationId: quotationDocRef.id
+  //  });
 
   } catch (error) {
     console.error("Error saving data to Firestore:", error.message);
