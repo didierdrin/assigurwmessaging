@@ -1305,6 +1305,9 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       case "yellowCard":
         folderName = "yellow_card_documents";
         break;
+      case "carImage":
+        folderName = "car_images";
+        break;
       default:
         folderName = "insurance_documents";
     }
@@ -1372,6 +1375,9 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       case "yellowCard":
         updateData.yellowCardDocumentUrl = publicUrl;
         break;
+      case "carImage":
+        updateData.carImageUrl = publicUrl;
+        break;
       default:
         updateData.insuranceDocumentUrl = publicUrl;
     }
@@ -1418,6 +1424,10 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
               isValidDocument = extractedData.policyholder_name && 
                                extractedData.chassis && 
                                extractedData.insurer;
+              break;
+              
+            case "carImage":
+              isValidDocument = extractedData.body_type;
               break;
           }
           
@@ -1497,6 +1507,13 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
             userContext.formattedPlate = plateNumber;
             userContext.licensedToCarryNumber = licensedToCarryNo;
             userContext.markAndTypeValue = markAndType;
+          } else if (expectedDocumentType === "carImage") {
+            // Save car body type data
+            await docRef.update({
+              carBodyType: extractedData.body_type || ""
+            });
+            
+            userContext.carBodyType = extractedData.body_type;
           }
           
         } catch (parseError) {
@@ -1582,6 +1599,9 @@ async function extractImageData(imageUrl, documentType) {
         break;
       case "yellowCard":
         extractionPrompt = "Extract the following details from this yellow card document: N0 Immatriculation, genre, Marque, N0 Du chassis, Annee, Date, Tin, Nom. Return these details in JSON format.";
+        break;
+      case "carImage":
+        extractionPrompt = "This is a car image. Identify the body type/style of the car in this image. Options include sedan, hatchback, SUV, pickup truck, coupe, convertible, wagon, van, minivan, or other specialized types. Return only the body type in JSON format with key 'body_type'.";
         break;
       default:
         extractionPrompt = "Extract all visible text from this document and return in JSON format.";
@@ -3085,12 +3105,12 @@ async function requestInsuranceDocument(phone, phoneNumberId) {
   userContexts.set(phone, userContext);
 }
 
-// Function to request Yellow Card (last in flow)
+// Function to request Yellow Card 
 async function requestYellowCard(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Thank you for your insurance certificate. Finally, please upload a clear image or PDF of your Yellow Card.",
+      body: "Thank you for your insurance certificate. Now, please upload a clear image or PDF of your Yellow Card.",
     },
   };
 
@@ -3100,6 +3120,24 @@ async function requestYellowCard(phone, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
   userContext.stage = "EXPECTING_DOCUMENT";
   userContext.expectingDocumentType = "yellowCard";
+  userContexts.set(phone, userContext);
+}
+
+
+async function requestCarImage(phone, phoneNumberId) {
+  const payload = {
+    type: "text",
+    text: {
+      body: "Thank you for your Yellow Card. Finally, please upload a clear image of your car so we can determine its body type (sedan, pickup, SUV, etc.).",
+    },
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+
+  // Update user context to expect a document
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_DOCUMENT";
+  userContext.expectingDocumentType = "carImage";
   userContexts.set(phone, userContext);
 }
 
