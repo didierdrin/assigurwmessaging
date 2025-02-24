@@ -4116,7 +4116,7 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
       : "",
     extractedData: userContext.extractedData ? userContext.extractedData : {},
     sitNumber: userContext.licensedToCarryNumber ? userContext.licensedToCarryNumber : 0,
-    creationDate: formattedDateFirebase,
+    creationDate: todayFirebase, //formattedDateFirebase,
   };
 
   // Prepare data for vehiclesWhatsapp collection
