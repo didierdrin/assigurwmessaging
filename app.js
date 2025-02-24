@@ -1704,7 +1704,7 @@ const handleDocumentUploadDraft2 = async (message, phone, phoneNumberId) => {
   // Validate file type
   if (
     !mediaId ||
-    !(mediaMimeType === "application/pdf" || mediaMimeType.startsWith("image/"))
+    !(mediaMimeType.startsWith("image/"))
   ) {
     await sendWhatsAppMessage(
       phone,
