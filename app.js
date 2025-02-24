@@ -4086,6 +4086,7 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
   await sendWhatsAppMessage(phone, paymentPayload, phoneNumberId);
 
   const todayFirebase = new Date();
+  const realCreationDate = new admin.firestore.Timestamp.fromDate(todayFirebase);
   const formattedDateFirebase = `${todayFirebase
     .getDate()
     .toString()
@@ -4116,7 +4117,7 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
       : "",
     extractedData: userContext.extractedData ? userContext.extractedData : {},
     sitNumber: userContext.licensedToCarryNumber ? userContext.licensedToCarryNumber : 0,
-    creationDate: todayFirebase, //formattedDateFirebase,
+    creationDate: realCreationDate, //formattedDateFirebase,
   };
 
   // Prepare data for vehiclesWhatsapp collection
