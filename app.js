@@ -3215,7 +3215,7 @@ async function requestNationalId(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Please upload a clear image or PDF of your National ID document.",
+      body: `*National ID*\nPlease upload a clear image or PDF of your National ID document.`,
     },
   };
 
@@ -3233,7 +3233,7 @@ async function requestInsuranceDocument(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Thank you for your National ID. Now, please upload a clear image or PDF of your current or old insurance certificate.",
+      body: `*Insurance Certificate*\nThank you for your National ID. Now, please upload a clear image or PDF of your current or old insurance certificate.`,
     },
   };
 
@@ -3251,7 +3251,7 @@ async function requestYellowCard(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Thank you for your insurance certificate. Now, please upload a clear image or PDF of your Yellow Card.",
+      body: `*Yellow Card*\nThank you for your insurance certificate. Now, please upload a clear image or PDF of your Yellow Card.`,
     },
   };
 
@@ -3269,7 +3269,7 @@ async function requestCarImage(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Thank you for your Yellow Card. Finally, please upload a clear image of your car so we can determine its body type (sedan, pickup, SUV, etc.).",
+      body: `*Car Photo*\nThank you for your Yellow Card. Finally, please upload a clear image of your car so we can determine its body type (sedan, pickup, SUV, etc.).`,
     },
   };
 
@@ -4648,7 +4648,7 @@ async function stateInsuranceDurationRW(phone, plateNumber, phoneNumberId) {
             type: "reply",
             reply: {
               id: "less_than_a_year_rw",
-              title: "Iminsi Itarengeje Umwaka"
+              title: "Munsi y'Umwaka"
             }
           }
         ]
