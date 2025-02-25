@@ -4566,7 +4566,7 @@ async function requestNationalIdRW(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: `*Indangamuntu*\nNyamuneka ohereza ifoto cyangwa PDF isobanutse y'Indangamuntu yawe.`
+      body: `*Twohereze Indangamuntu*\nOk! Noneho, ohereza kopi/ifoto y'indangamuntu ya nyiri iki kinyabiziga. Ibi bidufasha kwemeza amakuru yawe byihuse.`
     }
   };
 
@@ -4583,7 +4583,7 @@ async function requestInsuranceDocumentRW(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: `*Icyemezo cy'Ubwishingizi*\nMurakoze kuri Indangamuntu yawe. Ubu, nyamuneka ohereza ifoto cyangwa PDF isobanutse y'icyemezo cy'ubwishingizi cyawe gishya cyangwa cyashize.`
+      body: `*Icyemezo cy'Ubwishingizi Gisanzwe(Niba gihari)*\nNiba ufite icyemezo cy'ubwishingizi gisanzwe, twohereze ifoto/pdf. Niba utagifite, kanda kuri 'Ntacyo' maze dukomeze.`
     }
   };
 
@@ -4600,7 +4600,7 @@ async function requestYellowCardRW(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: `*Carte Jaune (Yellow Card)*\nMurakoze kuri icyemezo cy'ubwishingizi. Ubu, nyamuneka ohereza ifoto cyangwa PDF isobanutse ya Carte Jaune (Yellow Card) y'ikinyabiziga cyawe.`
+      body: `*Carte Jaune(Yellow Card)/Logbook*\nDukomeze! Ubu noneho twohereze ifoto/pdf ya Carte Jaune(Yellow Card)/Logbook y'ikinyabiziga kugirango tumenye neza amakuru y'imodoka.`
     }
   };
 
@@ -4617,7 +4617,7 @@ async function requestCarImageRW(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: `*Ifoto y'Imodoka*\nMurakoze kuri Carte Jaune. Nyamuneka ohereza ifoto isobanutse y'imodoka yawe kugira ngo tumenye ubwoko bwayo (sedan, pickup, SUV, etc.).`
+      body: `*Ifoto y'Imodoka*\nTuri hafi gusoza gutanga ibyemezo by'ibanze! Noneho, ohereza ifoto y'imodoka wifuza gufatira ubwishingizi.`
     }
   };
 
@@ -4653,7 +4653,7 @@ async function stateInsuranceDurationRW(phone, plateNumber, phoneNumberId) {
     interactive: {
       type: "button",
       body: {
-        text: `Nimero y'Ikinyabiziga: ${plateNumber}\n\nUbwishingizi bwawe buzamara igihe kingana gute?`
+        text: `*Nimero y'Ikinyabiziga:*\n${plateNumber}\n\nUbwishingizi bwawe buzamara igihe kingana gite?`
       },
       action: {
         buttons: [
@@ -4688,7 +4688,7 @@ async function startDateRW(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Tanga itariki yo gutangira ubwishingizi. (Urugero: DD/MM/YYYY, 02/01/2100)"
+      body: `*Ni Ryari Ubwishingizi Buzatangira?*\nAndika itariki ushakako ubwishingizi buzatangira. (Urugero: DD/MM/YYYY, 02/01/2100)`
     }
   };
 
@@ -4704,7 +4704,7 @@ async function endDateRW(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Tanga itariki yo kurangiza ubwishingizi. (Urugero: DD/MM/YYYY, 04/01/2025)"
+      body: `*Itariki yo Gusoza*\nNoneho andika itariki ushakako ubwishingizi buzarangira. (Urugero: DD/MM/YYYY, 04/01/2025)`
     }
   };
 
@@ -5138,6 +5138,89 @@ async function selectVehicleBodyTypeDraftRW(phone, phoneNumberId) {
 // (Keep the premium summary and installment options in English)
 async function selectPaymentPlanRW(phone, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
+
+  
+  // Create a VehicleModel instance from stored data
+  const vehicle = new VehicleModel(
+    "", //userContext.tin,
+    userContext.licensedToCarryNumber, // or sitNumber
+    "", //userContext.year,
+    "", //userContext.make,
+    "", //userContext.model,
+    "", //userContext.vin,
+    userContext.plateNumber,
+    userContext.bodyType,
+    userContext.usageTypeManual,
+    "", //userContext.fuelType,
+    "", //userContext.vehicleValue,
+    "", //userContext.engineSize,
+    [] //userContext.images || []
+  );
+
+
+
+// Enhanced parseDate function with better validation
+function parseDate(dateStr) {
+  if (!dateStr) {
+    throw new Error("Date string is required");
+  }
+  
+  dateStr = String(dateStr);
+  const parts = dateStr.split('/');
+  
+  if (parts.length !== 3) {
+    throw new Error("Invalid date format: expected DD/MM/YYYY");
+  }
+  
+  const day = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const year = parseInt(parts[2], 10);
+  
+  if (isNaN(day) || isNaN(month) || isNaN(year)) {
+    throw new Error("Date parts must be numeric");
+  }
+  
+  if (day < 1 || day > 31 || month < 0 || month > 11 || year < 2000) {
+    throw new Error("Date values out of valid range");
+  }
+  
+  const date = new Date(year, month, day);
+  
+  // Check if the date is valid (e.g., not Feb 30)
+  if (date.getDate() !== day || date.getMonth() !== month || date.getFullYear() !== year) {
+    throw new Error("Invalid date combination");
+  }
+  
+  return date;
+}
+  
+  // Debug: Log the date values
+  console.log("Insurance dates received:", {
+    startDate: userContext.insuranceStartDate,
+    endDate: userContext.insuranceEndDate
+  });
+
+  
+
+  let start = parseDate(userContext.insuranceStartDate);
+  let end = parseDate(userContext.insuranceEndDate);
+  let calculatedTotalPerVehicle;
+  
+
+  // Calculate pricing using the imported CalculatePricing class
+  const pricingObj = new CalculatePricing(vehicle, start, end, false);
+
+  // Choose the total cost as needed – for example, full comprehensive premium:
+  //const calculatedTotalPerVehicle = pricingObj.comesa;
+  if (userContext.coverType === "COMESA") {
+    calculatedTotalPerVehicle = pricingObj.comesa;
+  } else {
+    calculatedTotalPerVehicle = pricingObj.premium;
+  }
+  
+  // Format numbers with commas
+  const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  
 
   // (Assume vehicle and pricing calculations remain unchanged)
   // ... [Calculation logic remains the same as in the original function] ...
