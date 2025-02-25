@@ -4490,7 +4490,7 @@ async function sendWelcomeMessageRW(phone, phoneNumberId) {
         text: "Ikaze!"
       },
       body: {
-        text: "Murakaza neza! Fata ubwishingizi bw'imodoka yawe mu buryo bwihuse kandi bw’ikoranabuhanga? Kanda ‘Tangira’ maze dutangire urugendo rwacu hamwe!"
+        text: "Murakaza neza! Fata ubwishingizi bw'imodoka yawe mu buryo bwihuse kandi bw’ikoranabuhanga. Kanda ‘Tangira’ maze dutangire urugendo rwacu hamwe!"
       },
       footer: {
         text: "Hitamo igikorwa cyo gukomeza"
