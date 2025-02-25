@@ -932,6 +932,13 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       await requestNationalIdRW(phone, phoneNumberId);
       break;
 
+    case "third_party_rw":
+      userContext.thirdPartyComesaCost = 14000; // Not this private 5,000 commercial 10,000
+      userContext.coverType = 'Rwanda'; 
+      userContexts.set(phone, userContext);
+      await selectVehicleBodyTypeRW(phone, phoneNumberId); 
+      break;
+
     case "file_claim":
       await initiateClaimProcess(phone, phoneNumberId);
       break;
@@ -4732,29 +4739,40 @@ async function selectInsurancePeriodRW(phone, plateNumber, phoneNumberId) {
 // Insurance Cover Type Selection – RW
 async function selectInsuranceCoverTypeRW(phone, phoneNumberId) {
   // Here we use an interactive message (instead of a template) with Kinyarwanda text.
-  const payload = {
+const payload = {
     type: "interactive",
     interactive: {
-      type: "button",
-      body: {
-        text: "Waba ushaka guhitamo ubwoko bw'ubwishingizi?"
+      type: "list",
+      header: {
+        type: "text",
+        text: "Hitamo Ubwoko bw'Ubwishingizi",
       },
+      body: {
+        text: "Waba ushaka guhitamo ubwoko bw'ubwishingizi?",
+      },
+  
       action: {
-        buttons: [
+        button: "Reba Ubwishingizi",
+        sections: [
           {
-            type: "reply",
-            reply: {
-              id: "select_cover_type",
-              title: "Hitamo Ubwoko"
-            }
-          }
-        ]
-      }
-    }
+            title: "Third Party",
+            rows: [
+              {
+                id: "third_party_rw",
+                title: "Sanlum",
+                description: "Third party cover",
+              },
+              
+            ],
+          },
+        ],
+      },
+    },
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
 }
+
 
 // Select to Add Personal Accident Cover – RW
 // (Keep text in English as instructed)
