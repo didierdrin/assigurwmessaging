@@ -1731,6 +1731,18 @@ async function extractImageData(imageUrl, documentType) {
       case "carImage":
         extractionPrompt = "This is a car image. Identify the body type/style of the car in this image. Options include sedan, hatchback, SUV, pickup truck, coupe, convertible, wagon, van, minivan, or other specialized types. Return only the body type in JSON format with key 'body_type'.";
         break;
+      case "insurance_rw":
+        extractionPrompt = "Extract the following details, policyholder name, policy no, inception date, expiry date, mark & type, registation plate no, chassis, licensed to carry no, usage, insurer. Return these details in JSON format.";
+        break;
+      case "nationalId_rw":
+        extractionPrompt = "Extract the following details from this national ID document: Amazina/Names, Indangamuntu/National Id No. Return these details in JSON format.";
+        break;
+      case "yellowCard_rw":
+        extractionPrompt = "Extract the following details from this yellow card document: N0 Immatriculation, genre, Marque, N0 Du chassis, Annee, Date, Tin, Nom. Return these details in JSON format.";
+        break;
+      case "carImage_rw":
+        extractionPrompt = "This is a car image. Identify the body type/style of the car in this image. Options include sedan, hatchback, SUV, pickup truck, coupe, convertible, wagon, van, minivan, or other specialized types. Return only the body type in JSON format with key 'body_type'.";
+        break;
       default:
         extractionPrompt = "Extract all visible text from this document and return in JSON format.";
     }
