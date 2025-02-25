@@ -5222,23 +5222,87 @@ function parseDate(dateStr) {
   const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   
 
-  // (Assume vehicle and pricing calculations remain unchanged)
-  // ... [Calculation logic remains the same as in the original function] ...
+    
+  // Calculate the breakdown based on insurance type (Rwanda or COMESA)
+  const getBreakdown = () => {
+    const isComesa = userContext.coverType === 'COMESA';
+    const baseAmount = calculatedTotalPerVehicle; 
+    const occupantFee = (userContext.numberOfCoveredPeople || 4) * (isComesa ? 0 : 1000);
+    const comesaMedicalFee = isComesa ? 10000 : 0;
+    const netPremium = baseAmount; //+ occupantFee + comesaMedicalFee;
+    const adminFee = isComesa ? 10000 : 2500; // Yellow card fee for COMESA
+    const vat = Math.round((netPremium + adminFee) * 0.18);
+    const sgf = Math.round(netPremium * 0.1);
+    const total = netPremium + adminFee + vat + sgf;
 
-  // Example breakdown text (in English) for the premium summary:
-  const breakdownText = `Insurance Premium Breakdown:
+    return {
+      tpl: baseAmount,
+      occupantFee,
+      comesaMedicalFee,
+      netPremium,
+      adminFee,
+      vat,
+      sgf,
+      total
+    };
+  };
+
   
-  Type of Cover: ${userContext.coverType}
-  TPL: ${formatNumber(breakdown.tpl)}
-  NET PREMIUM: ${formatNumber(breakdown.netPremium)}
-  Adm.fee/Yellow Card: ${formatNumber(breakdown.adminFee)}
-  VAT(18%): ${formatNumber(breakdown.vat)}
-  SGF: ${formatNumber(breakdown.sgf)}
-  TOTAL PREMIUM: ${formatNumber(breakdown.total)}
+  // Use default values if required data is missing
+  const coverType = userContext.coverType || 'Rwanda';
+  const numberOfCoveredPeople = userContext.numberOfCoveredPeople || 1;
   
-  TOTAL TO PAY: ${formatNumber(breakdown.total)}
+  // Ensure we have required context data
+  if (!userContext.coverType || !numberOfCoveredPeople) {
+    console.error("Missing required context data");
+    await sendWhatsAppMessage(
+      phone,
+      {
+        type: "text",
+        text: {
+          body: "Sorry, we're missing some required information. Please start over."
+        }
+      },
+      phoneNumberId
+    );
+    return;
+  }
+
+  const breakdown = getBreakdown();
   
-  Please select your preferred payment plan:`;
+  // Create the detailed breakdown text
+ // const breakdownText = `Insurance Premium Breakdown:\nType of Cover         ${userContext.coverType}\nTPL                   ${formatNumber(breakdown.tpl)}\nOccupant              ${userContext.numberOfCoveredPeople}\nCOMESA Medical Fee    ${formatNumber(breakdown.comesaMedicalFee)}\nNET PREMIUM           ${formatNumber(breakdown.netPremium)}\nAdm.fee/Yellow Card   ${formatNumber(breakdown.adminFee)}\nVAT(18%)              ${formatNumber(breakdown.vat)}\nSGF(9%)               ${formatNumber(breakdown.sgf)}\nTOTAL PREMIUM         ${formatNumber(breakdown.total)}\n\nTOTAL TO PAY          ${formatNumber(breakdown.total)}\nPlease select your preferred payment plan:`;
+
+  // Calculate the longest label length
+const labels = [
+  'Type of Cover',
+  'TPL',
+  'Occupant',
+  'COMESA Medical Fee',  
+  'NET PREMIUM',
+  'Adm.fee/Yellow Card', // Longest label - will be our reference
+  'VAT(18%)',
+  'SGF(9%)',
+  'TOTAL PREMIUM',
+  'TOTAL TO PAY'
+];
+
+const longestLabelLength = 'Adm.fee/Yellow Card'.length;
+
+// Create the detailed breakdown text with properly aligned values ${' '.repeat(longestLabelLength - 'Type of Cover'.length)} //Occupant: ${formatNumber(userContext.licensedToCarryNumber)} COMESA Medical Fee: ${formatNumber(breakdown.comesaMedicalFee)}
+const breakdownText = `Insurance Premium Breakdown:
+
+Type of Cover: ${userContext.coverType}
+TPL: ${formatNumber(breakdown.tpl)}
+NET PREMIUM: ${formatNumber(breakdown.netPremium)}
+Adm.fee/Yellow Card: ${formatNumber(breakdown.adminFee)}
+VAT(18%): ${formatNumber(breakdown.vat)}
+SGF: ${formatNumber(breakdown.sgf)}
+TOTAL PREMIUM: ${formatNumber(breakdown.total)}
+
+TOTAL TO PAY: ${formatNumber(breakdown.total)}
+
+Please select your preferred payment plan:`;
 
   const payload = {
     type: "interactive",
