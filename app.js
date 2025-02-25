@@ -3080,7 +3080,7 @@ async function requestNationalId(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Please upload a clear image or PDF of your National ID document.",
+      body: `*National ID*\nPlease upload a clear image or PDF of your National ID document.`,
     },
   };
 
@@ -3098,7 +3098,7 @@ async function requestInsuranceDocument(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Thank you for your National ID. Now, please upload a clear image or PDF of your current or old insurance certificate.",
+      body: `*Insurance Certificate*\nThank you for your National ID. Now, please upload a clear image or PDF of your current or old insurance certificate.`,
     },
   };
 
@@ -3116,7 +3116,7 @@ async function requestYellowCard(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Thank you for your insurance certificate. Now, please upload a clear image or PDF of your Yellow Card.",
+      body: `*Carte Jaune*\nThank you for your insurance certificate. Now, please upload a clear image or PDF of your Yellow Card.`,
     },
   };
 
@@ -3134,7 +3134,7 @@ async function requestCarImage(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: "Thank you for your Yellow Card. Finally, please upload a clear image of your car so we can determine its body type (sedan, pickup, SUV, etc.).",
+      body: `*Car Type*\nThank you for your Yellow Card. Finally, please upload a clear image of your car so we can determine its body type (sedan, pickup, SUV, etc.).`,
     },
   };
 
@@ -4159,6 +4159,7 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
     startTime: userContext.insuranceStartDate, // Use current date as a placeholder
     endTime: userContext.insuranceEndDate, // Placeholder for 1 year from now
     transactionId: `WHATSAPP_${Date.now()}_${phone.slice(-4)}`,
+    status: 'processing',
     insuranceCompanyName: userContext.insuranceCompany || "Insurance Provider"
   };
 
