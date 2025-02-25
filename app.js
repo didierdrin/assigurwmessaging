@@ -4504,7 +4504,7 @@ async function sendWelcomeMessageRW(phone, phoneNumberId) {
               {
                 id: "get_insurance_rw",
                 title: "Fata Ubwishingizi",
-                description: "Saba politiki y'ubwishingizi bushya"
+                description: "Saba ubwishingizi bushya"
               }
               // Additional options can be added here.
             ]
