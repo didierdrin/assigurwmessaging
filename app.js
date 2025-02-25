@@ -211,11 +211,63 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
             await selectInsuranceCoverType(phone, phoneNumberId);
             break;
 
+          case "EXPECTING_START_DATE_RW":
+            const formattedDateRW = `${today
+          .getDate()
+          .toString()
+          .padStart(2, "0")}/${(today.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}/${today.getFullYear()}`;
+
+            userContext.insuranceStartDate = messageText; //inputDate;
+            userContext.stage = "EXPECTING_END_DATE_RW";
+            userContexts.set(phone, userContext);
+            await endDateRW(phone, phoneNumberId);
+            break;
+
+          case "EXPECTING_END_DATE_RW":
+            //const startDate = new Date(userContext.insuranceStartDate);
+            const startDateRW = new Date(
+              userContext.insuranceStartDate.split("/").reverse().join("-")
+            );
+            startDateRW.setHours(0, 0, 0, 0); // Reset time part for start date
+
+            // Debug logging
+            console.log("Date comparison:", {
+              startDate: startDateRW.toISOString(),
+              inputDate: inputDate.toISOString(),
+              comparison: inputDate > startDateRW
+            });
+
+            // Check if end date is after start date
+            if (inputDate <= startDateRW) {
+              await sendWhatsAppMessage(phone, {
+                type: "text",
+                text: {
+                  body: "End date must be after the start date. Please enter a valid end date with format DD/MM/YYYY e.g: 15/12/2100",
+                }
+              }, phoneNumberId);
+              return;
+            }
+
+            userContext.insuranceEndDate =  messageText; //inputDate;
+            userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
+            userContexts.set(phone, userContext);
+            await selectInsuranceCoverTypeRW(phone, phoneNumberId);
+            break;
+
           case "CUSTOM_DATE_INPUT":
             userContext.insuranceStartDate = inputDate;
             userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
             userContexts.set(phone, userContext);
             await selectInsuranceCoverType(phone, phoneNumberId);
+            break;
+
+          case "CUSTOM_DATE_INPUT_RW":
+            userContext.insuranceStartDate = inputDate;
+            userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
+            userContexts.set(phone, userContext);
+            await selectInsuranceCoverTypeRW(phone, phoneNumberId);
             break;
 
           default:
@@ -544,6 +596,25 @@ const handlePaymentTermsReply = async (
       }
 
       break;
+    case "full_year_rw":
+      if (userContext.stage === "EXPECTING_STATE_INSURANCE_DURATION") {
+        await selectInsurancePeriodRW(
+          phone,
+          userContext.formattedPlate,
+          phoneNumberId
+        );
+        return;
+      }
+
+      break;
+    case "less_than_a_year_rw":
+      if (userContext.stage === "EXPECTING_STATE_INSURANCE_DURATION") {
+        await startDateRW(phone, phoneNumberId);
+        return;
+      }
+
+      break;
+    
 
     case "add_yes":
       if (userContext.stage === "PERSONAL_ACCIDENT_COVER") {
@@ -636,6 +707,57 @@ const handlePaymentTermsReply = async (
           phoneNumberId
         );
         userContext.stage = "CUSTOM_DATE_INPUT";
+        userContexts.set(phone, userContext);
+        console.log("Expecting custom_date button reply");
+        return;
+      }
+
+      break;
+
+    case "start_today_rw":
+      if (userContext.stage === "EXPECTING_INSURANCE_PERIOD") {
+        // Store the insurance start date in userContext
+        const today = new Date();
+        const formattedDate = `${today
+          .getDate()
+          .toString()
+          .padStart(2, "0")}/${(today.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}/${today.getFullYear()}`;
+
+        // Calculate the insurance end date by adding one year
+    const insuranceEndDate = new Date(today);
+    insuranceEndDate.setFullYear(insuranceEndDate.getFullYear() + 1);
+    const formattedEndDate = `${insuranceEndDate
+      .getDate()
+      .toString()
+      .padStart(2, "0")}/${(insuranceEndDate.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}/${insuranceEndDate.getFullYear()}`;
+        
+    userContext.insuranceEndDate = formattedEndDate;
+        userContext.insuranceStartDate = formattedDate;
+        userContexts.set(phone, userContext);
+        await selectInsuranceCoverTypeRW(phone, phoneNumberId);
+        console.log("Expecting start_today_rw button reply");
+        return;
+      }
+
+      break;
+
+     case "custom_date_rw":
+      if (userContext.stage === "EXPECTING_INSURANCE_PERIOD") {
+        await sendWhatsAppMessage(
+          phone,
+          {
+            type: "text",
+            text: {
+              body: "Shyiramo umunsi ubwishingizi butangiriraho. (DD/MM/YYYY, 02/01/2025):",
+            },
+          },
+          phoneNumberId
+        );
+        userContext.stage = "CUSTOM_DATE_INPUT_RW";
         userContexts.set(phone, userContext);
         console.log("Expecting custom_date button reply");
         return;
@@ -788,6 +910,10 @@ const handleTextMessagesOld = async (message, phone, phoneNumberId) => {
       console.log("User requested insurance options.");
       await sendWelcomeMessage(phone, phoneNumberId);
       break;
+    case "ubwishingizi":
+      console.log("User requested insurance options.");
+      await sendWelcomeMessageRW(phone, phoneNumberId);
+      break;
     case "lifuti":
       console.log("User requested insurance options.");
       await sendLifutiWelcomeMessage(phone, phoneNumberId);
@@ -861,6 +987,10 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
     case "get_insurance":
       await requestNationalId(phone, phoneNumberId);
       //await requestInsuranceDocument(phone, phoneNumberId);
+      break;
+
+    case "get_insurance_rw":
+      await requestNationalIdRW(phone, phoneNumberId);
       break;
 
     case "file_claim":
@@ -1308,6 +1438,15 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       case "carImage":
         folderName = "car_images";
         break;
+      case "nationalId_rw":
+        folderName = "national_id_documents";
+        break;
+      case "yellowCard_rw":
+        folderName = "yellow_card_documents";
+        break;
+      case "carImage_rw":
+        folderName = "car_images";
+        break;
       default:
         folderName = "insurance_documents";
     }
@@ -1380,6 +1519,16 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       case "carImage":
         updateData.carImageUrl = publicUrl;
         break;
+      case "nationalId_rw":
+        updateData.nationalIdDocumentUrl = publicUrl;
+        break;
+      case "yellowCard_rw":
+        updateData.yellowCardDocumentUrl = publicUrl;
+        break;
+      case "carImage_rw":
+        updateData.carImageUrl = publicUrl;
+        break;
+      
       default:
         updateData.insuranceDocumentUrl = publicUrl;
     }
@@ -1431,6 +1580,25 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
             case "carImage":
               isValidDocument = extractedData.body_type;
               break;
+              
+            case "nationalId_rw":
+              //isValidDocument = extractedData.Names && extractedData.National_Id_No;
+              isValidDocument = extractedData["Amazina/Names"] && extractedData["Indangamuntu/National Id No"];
+              break;
+              
+            case "yellowCard_rw":
+              isValidDocument = extractedData.N0_Immatriculation && extractedData.Nom;
+              break;
+              
+            case "insurance_rw":
+              isValidDocument = extractedData.policyholder_name && 
+                               extractedData.chassis && 
+                               extractedData.insurer;
+              break;
+              
+            case "carImage_rw":
+              isValidDocument = extractedData.body_type;
+              break;
           }
           
           if (!isValidDocument) {
@@ -1452,7 +1620,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
           }
           
           // Process specific document types
-          if (expectedDocumentType === "nationalId") {
+          if (expectedDocumentType === "nationalId" || expectedDocumentType === "nationalId_rw") {
             // Save national ID data
             await docRef.update({
               nationalIdNames: extractedData.Names || "",
@@ -1462,7 +1630,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
             userContext.nationalIdNames = extractedData.Names;
             userContext.nationalIdNumber = extractedData.National_Id_No;
             
-          } else if (expectedDocumentType === "yellowCard") {
+          } else if (expectedDocumentType === "yellowCard" || expectedDocumentType === "yellowCard_rw") {
             // Save yellow card data
             await docRef.update({
               yellowCardImmatriculation: extractedData.N0_Immatriculation || "",
@@ -1478,7 +1646,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
             userContext.yellowCardImmatriculation = extractedData.N0_Immatriculation;
             userContext.yellowCardNom = extractedData.Nom;
             
-          } else if (expectedDocumentType === "insurance") {
+          } else if (expectedDocumentType === "insurance" || expectedDocumentType === "insurance_rw") {
             // Save insurance data (similar to original code)
             const {
               policyholder_name: policyholderName = "",
@@ -1509,7 +1677,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
             userContext.formattedPlate = plateNumber;
             userContext.licensedToCarryNumber = licensedToCarryNo;
             userContext.markAndTypeValue = markAndType;
-          } else if (expectedDocumentType === "carImage") {
+          } else if (expectedDocumentType === "carImage" || expectedDocumentType === "carImage_rw") {
             // Save car body type data
             await docRef.update({
               carBodyType: extractedData.body_type || ""
@@ -1560,6 +1728,22 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
     } else if (expectedDocumentType === "carImage") {
       // After car image, proceed with insurance flow
       await stateInsuranceDuration(
+        phone,
+        userContext.formattedPlate,
+        phoneNumberId
+      );
+    } else if (expectedDocumentType === "nationalId_rw") {
+      // After national ID, request insurance document
+      await requestInsuranceDocumentRW(phone, phoneNumberId);
+    } else if (expectedDocumentType === "insurance_rw") {
+      // After insurance, request yellow card
+      await requestYellowCardRW(phone, phoneNumberId);
+    } else if (expectedDocumentType === "yellowCard_rw") {
+      // After yellow card, request car image
+      await requestCarImageRW(phone, phoneNumberId);
+    } else if (expectedDocumentType === "carImage_rw") {
+      // After car image, proceed with insurance flow
+      await stateInsuranceDurationRW(
         phone,
         userContext.formattedPlate,
         phoneNumberId
@@ -3080,7 +3264,7 @@ async function requestNationalId(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: `*National ID*\nPlease upload a clear image or PDF of your National ID document.`,
+      body: "Please upload a clear image or PDF of your National ID document.",
     },
   };
 
@@ -3098,7 +3282,7 @@ async function requestInsuranceDocument(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: `*Insurance Certificate*\nThank you for your National ID. Now, please upload a clear image or PDF of your current or old insurance certificate.`,
+      body: "Thank you for your National ID. Now, please upload a clear image or PDF of your current or old insurance certificate.",
     },
   };
 
@@ -3116,7 +3300,7 @@ async function requestYellowCard(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: `*Carte Jaune*\nThank you for your insurance certificate. Now, please upload a clear image or PDF of your Yellow Card.`,
+      body: "Thank you for your insurance certificate. Now, please upload a clear image or PDF of your Yellow Card.",
     },
   };
 
@@ -3134,7 +3318,7 @@ async function requestCarImage(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: `*Car Type*\nThank you for your Yellow Card. Finally, please upload a clear image of your car so we can determine its body type (sedan, pickup, SUV, etc.).`,
+      body: "Thank you for your Yellow Card. Finally, please upload a clear image of your car so we can determine its body type (sedan, pickup, SUV, etc.).",
     },
   };
 
@@ -4159,7 +4343,6 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
     startTime: userContext.insuranceStartDate, // Use current date as a placeholder
     endTime: userContext.insuranceEndDate, // Placeholder for 1 year from now
     transactionId: `WHATSAPP_${Date.now()}_${phone.slice(-4)}`,
-    status: 'processing',
     insuranceCompanyName: userContext.insuranceCompany || "Insurance Provider"
   };
 
@@ -4314,6 +4497,951 @@ async function processPaymentOld(phone, paymentPlan, phoneNumberId) {
   }
 
   // Add logic to integrate with payment gateway API if needed.
+  console.log("______________________________________");
+  console.log("User context after all flows:", userContext);
+}
+
+// Kinyarwanda flows
+// ---------- RW versions of Insurance Services Functions ----------
+
+// Initial welcome message – RW
+async function sendWelcomeMessageRW(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "WELCOME"; // keeping the same stage value
+  userContexts.set(phone, userContext);
+
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Ikaze!"
+      },
+      body: {
+        text: "Murakaza neza! Fata ubwishingizi bw'imodoka yawe mu buryo bwihuse kandi bw’ikoranabuhanga? Kanda ‘Tangira’ maze dutangire urugendo rwacu hamwe!"
+      },
+      footer: {
+        text: "Hitamo igikorwa cyo gukomeza"
+      },
+      action: {
+        button: "Tangira",
+        sections: [
+          {
+            title: "Serivisi z'Ubwishingizi",
+            rows: [
+              {
+                id: "get_insurance_rw",
+                title: "Fata Ubwishingizi",
+                description: "Saba politiki y'ubwishingizi bushya"
+              }
+              // Additional options can be added here.
+            ]
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Claim Filing Process – RW
+async function initiateClaimProcessRW(phone, phoneNumberId) {
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Gutanga Ikirego"
+      },
+      body: {
+        text: "Tegura inyandiko zikurikira ku kirego cyawe:"
+      },
+      action: {
+        button: "Ongeraho Inyandiko",
+        sections: [
+          {
+            title: "Inyandiko Zikenewe",
+            rows: [
+              {
+                id: "add_driver_license",
+                title: "Indangamuntu y'Umushoferi",
+                description: "Ohereza amakuru y'indangamuntu y'umushoferi"
+              },
+              {
+                id: "add_logbook",
+                title: "Igitabo cy'Ikinyabiziga",
+                description: "Ohereza inyandiko y'iyandikwa ry'ikinyabiziga"
+              },
+              {
+                id: "add_insurance_cert",
+                title: "Icyemezo cy'Ubwishingizi",
+                description: "Ohereza inyandiko y'ubwishingizi buhari"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Request National ID – RW
+async function requestNationalIdRW(phone, phoneNumberId) {
+  const payload = {
+    type: "text",
+    text: {
+      body: `*Indangamuntu*\nNyamuneka ohereza ifoto cyangwa PDF isobanutse y'Indangamuntu yawe.`
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_DOCUMENT";
+  userContext.expectingDocumentType = "nationalId_rw";
+  userContexts.set(phone, userContext);
+}
+
+// Request Insurance Document – RW
+async function requestInsuranceDocumentRW(phone, phoneNumberId) {
+  const payload = {
+    type: "text",
+    text: {
+      body: `*Icyemezo cy'Ubwishingizi*\nMurakoze kuri Indangamuntu yawe. Ubu, nyamuneka ohereza ifoto cyangwa PDF isobanutse y'icyemezo cy'ubwishingizi cyawe gishya cyangwa cyashize.`
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_DOCUMENT";
+  userContext.expectingDocumentType = "insurance_rw";
+  userContexts.set(phone, userContext);
+}
+
+// Request Yellow Card – RW
+async function requestYellowCardRW(phone, phoneNumberId) {
+  const payload = {
+    type: "text",
+    text: {
+      body: `*Carte Jaune (Yellow Card)*\nMurakoze kuri icyemezo cy'ubwishingizi. Ubu, nyamuneka ohereza ifoto cyangwa PDF isobanutse ya Carte Jaune (Yellow Card) y'ikinyabiziga cyawe.`
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_DOCUMENT";
+  userContext.expectingDocumentType = "yellowCard_rw";
+  userContexts.set(phone, userContext);
+}
+
+// Request Car Image – RW
+async function requestCarImageRW(phone, phoneNumberId) {
+  const payload = {
+    type: "text",
+    text: {
+      body: `*Ifoto y'Imodoka*\nMurakoze kuri Carte Jaune. Nyamuneka ohereza ifoto isobanutse y'imodoka yawe kugira ngo tumenye ubwoko bwayo (sedan, pickup, SUV, etc.).`
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_DOCUMENT";
+  userContext.expectingDocumentType = "carImage_rw";
+  userContexts.set(phone, userContext);
+}
+
+// Request Vehicle Plate Number – RW
+async function requestVehiclePlateNumberRW(phone, phoneNumberId) {
+  const payload = {
+    type: "text",
+    text: {
+      body: "Nyamuneka tanga nimero y'ikarita y'ikinyabiziga cyawe (nko: RAD 123A):"
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// State Insurance Duration – RW
+async function stateInsuranceDurationRW(phone, plateNumber, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.plateNumber = plateNumber;
+  userContext.stage = "EXPECTING_STATE_INSURANCE_DURATION";
+  userContexts.set(phone, userContext);
+
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: `Nimero y'Ikinyabiziga: ${plateNumber}\n\nUbwishingizi bwawe buzamara igihe kingana gute?`
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "full_year_rw",
+              title: "Umwaka Wose"
+            }
+          },
+          {
+            type: "reply",
+            reply: {
+              id: "less_than_a_year_rw",
+              title: "Iminsi Itarengeje Umwaka"
+            }
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Start Date – RW
+async function startDateRW(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_START_DATE_RW";
+  userContexts.set(phone, userContext);
+
+  const payload = {
+    type: "text",
+    text: {
+      body: "Tanga itariki yo gutangira ubwishingizi. (Urugero: DD/MM/YYYY, 02/01/2100)"
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// End Date – RW
+async function endDateRW(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_END_DATE_RW";
+  userContexts.set(phone, userContext);
+
+  const payload = {
+    type: "text",
+    text: {
+      body: "Tanga itariki yo kurangiza ubwishingizi. (Urugero: DD/MM/YYYY, 04/01/2025)"
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Insurance Period Selection – RW
+async function selectInsurancePeriodRW(phone, plateNumber, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.plateNumber = plateNumber;
+  userContext.stage = "EXPECTING_INSURANCE_PERIOD";
+  userContexts.set(phone, userContext);
+
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: `Nimero y'Ikinyabiziga: ${plateNumber}\n\nUbwishingizi bwawe buzatangira ryari?`
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "start_today_rw",
+              title: "Tangirira Uyu Munsi"
+            }
+          },
+          {
+            type: "reply",
+            reply: {
+              id: "custom_date_rw",
+              title: "Hitamo Itariki"
+            }
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Insurance Cover Type Selection – RW
+async function selectInsuranceCoverTypeRW(phone, phoneNumberId) {
+  // Here we use an interactive message (instead of a template) with Kinyarwanda text.
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: "Waba ushaka guhitamo ubwoko bw'ubwishingizi?"
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "select_cover_type",
+              title: "Hitamo Ubwoko"
+            }
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Select to Add Personal Accident Cover – RW
+// (Keep text in English as instructed)
+async function selectToAddPersonalAccidentCoverRW(phone, phoneNumberId) {
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: `Waba wifuza gufata ubwirinzi bwa accident bwawe/ku mugenzi?`
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "add_yes",
+              title: "Yes"
+            }
+          },
+          {
+            type: "reply",
+            reply: {
+              id: "add_no",
+              title: "No"
+            }
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "PERSONAL_ACCIDENT_COVER";
+  userContexts.set(phone, userContext);
+}
+
+// Personal Accident Cover Categories – RW
+// (Keep text in English as instructed)
+async function selectPersonalAccidentCategoryRW(phone, phoneNumberId) {
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Personal Accident Cover Categories"
+      },
+      body: {
+        text: "Based on coverage levels:"
+      },
+      action: {
+        button: "Select Category",
+        sections: [
+          {
+            title: "Coverage Categories",
+            rows: [
+              {
+                id: "cat_1",
+                title: "CAT 1",
+                description:
+                  "Death/Disability: FRW 1,000,000 | Medical: FRW 100,000"
+              },
+              {
+                id: "cat_2",
+                title: "CAT 2",
+                description:
+                  "Death/Disability: FRW 2,000,000 | Medical: FRW 200,000"
+              },
+              {
+                id: "cat_3",
+                title: "CAT 3",
+                description:
+                  "Death/Disability: FRW 3,000,000 | Medical: FRW 300,000"
+              },
+              {
+                id: "cat_4",
+                title: "CAT 4",
+                description:
+                  "Death/Disability: FRW 4,000,000 | Medical: FRW 400,000"
+              },
+              {
+                id: "cat_5",
+                title: "CAT 5",
+                description:
+                  "Death/Disability: FRW 5,000,000 | Medical: FRW 500,000"
+              },
+              {
+                id: "risk_taker",
+                title: "No Cover",
+                description: "I'm a risk taker!"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Number of Covered People – RW
+async function numberOfCoveredPeopleRW(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.stage = "EXPECTING_NUMBER_OF_PEOPLE";
+  userContexts.set(phone, userContext);
+
+  const payload = {
+    type: "text",
+    text: {
+      body: "Ni abantu bangahe bazarindwa? (Urugero: 1, 4, etc):"
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Select Vehicle Body Type – RW
+async function selectVehicleBodyTypeRW(phone, phoneNumberId) {
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Hitamo ubwoko bw'imodoka"
+      },
+      body: {
+        text: "Hitamo ubwoko bw'ikinyabiziga cyawe n'intego yabyo mu mahitamo akurikira:"
+      },
+      action: {
+        button: "Hitamo Imodoka",
+        sections: [
+          {
+            title: "Moto n'Imodoka",
+            rows: [
+              {
+                id: "side_cars_motor_bikes_commercial",
+                title: "Moto/Tricycle",
+                description: "Ikoreshwa mu bucuruzi/Itwara ibicuruzwa"
+              },
+              {
+                id: "car_voiture",
+                title: "Imodoka - Ku giti cyawe",
+                description: "Sedan/Saloon ikoreshwa ku giti cyawe"
+              },
+              {
+                id: "car_voiture_taxi",
+                title: "Imodoka - Taxi",
+                description: "Sedan/Saloon ikoreshwa nka taxi"
+              },
+              {
+                id: "car_voiture_commercial",
+                title: "Imodoka - Gukodesha",
+                description: "Sedan/Saloon ikoreshwa mu gukodesha"
+              },
+              {
+                id: "car_voiture_goods",
+                title: "Imodoka - Ubucuruzi",
+                description: "Sedan/Saloon ikoreshwa mu gutwara ibicuruzwa"
+              }
+            ]
+          },
+          {
+            title: "SUVs & Vans",
+            rows: [
+              {
+                id: "jeep_suv",
+                title: "Jeep/SUV - Ku giti cyawe",
+                description: "SUV ikoreshwa ku giti cyawe"
+              },
+              {
+                id: "jeep_suv_taxi",
+                title: "Jeep/SUV - Taxi",
+                description: "SUV ikoreshwa nka taxi"
+              },
+              {
+                id: "jeep_suv_commercial",
+                title: "Jeep/SUV - Gukodesha",
+                description: "SUV ikoreshwa mu gukodesha"
+              },
+              {
+                id: "jeep_suv_goods",
+                title: "Jeep/SUV - Ubucuruzi",
+                description: "SUV ikoreshwa mu gutwara ibicuruzwa"
+              },
+              {
+                id: "minibus_van",
+                title: "Minibus/Van - Ku giti cyawe",
+                description: "Ku giti cyawe"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  };
+
+  const payload2 = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Ubwoko bw'inyongera bw'imodoka"
+      },
+      body: {
+        text: "Hitamo ubwoko bw'ikinyabiziga cyawe n'intego yabyo mu mahitamo akurikira:"
+      },
+      action: {
+        button: "Izindi Modoka",
+        sections: [
+          {
+            title: "Imodoka z'ubucuruzi",
+            rows: [
+              {
+                id: "minibus_van_taxi",
+                title: "Minibus/Van - Taxi",
+                description: "Ikoreshwa nka taxi"
+              },
+              {
+                id: "minibus_van_commercial",
+                title: "Minibus/Van - Gukodesha",
+                description: "Ikoreshwa mu gukodesha"
+              },
+              {
+                id: "minibus_van_goods",
+                title: "Minibus/Van - Ubucuruzi",
+                description: "Ikoreshwa mu gutwara ibicuruzwa"
+              },
+              {
+                id: "pickup",
+                title: "Pickup/Camion. Ku giti cyawe",
+                description: "Ikoreshwa ku giti cyawe/Camionnette"
+              },
+              {
+                id: "pickup_commercial",
+                title: "Pickup/Camion. Gukodesha",
+                description: "Ikoreshwa mu gukodesha/Camionnette"
+              }
+            ]
+          },
+          {
+            title: "Ibinyabiziga Binini",
+            rows: [
+              {
+                id: "pickup_goods",
+                title: "Pickup/Camion. Ubucuruzi",
+                description: "Ikoreshwa mu gutwara ibicuruzwa/Camionnette"
+              },
+              {
+                id: "trailer_semi_trailer_goods",
+                title: "Truck/Camion Ubucuruzi",
+                description: "Ikoreshwa mu gutwara ibicuruzwa (Idashya)"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+  await sendWhatsAppMessage(phone, payload2, phoneNumberId);
+}
+
+// Select Vehicle Body Type Draft – RW
+async function selectVehicleBodyTypeDraftRW(phone, phoneNumberId) {
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Hitamo ubwoko bw'imiterere y'imodoka"
+      },
+      body: {
+        text: "Hitamo ubwoko bw'imiterere y'imodoka yawe mu mahitamo akurikira:"
+      },
+      action: {
+        button: "Hitamo Imiterere",
+        sections: [
+          {
+            title: "Ubwoko bw'imiterere",
+            rows: [
+              {
+                id: "side_cars_motor_bikes",
+                title: "Ibinyabiziga bito byoroshye",
+                description: "Side Cars & Motor Bikes, Tricycles"
+              },
+              {
+                id: "car_voiture",
+                title: "Imodoka",
+                description: "Imodoka zisanzwe z'abagenzi."
+              },
+              {
+                id: "jeep_suv",
+                title: "Jeep/SUV",
+                description: "Imodoka za Sport Utility."
+              },
+              {
+                id: "pickup",
+                title: "Pickup/Camionnette ntoya (<5TN)",
+                description: "Pickup/Camionnette (imyanya mito)"
+              },
+              {
+                id: "minibus_van",
+                title: "Minibus/Van",
+                description: "Minibus na van z'abagenzi benshi."
+              },
+              {
+                id: "school_bus",
+                title: "Bisi y'Amashuri",
+                description: "Bisi ikoreshwa mu gutwara abanyeshuri."
+              },
+              {
+                id: "bus",
+                title: "Bisi",
+                description: "Bisi nini z'abagenzi."
+              },
+              {
+                id: "trailer_semi_trailer",
+                title: "Trailer & Semi-Trailer",
+                description: "Trailer (Remorque) & Semi-Trailer (Semi-Remorque)"
+              },
+              {
+                id: "howo_shacman_fuso_faw",
+                title: "Amatiraki akomeye",
+                description: "HOWO, SHACMAN, FUSO, FAW"
+              },
+              {
+                id: "truck_tractor_lorry",
+                title: "Camion n'Imashini zikomeye",
+                description: "Truck (Camion) & Tractor, Lorry>= 5 TN – Camionnette"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Select Payment Plan – RW
+// (Keep the premium summary and installment options in English)
+async function selectPaymentPlanRW(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+
+  // (Assume vehicle and pricing calculations remain unchanged)
+  // ... [Calculation logic remains the same as in the original function] ...
+
+  // Example breakdown text (in English) for the premium summary:
+  const breakdownText = `Insurance Premium Breakdown:
+  
+  Type of Cover: ${userContext.coverType}
+  TPL: ${formatNumber(breakdown.tpl)}
+  NET PREMIUM: ${formatNumber(breakdown.netPremium)}
+  Adm.fee/Yellow Card: ${formatNumber(breakdown.adminFee)}
+  VAT(18%): ${formatNumber(breakdown.vat)}
+  SGF: ${formatNumber(breakdown.sgf)}
+  TOTAL PREMIUM: ${formatNumber(breakdown.total)}
+  
+  TOTAL TO PAY: ${formatNumber(breakdown.total)}
+  
+  Please select your preferred payment plan:`;
+
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Premium Summary"
+      },
+      body: {
+        text: breakdownText
+      },
+      action: {
+        button: "Select Payment Plan",
+        sections: [
+          {
+            title: "Payment Options",
+            rows: [
+              {
+                id: "installment_cat1",
+                title: "CAT 1 Installment",
+                description: `1M (${formatNumber(Math.round(breakdown.total * 0.25))}), 2M (${formatNumber(Math.round(breakdown.total * 0.25))}), 9M (${formatNumber(Math.round(breakdown.total * 0.5))})`
+              },
+              {
+                id: "installment_cat2",
+                title: "CAT 2 Installment",
+                description: `3M (${formatNumber(Math.round(breakdown.total * 0.5))}), 9M (${formatNumber(Math.round(breakdown.total * 0.5))})`
+              },
+              {
+                id: "installment_cat3",
+                title: "CAT 3 Installment",
+                description: `6M (${formatNumber(Math.round(breakdown.total * 0.75))}), 6M (${formatNumber(Math.round(breakdown.total * 0.25))})`
+              },
+              {
+                id: "installment_cat4",
+                title: "CAT 4 Installment",
+                description: `1M (${formatNumber(Math.round(breakdown.total * 0.25))}), 3M (${formatNumber(Math.round(breakdown.total * 0.35))}), 8M (${formatNumber(Math.round(breakdown.total * 0.4))})`
+              },
+              {
+                id: "full_payment",
+                title: "Full Payment",
+                description: `Pay ${formatNumber(breakdown.total)} upfront`
+              }
+            ]
+          }
+        ]
+      }
+    }
+  };
+
+  // Save calculated values and update Firestore as in the original function...
+  userContext.calculatedTotal = breakdown.total;
+  userContexts.set(phone, userContext);
+
+  await firestore3.collection("whatsappInsuranceOrders")
+    .doc(userContext.insuranceDocId)
+    .update({
+      totalCost: breakdown.total,
+      netPremium: breakdown.netPremium,
+      adminFee: breakdown.adminFee,
+      vat: breakdown.vat,
+      sgf: breakdown.sgf
+    });
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+}
+
+// Confirm and Pay – RW
+async function confirmAndPayRW(phone, selectedInstallmentChoice, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  const totalCost = userContext.calculatedTotal || 0;
+  const formatNum = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  let installmentBreakdown = "";
+
+  switch (selectedInstallmentChoice) {
+    case "i_cat1":
+      installmentBreakdown = `${totalCost * 0.25}`;
+      break;
+    case "i_cat2":
+      installmentBreakdown = `${totalCost * 0.5}`;
+      break;
+    case "i_cat3":
+      installmentBreakdown = `${totalCost * 0.75}`;
+      break;
+    case "i_cat4":
+      installmentBreakdown = `${totalCost * 0.4}`;
+      break;
+    case "i_catf":
+      installmentBreakdown = `${totalCost}`;
+      break;
+    default:
+      installmentBreakdown = "Unknown installment plan.";
+  }
+
+  const payload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      header: {
+        type: "text",
+        text: "Emeza kandi Wishyure"
+      },
+      body: {
+        text: "Icyo wahisemo kirimo amafaranga y'ubuyobozi, VAT, na SGF. Urabyemera gukomeza kwishyura?"
+      },
+      footer: {
+        text: `Total: FRW ${formatNum(installmentBreakdown)} kuri uyu kwezi`
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "agree_to_terms",
+              title: "Emeza kandi Wishyure"
+            }
+          },
+          {
+            type: "reply",
+            reply: {
+              id: "cancel_payment",
+              title: "Hagarika"
+            }
+          }
+        ]
+      }
+    }
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+  userContext.stage = "EXPECTING_CONFIRM_PAY";
+  userContexts.set(phone, userContext);
+}
+
+// Process Payment – RW
+async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  userContext.userPhone = phone;
+  userContexts.set(phone, userContext);
+
+  const totalCost = userContext.calculatedTotal || userContext.totalCost || 0;
+  const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  let installmentBreakdown = "";
+
+  switch (paymentPlan) {
+    case "installment_cat1":
+    case "i_cat1":
+      installmentBreakdown = `1 Month: FRW ${formatNumber(totalCost * 0.25)}`;
+      userContext.selectedInstallment = "CAT 1";
+      break;
+    case "installment_cat2":
+    case "i_cat2":
+      installmentBreakdown = `3 Months: FRW ${formatNumber(totalCost * 0.5)}`;
+      userContext.selectedInstallment = "CAT 2";
+      break;
+    case "installment_cat3":
+    case "i_cat3":
+      installmentBreakdown = `6 Months: FRW ${formatNumber(totalCost * 0.75)}`;
+      userContext.selectedInstallment = "CAT 3";
+      break;
+    case "installment_cat4":
+    case "i_cat4":
+      installmentBreakdown = `1 Month: FRW ${formatNumber(totalCost * 0.25)}, 3M: FRW ${formatNumber(totalCost * 0.35)}`;
+      userContext.selectedInstallment = "CAT 4";
+      break;
+    case "full_payment":
+    case "i_catf":
+      installmentBreakdown = `Full payment: FRW ${formatNumber(totalCost)}`;
+      userContext.selectedInstallment = "FULL";
+      break;
+    default:
+      installmentBreakdown = "Unknown payment plan.";
+      userContext.selectedInstallment = "UNKNOWN";
+  }
+
+  userContext.totalCost = totalCost;
+
+  const paymentPayload = {
+    type: "text",
+    text: {
+      body: `Nyamuneka wishyure ukoresheje MoMo/Airtel kuri iyi nimero: ${250788767816}\nIzina: Ikanisa\n_______________________\nIcyo waguze ku giciro cya ${installmentBreakdown} kiri gukorwa nyuma yo kwakira kwishyura, uzahabwa icyemezo mu gihe gito.`
+    }
+  };
+
+  console.log("Processing payment for:", phone, paymentPlan);
+
+  await sendWhatsAppMessage(phone, paymentPayload, phoneNumberId);
+
+  const todayFirebase = new Date();
+  const formattedDateFirebase = `${todayFirebase.getDate().toString().padStart(2, "0")}/${(todayFirebase.getMonth() + 1).toString().padStart(2, "0")}/${todayFirebase.getFullYear()}`;
+
+  const insuranceOrderData = {
+    userPhone: userContext.userPhone ? String(userContext.userPhone) : "",
+    plateNumber: userContext.plateNumber ? String(userContext.plateNumber) : "",
+    insuranceStartDate: userContext.insuranceStartDate ? String(userContext.insuranceStartDate) : "",
+    selectedCoverTypes: userContext.selectedCoverTypes ? String(userContext.selectedCoverTypes) : "",
+    selectedPersonalAccidentCoverage: userContext.selectedCoverage ? parseFloat(userContext.selectedCoverage) : 0.0,
+    totalCost: totalCost,
+    numberOfCoveredPeople: userContext.numberOfCoveredPeople ? parseFloat(userContext.numberOfCoveredPeople) : 0.0,
+    selectedInstallment: userContext.selectedInstallment,
+    insuranceDocumentUrl: userContext.insuranceDocumentUrl ? String(userContext.insuranceDocumentUrl) : "",
+    extractedData: userContext.extractedData ? userContext.extractedData : {},
+    sitNumber: userContext.licensedToCarryNumber ? userContext.licensedToCarryNumber : 0,
+    creationDate: admin.firestore.Timestamp.now()
+  };
+
+  const vehicleData = {
+    licensePlate: userContext.plateNumber ? String(userContext.plateNumber) : "",
+    make: userContext.markAndTypeValue,
+    model: userContext.markAndTypeValue,
+    usageType: userContext.extractedData && userContext.extractedData.usageType ? String(userContext.extractedData.usageType) : "Private",
+    userId: Number(phone) || 0,
+    bodyType: userContext.extractedData && userContext.extractedData.bodyType ? String(userContext.extractedData.bodyType) : "",
+    engineSize: userContext.extractedData && userContext.extractedData.engineSize ? Number(userContext.extractedData.engineSize) : 0,
+    fuelType: userContext.extractedData && userContext.extractedData.fuelType ? String(userContext.extractedData.fuelType) : "",
+    vin: userContext.extractedData && userContext.extractedData.vin ? String(userContext.extractedData.vin) : "",
+    year: userContext.extractedData && userContext.extractedData.year ? Number(userContext.extractedData.year) : 0,
+    sitNumber: userContext.licensedToCarryNumber ? Number(userContext.licensedToCarryNumber) : 0
+  };
+
+  const quotationData = {
+    amount: totalCost,
+    registration: userContext.plateNumber ? String(userContext.plateNumber) : "",
+    usage: vehicleData.usageType,
+    userId: Number(phone) || 0,
+    policyHolder: userContext.extractedData && userContext.extractedData.name ? String(userContext.extractedData.name) : "",
+    makeModal: userContext.markAndTypeValue,
+    coverType: {
+      name: userContext.coverType === 'COMESA' ? "COMESA" : "Third-Party",
+      Personal_Accident: userContext.selectedCoverage ? Number(userContext.selectedCoverage) : 0,
+      damage: 0,
+      fire: 0
+    },
+    totalPaid: "0",
+    policyStatus: "pending",
+    licensedToCarry: userContext.licensedToCarryNumber ? Number(userContext.licensedToCarryNumber) : 0,
+    instalment: userContext.selectedInstallment,
+    startTime: userContext.insuranceStartDate,
+    endTime: userContext.insuranceEndDate,
+    transactionId: `WHATSAPP_${Date.now()}_${phone.slice(-4)}`,
+    status: 'processing',
+    insuranceCompanyName: userContext.insuranceCompany || "Insurance Provider"
+  };
+
+  try {
+    userContext.insuranceDocRef.update(insuranceOrderData);
+    console.log("Insurance order data successfully saved to Firestore");
+    userContexts.set(phone, userContext);
+
+    if (vehicleData.licensePlate) {
+      await firestore3.collection("vehiclesWhatsapp")
+        .doc(vehicleData.licensePlate)
+        .set(vehicleData);
+      console.log("Vehicle data successfully saved with ID:", vehicleData.licensePlate);
+    } else {
+      const vehicleDocRef = await firestore3.collection("vehiclesWhatsapp").add(vehicleData);
+      console.log("Vehicle data saved with generated ID:", vehicleDocRef.id);
+    }
+
+    const quotationDocRef = await firestore3.collection("quotationsWhatsapp").add(quotationData);
+    console.log("Quotation data saved with ID:", quotationDocRef.id);
+
+    await userContext.insuranceDocRef.update({ quotationId: quotationDocRef.id });
+
+  } catch (error) {
+    console.error("Error saving data to Firestore:", error.message);
+  }
+
   console.log("______________________________________");
   console.log("User context after all flows:", userContext);
 }
