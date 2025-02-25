@@ -861,68 +861,7 @@ const handleTextMessages = async (message, phone, phoneNumberId) => {
   }
 };
 
-const handleTextMessagesOld = async (message, phone, phoneNumberId) => {
-  const userContext = userContexts.get(phone) || {};
-  const messageText = message.text.body.trim().toLowerCase();
-  
-  // Handle table selection stage
-  if (userContext.stage === "TABLE_SELECTION") {
-    const table = message.text.body.trim();
-    userContext.table = table;
-    await sendOrderSummary(phone, phoneNumberId);
-    userContexts.set(phone, userContext);
-    return;
-  }
 
-  //const messageText = message.text.body.trim().toLowerCase();
-  
-  // Check if we have a handler for this message
-  const handler = textMessageCases.get(messageText);
-  
-  if (handler) {
-    if (typeof handler === 'function') {
-      // Execute function handler
-      await handler(userContext, phone, phoneNumberId);
-    } else if (handler.vendorId) {
-      // Handle menu/vendor selection
-      await sendClassSelectionMessage(phone, phoneNumberId);
-      userContext.vendorId = handler.vendorId;
-      userContext.stage = "CLASS_SELECTION";
-      userContexts.set(phone, userContext);
-    }
-  } else {
-    console.log(`Received unrecognized text message: ${messageText}`);
-  }
-  
-
-  switch (messageText) {
-    case "adminclear":
-      userContexts.clear();
-      console.log("All user contexts reset.");
-      break;
-
-    case "clear":
-      userContexts.delete(phone);
-      console.log("User context reset.");
-      break;
-
-    case "insurance":
-      console.log("User requested insurance options.");
-      await sendWelcomeMessage(phone, phoneNumberId);
-      break;
-    case "ubwishingizi":
-      console.log("User requested insurance options.");
-      await sendWelcomeMessageRW(phone, phoneNumberId);
-      break;
-    case "lifuti":
-      console.log("User requested insurance options.");
-      await sendLifutiWelcomeMessage(phone, phoneNumberId);
-      break;
-
-    default:
-      console.log(`Received unrecognized message: ${messageText}`);
-  }
-};
 
 
 
@@ -5482,7 +5421,6 @@ const setupVendorKeywordListener = () => {
 };
 
 
-
 // Initialize default cases
 const initializeDefaultCases = () => {
   textMessageCases.set('adminclear', async (userContext) => {
@@ -5505,6 +5443,10 @@ const initializeDefaultCases = () => {
 
   textMessageCases.set('insurance', async (userContext, phone, phoneNumberId) => {
     await sendWelcomeMessage(phone, phoneNumberId);
+  });
+
+  textMessageCases.set('ubwishingizi', async (userContext, phone, phoneNumberId) => {
+    await sendWelcomeMessageRW(phone, phoneNumberId);
   });
   
   textMessageCases.set('lifuti', async (userContext, phone, phoneNumberId) => {
