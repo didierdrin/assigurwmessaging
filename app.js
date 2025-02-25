@@ -5450,27 +5450,27 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   switch (paymentPlan) {
     case "installment_cat1_rw":
     case "i_cat1":
-      installmentBreakdown = `1 Month: FRW ${formatNumber(totalCost * 0.25)}`;
+      installmentBreakdown = `Ukwezi 1: FRW ${formatNumber(totalCost * 0.25)}`;
       userContext.selectedInstallment = "CAT 1";
       break;
     case "installment_cat2_rw":
     case "i_cat2":
-      installmentBreakdown = `3 Months: FRW ${formatNumber(totalCost * 0.5)}`;
+      installmentBreakdown = `Amezi 3: FRW ${formatNumber(totalCost * 0.5)}`;
       userContext.selectedInstallment = "CAT 2";
       break;
     case "installment_cat3_rw":
     case "i_cat3":
-      installmentBreakdown = `6 Months: FRW ${formatNumber(totalCost * 0.75)}`;
+      installmentBreakdown = `Amezi 6: FRW ${formatNumber(totalCost * 0.75)}`;
       userContext.selectedInstallment = "CAT 3";
       break;
     case "installment_cat4_rw":
     case "i_cat4":
-      installmentBreakdown = `1 Month: FRW ${formatNumber(totalCost * 0.25)}, 3M: FRW ${formatNumber(totalCost * 0.35)}`;
+      installmentBreakdown = `Ukwezi 1: FRW ${formatNumber(totalCost * 0.25)}, 3M: FRW ${formatNumber(totalCost * 0.35)}`;
       userContext.selectedInstallment = "CAT 4";
       break;
     case "full_payment_rw":
     case "i_catf":
-      installmentBreakdown = `Full payment: FRW ${formatNumber(totalCost)}`;
+      installmentBreakdown = `Wiyishyuriye yose: FRW ${formatNumber(totalCost)}`;
       userContext.selectedInstallment = "FULL";
       break;
     default:
@@ -5483,7 +5483,7 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   const paymentPayload = {
     type: "text",
     text: {
-      body: `Nyamuneka wishyure ukoresheje MoMo/Airtel kuri iyi nimero: ${250788767816}\nIzina: Ikanisa\n_______________________\nIcyo waguze ku giciro cya ${installmentBreakdown} kiri gukorwa nyuma yo kwakira kwishyura, uzahabwa icyemezo mu gihe gito.`
+      body: `*Kwishyura Ubwishingizi*\nMurakoze! Noneho ishyura ukoresheje MoMo/Airtel kuri iyi nimero: ${250788767816}\nIzina: Ikanisa\n_______________________\nWishyuye igiciro cya ${installmentBreakdown}, urahabwa icyemezo mu gihe gito.`
     }
   };
 
