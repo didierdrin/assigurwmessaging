@@ -419,8 +419,11 @@ const handleNFMReply = async (message, phone, phoneNumberId) => {
     // Process specific cover type
     if (selectedCoverTypes.includes("0_Third-Party_Cover_")) {
       userContext.thirdPartyComesaCost = 14000; // Not this private 5,000 commercial 10,000
-      userContext.coverType = 'Rwanda'; 
-      await selectVehicleBodyType(phone, phoneNumberId); 
+      userContext.coverType = 'Rwanda';
+      userContext.bodyType = "Jeep/SUV"; 
+      userContext.usageTypeManual = "Private";
+      await selectPaymentPlan(phone, phoneNumberId);
+      //await selectVehicleBodyType(phone, phoneNumberId); 
       //await selectToAddPersonalAccidentCover(phone, phoneNumberId);
     }
 
@@ -650,14 +653,25 @@ const handlePaymentTermsReply = async (
       );
       break;
 
-    case "cancel_payment":
+    case "agree_to_terms_rw":
+      console.log("User agreed to the terms. Proceeding with payment.");
+      await processPaymentRW(
+        phone,
+        userContext.selectedInstallment,
+        phoneNumberId
+      );
+      break;
+
+    
+
+    case "cancel_payment_rw":
       console.log("User canceled the payment.");
       await sendWhatsAppMessage(
         phone,
         {
           type: "text",
           text: {
-            body: "Payment has been canceled. Let us know if you need anything else!",
+            body: "Uhagaritse kwishyura. Niba mugize ikibazo mwatumenyesha!",
           },
         },
         phoneNumberId
@@ -935,8 +949,11 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
     case "third_party_rw":
       userContext.thirdPartyComesaCost = 14000; // Not this private 5,000 commercial 10,000
       userContext.coverType = 'Rwanda'; 
+      userContext.bodyType = "Jeep/SUV"; 
+      userContext.usageTypeManual = "Private";
       userContexts.set(phone, userContext);
-      await selectVehicleBodyTypeRW(phone, phoneNumberId); 
+      await selectPaymentPlanRW(phone, phoneNumberId);
+      //await selectVehicleBodyTypeRW(phone, phoneNumberId); 
       break;
 
     case "file_claim":
@@ -1181,6 +1198,56 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       userContext.selectedInstallment = "i_catf";
       userContexts.set(phone, userContext);
       await confirmAndPay(
+        phone,
+        userContext.selectedInstallment,
+        phoneNumberId
+      );
+      break;
+
+    case "installment_cat1_rw":
+      userContext.selectedInstallment = "i_cat1";
+      userContexts.set(phone, userContext);
+      await confirmAndPayRW(
+        phone,
+        userContext.selectedInstallment,
+        phoneNumberId
+      );
+      break;
+
+    case "installment_cat2_rw":
+      userContext.selectedInstallment = "i_cat2";
+      userContexts.set(phone, userContext);
+      await confirmAndPayRW(
+        phone,
+        userContext.selectedInstallment,
+        phoneNumberId
+      );
+      break;
+
+    case "installment_cat3_rw":
+      userContext.selectedInstallment = "i_cat3";
+      userContexts.set(phone, userContext);
+      await confirmAndPayRW(
+        phone,
+        userContext.selectedInstallment,
+        phoneNumberId
+      );
+      break;
+
+    case "installment_cat4_rw":
+      userContext.selectedInstallment = "i_cat4";
+      userContexts.set(phone, userContext);
+      await confirmAndPayRW(
+        phone,
+        userContext.selectedInstallment,
+        phoneNumberId
+      );
+      break;
+
+    case "full_payment_rw":
+      userContext.selectedInstallment = "i_catf";
+      userContexts.set(phone, userContext);
+      await confirmAndPayRW(
         phone,
         userContext.selectedInstallment,
         phoneNumberId
@@ -3978,16 +4045,16 @@ Please select your preferred payment plan:`;
       type: "list",
       header: {
         type: "text",
-        text: "Premium Summary",
+        text: "Choose Payment Plan",
       },
       body: {
-        text: breakdownText,
+        text: "Please select your preferred payment plan:" //breakdownText,
       },
       action: {
-        button: "Select Payment Plan",
+        button: "Select Installments",
         sections: [
           {
-            title: "Payment Options",
+            title: "Installments",
             rows: [
               {
                 id: "installment_cat1",
@@ -4044,60 +4111,6 @@ Please select your preferred payment plan:`;
 
 
 
-// Payment Installment Options - added
-async function selectPaymentPlanOld(phone, phoneNumberId) {
-  const payload = {
-    type: "interactive",
-    interactive: {
-      type: "list",
-      header: {
-        type: "text",
-        text: "Payment Plans",
-      },
-      body: {
-        text: "Choose how you want to pay for your insurance:",
-      },
-      action: {
-        button: "Select Payment Plan",
-        sections: [
-          {
-            title: "Payment Options",
-            rows: [
-              {
-                id: "installment_cat1",
-                title: "CAT 1 Installment",
-                description: "1M (25%), 2M (25%), 9M (50%)",
-              },
-              {
-                id: "installment_cat2",
-                title: "CAT 2 Installment",
-                description: "3M (50%), 9M (50%)",
-              },
-              {
-                id: "installment_cat3",
-                title: "CAT 3 Installment",
-                description: "6M (75%), 6M (25%)",
-              },
-
-              {
-                id: "installment_cat4",
-                title: "CAT 4 Installment",
-                description: "1M (25%), 3M (35%), 8M (40%)",
-              },
-              {
-                id: "full_payment",
-                title: "Full Payment",
-                description: "Pay 100% upfront",
-              },
-            ],
-          },
-        ],
-      },
-    },
-  };
-
-  await sendWhatsAppMessage(phone, payload, phoneNumberId);
-}
 
 async function confirmAndPay(phone, selectedInstallmentChoice, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
@@ -5150,39 +5163,39 @@ async function selectPaymentPlanRW(phone, phoneNumberId) {
       type: "list",
       header: {
         type: "text",
-        text: "Premium Summary"
+        text: "Hitamo Uburyo Bwo Kwishyura" //"Premium Summary"
       },
       body: {
-        text: breakdownText
+        text: "Please select your preferred payment plan:" //breakdownText
       },
       action: {
-        button: "Select Payment Plan",
+        button: "Reba installments",
         sections: [
           {
-            title: "Payment Options",
+            title: "Installments",
             rows: [
               {
-                id: "installment_cat1",
+                id: "installment_cat1_rw",
                 title: "CAT 1 Installment",
                 description: `1M (${formatNumber(Math.round(breakdown.total * 0.25))}), 2M (${formatNumber(Math.round(breakdown.total * 0.25))}), 9M (${formatNumber(Math.round(breakdown.total * 0.5))})`
               },
               {
-                id: "installment_cat2",
+                id: "installment_cat2_rw",
                 title: "CAT 2 Installment",
                 description: `3M (${formatNumber(Math.round(breakdown.total * 0.5))}), 9M (${formatNumber(Math.round(breakdown.total * 0.5))})`
               },
               {
-                id: "installment_cat3",
+                id: "installment_cat3_rw",
                 title: "CAT 3 Installment",
                 description: `6M (${formatNumber(Math.round(breakdown.total * 0.75))}), 6M (${formatNumber(Math.round(breakdown.total * 0.25))})`
               },
               {
-                id: "installment_cat4",
+                id: "installment_cat4_rw",
                 title: "CAT 4 Installment",
                 description: `1M (${formatNumber(Math.round(breakdown.total * 0.25))}), 3M (${formatNumber(Math.round(breakdown.total * 0.35))}), 8M (${formatNumber(Math.round(breakdown.total * 0.4))})`
               },
               {
-                id: "full_payment",
+                id: "full_payment_rw",
                 title: "Full Payment",
                 description: `Pay ${formatNumber(breakdown.total)} upfront`
               }
@@ -5256,14 +5269,14 @@ async function confirmAndPayRW(phone, selectedInstallmentChoice, phoneNumberId) 
           {
             type: "reply",
             reply: {
-              id: "agree_to_terms",
+              id: "agree_to_terms_rw",
               title: "Emeza kandi Wishyure"
             }
           },
           {
             type: "reply",
             reply: {
-              id: "cancel_payment",
+              id: "cancel_payment_rw",
               title: "Hagarika"
             }
           }
@@ -5288,27 +5301,27 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   let installmentBreakdown = "";
 
   switch (paymentPlan) {
-    case "installment_cat1":
+    case "installment_cat1_rw":
     case "i_cat1":
       installmentBreakdown = `1 Month: FRW ${formatNumber(totalCost * 0.25)}`;
       userContext.selectedInstallment = "CAT 1";
       break;
-    case "installment_cat2":
+    case "installment_cat2_rw":
     case "i_cat2":
       installmentBreakdown = `3 Months: FRW ${formatNumber(totalCost * 0.5)}`;
       userContext.selectedInstallment = "CAT 2";
       break;
-    case "installment_cat3":
+    case "installment_cat3_rw":
     case "i_cat3":
       installmentBreakdown = `6 Months: FRW ${formatNumber(totalCost * 0.75)}`;
       userContext.selectedInstallment = "CAT 3";
       break;
-    case "installment_cat4":
+    case "installment_cat4_rw":
     case "i_cat4":
       installmentBreakdown = `1 Month: FRW ${formatNumber(totalCost * 0.25)}, 3M: FRW ${formatNumber(totalCost * 0.35)}`;
       userContext.selectedInstallment = "CAT 4";
       break;
-    case "full_payment":
+    case "full_payment_rw":
     case "i_catf":
       installmentBreakdown = `Full payment: FRW ${formatNumber(totalCost)}`;
       userContext.selectedInstallment = "FULL";
