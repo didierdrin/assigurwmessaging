@@ -1598,7 +1598,7 @@ await docRef.update({
               break;
               
             case "yellowCard":
-              isValidDocument = extractedData.N0_Immatriculation && extractedData.Nom;
+              isValidDocument = extractedData["N0 Immatriculation"] && extractedData["Nom"]; //extractedData.N0_Immatriculation && extractedData.Nom;
               break;
               
             case "insurance":
@@ -1661,20 +1661,20 @@ await docRef.update({
             userContext.nationalIdNumber = extractedData["Indangamuntu/National Id No"];
             
           } else if (expectedDocumentType === "yellowCard" || expectedDocumentType === "yellowCard_rw") {
-            // Save yellow card data
-            await docRef.update({
-              yellowCardImmatriculation: extractedData.N0_Immatriculation || "",
-              yellowCardGenre: extractedData.genre || "",
-              yellowCardMarque: extractedData.Marque || "",
-              yellowCardChassis: extractedData.N0_Du_chassis || "",
-              yellowCardAnnee: extractedData.Annee || "",
-              yellowCardDate: extractedData.Date || "",
-              yellowCardTin: extractedData.Tin || "",
-              yellowCardNom: extractedData.Nom || ""
-            });
-            
-            userContext.yellowCardImmatriculation = extractedData.N0_Immatriculation;
-            userContext.yellowCardNom = extractedData.Nom;
+            // Save yellow card data with correct property names
+  await docRef.update({
+    yellowCardImmatriculation: extractedData["N0 Immatriculation"] || "",
+    yellowCardGenre: extractedData["Genre"] || "",
+    yellowCardMarque: extractedData["Marque"] || "",
+    yellowCardChassis: extractedData["N0 Du Chassis"] || "",
+    yellowCardAnnee: extractedData["Annee"] || "",
+    yellowCardDate: extractedData["Date"] || "",
+    yellowCardTin: extractedData["Tin"] || "",
+    yellowCardNom: extractedData["Nom"] || ""
+  });
+  
+  userContext.yellowCardImmatriculation = extractedData["N0 Immatriculation"];
+  userContext.yellowCardNom = extractedData["Nom"];
             
           } else if (expectedDocumentType === "insurance" || expectedDocumentType === "insurance_rw") {
             // Save insurance data (similar to original code)
