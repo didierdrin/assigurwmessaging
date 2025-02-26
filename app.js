@@ -5792,7 +5792,7 @@ app.post("/api/send-proforma-old", async (req, res) => {
     },
   };
 
-  await sendWhatsAppMessage(phoneNumber, payload, 561637583695258);
+  await sendWhatsAppMessage(phoneNumber, payload, "561637583695258");
       
       // Send the PDF document
       await sendWhatsAppDocument(phoneNumber, url, "Proforma Invoice", "Please review your proforma invoice");
@@ -5869,7 +5869,7 @@ app.post("/api/mark-as-paid", async (req, res) => {
       await sendWhatsAppMessage(
         phoneNumber,
         `Thank you for your payment! Your insurance policy is now active. We've attached your insurance certificate for your records.`,
-        561637583695258
+        "561637583695258"
       );
       
       // Send the certificate document
