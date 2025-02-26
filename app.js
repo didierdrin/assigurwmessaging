@@ -1520,6 +1520,11 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
       docRef = await firestore3
         .collection("whatsappInsuranceOrders")
         .add(initialData);
+
+      // Update the document to include its own ID
+await docRef.update({
+  id: docRef.id  // Set the id field to match the document's ID
+});
         
       console.log("New document reference created in Firestore");
       userContext.insuranceDocId = docRef.id;
