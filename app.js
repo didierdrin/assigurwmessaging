@@ -1686,7 +1686,7 @@ await docRef.update({
               mark_and_type: markAndType = "",
               registration_plate_no: plateNumber = "",
               chassis = "",
-              licensed_to_carry_no: 0,
+              licensed_to_carry_no: licensedToCarryNo = "",
               usage = "",
               insurer = "",
             } = extractedData;
