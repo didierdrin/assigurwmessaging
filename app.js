@@ -5644,9 +5644,72 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
 // Add these endpoints to your existing Express app
 
 // Endpoint to send proforma invoice
+app.post("/api/send-proforma", async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: "Order ID is required" });
+    }
+    
+    const orderDoc = await firestore3.collection("whatsappInsuranceOrders").doc(orderId).get();
+    if (!orderDoc.exists) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+    
+    const orderData = { id: orderDoc.id, ...orderDoc.data() };
+    
+    // Instead of generating a PDF, use the uploaded document URL
+    if (!orderData.uploadedProformaUrl) {
+      return res.status(400).json({ success: false, message: "No uploaded proforma document found" });
+    }
+    
+    // Update order with proforma URL and change status
+    await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
+      status: "proforma",
+      proformaSentAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // Send WhatsApp message using the uploaded document URL
+    if (orderData.userPhone) {
+      const phoneNumber = orderData.userPhone.startsWith('+')
+        ? orderData.userPhone.substring(1)
+        : orderData.userPhone;
+      
+      const payload = {
+        type: "interactive",
+        interactive: {
+          type: "button",
+          body: {
+            text: `Your insurance proforma invoice is ready. Please review and complete payment to finalize your policy.`,
+          },
+          action: {
+            buttons: [{
+              type: "reply",
+              reply: { id: "done_verification", title: "Done" },
+            }],
+          },
+        },
+      };
+
+      await sendWhatsAppMessage(phoneNumber, payload, "561637583695258");
+      await sendWhatsAppDocument(phoneNumber, orderData.uploadedProformaUrl, "Proforma Invoice", "Please review your proforma invoice", "561637583695258");
+    }
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: "Proforma sent successfully",
+      proformaUrl: orderData.uploadedProformaUrl
+    });
+    
+  } catch (error) {
+    console.error("Error sending proforma:", error);
+    return res.status(500).json({ success: false, message: "Failed to send proforma", error: error.message });
+  }
+});
+
 
 // Endpoint to send proforma invoice
-app.post("/api/send-proforma", async (req, res) => {
+app.post("/api/send-proforma-old", async (req, res) => {
   try {
     const { orderId } = req.body;
     
