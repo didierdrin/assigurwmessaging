@@ -1493,6 +1493,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
 
       const initialData = {
         userPhone: phone,
+        status: 'processing',
         creationDate: admin.firestore.Timestamp.now(),
         // These will be filled in later as needed
         plateNumber: "",
@@ -5543,7 +5544,6 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
     startTime: userContext.insuranceStartDate,
     endTime: userContext.insuranceEndDate,
     transactionId: `WHATSAPP_${Date.now()}_${phone.slice(-4)}`,
-    status: 'processing',
     insuranceCompanyName: userContext.insuranceCompany || "Insurance Provider"
   };
 
