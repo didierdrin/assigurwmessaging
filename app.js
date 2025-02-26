@@ -5700,7 +5700,7 @@ app.post("/api/send-proforma", async (req, res) => {
       await sendWhatsAppMessage(phoneNumber, payload);
       
       // Send the PDF document
-      await sendWhatsAppDocument(phoneNumber, url, "Proforma Invoice", "Please review your proforma invoice");
+      await sendWhatsAppDocument(phoneNumber, url, "Proforma Invoice", "Please review your proforma invoice", "561637583695258");
     }
     
     return res.status(200).json({ 
@@ -5795,7 +5795,7 @@ app.post("/api/send-proforma-old", async (req, res) => {
   await sendWhatsAppMessage(phoneNumber, payload, "561637583695258");
       
       // Send the PDF document
-      await sendWhatsAppDocument(phoneNumber, url, "Proforma Invoice", "Please review your proforma invoice");
+      await sendWhatsAppDocument(phoneNumber, url, "Proforma Invoice", "Please review your proforma invoice", "561637583695258");
     }
     
     return res.status(200).json({ 
@@ -5873,7 +5873,7 @@ app.post("/api/mark-as-paid", async (req, res) => {
       );
       
       // Send the certificate document
-      await sendWhatsAppDocument(phoneNumber, certificateUrl, "Insurance Certificate", "Your insurance certificate");
+      await sendWhatsAppDocument(phoneNumber, certificateUrl, "Insurance Certificate", "Your insurance certificate", "561637583695258");
     }
     
     return res.status(200).json({ 
@@ -6400,10 +6400,10 @@ async function generateInsuranceCertificate(orderData) {
 
 
 // Function to send WhatsApp document
-async function sendWhatsAppDocument(phoneNumber, documentUrl, fileName, caption) {
+async function sendWhatsAppDocument(phoneNumber, documentUrl, fileName, caption, phone_number_id) {
   try {
     const response = await axios.post(
-      `https://graph.facebook.com/${VERSION}/561637583695258/messages`,
+      `https://graph.facebook.com/${VERSION}/${phone_number_id}/messages`,
       {
         messaging_product: "whatsapp",
         recipient_type: "individual",
