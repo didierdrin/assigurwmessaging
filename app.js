@@ -5634,7 +5634,7 @@ app.post("/api/send-proforma", async (req, res) => {
     }
     
     // Get order details from Firestore
-    const orderDoc = await firestore.collection("whatsappInsuranceOrders").doc(orderId).get();
+    const orderDoc = await firestore3.collection("whatsappInsuranceOrders").doc(orderId).get();
     
     if (!orderDoc.exists) {
       return res.status(404).json({ success: false, message: "Order not found" });
@@ -5663,7 +5663,7 @@ app.post("/api/send-proforma", async (req, res) => {
     });
     
     // Update order with proforma URL and change status
-    await firestore.collection("whatsappInsuranceOrders").doc(orderId).update({
+    await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
       proformaUrl: url,
       status: "proforma",
       proformaSentAt: admin.firestore.FieldValue.serverTimestamp()
@@ -5725,7 +5725,7 @@ app.post("/api/send-proforma-old", async (req, res) => {
     }
     
     // Get order details from Firestore
-    const orderDoc = await firestore.collection("whatsappInsuranceOrders").doc(orderId).get();
+    const orderDoc = await firestore3.collection("whatsappInsuranceOrders").doc(orderId).get();
     
    // if (!orderDoc.exists) {
    //   return res.status(404).json({ success: false, message: "Order not found" });
@@ -5753,7 +5753,7 @@ app.post("/api/send-proforma-old", async (req, res) => {
     });
     
     // Update order with proforma URL and change status
-    await firestore.collection("whatsappInsuranceOrders").doc(orderId).update({
+    await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
       proformaUrl: url,
       status: "proforma",
       proformaSentAt: admin.firestore.FieldValue.serverTimestamp()
@@ -5820,7 +5820,7 @@ app.post("/api/mark-as-paid", async (req, res) => {
     }
     
     // Get order details from Firestore
-    const orderDoc = await firestore.collection("whatsappInsuranceOrders").doc(orderId).get();
+    const orderDoc = await firestore3.collection("whatsappInsuranceOrders").doc(orderId).get();
     
     if (!orderDoc.exists) {
       return res.status(404).json({ success: false, message: "Order not found" });
@@ -5829,7 +5829,7 @@ app.post("/api/mark-as-paid", async (req, res) => {
     const orderData = orderDoc.data();
     
     // Update order with payment details
-    await firestore.collection("whatsappInsuranceOrders").doc(orderId).update({
+    await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
       status: "completed",
       paidAmount: orderData.totalCost,
       paymentReference: paymentReference || `PAY-${Date.now()}`,
@@ -5856,7 +5856,7 @@ app.post("/api/mark-as-paid", async (req, res) => {
     });
     
     // Update order with certificate URL
-    await firestore.collection("whatsappInsuranceOrders").doc(orderId).update({
+    await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
       certificateUrl: certificateUrl
     });
     
