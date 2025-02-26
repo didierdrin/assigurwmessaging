@@ -5697,7 +5697,7 @@ app.post("/api/send-proforma", async (req, res) => {
       };
 
       // Ensure that the sendWhatsAppMessage function's parameters match what you pass here.
-      await sendWhatsAppMessage(phoneNumber, payload);
+      await sendWhatsAppMessage(phoneNumber, payload, "561637583695258");
       
       // Send the PDF document
       await sendWhatsAppDocument(phoneNumber, url, "Proforma Invoice", "Please review your proforma invoice", "561637583695258");
@@ -5715,100 +5715,7 @@ app.post("/api/send-proforma", async (req, res) => {
   }
 });
 
-// oldproforma
-app.post("/api/send-proforma-old", async (req, res) => {
-  try {
-    const { orderId } = req.body;
-    
-    if (!orderId) {
-      return res.status(400).json({ success: false, message: "Order ID is required" });
-    }
-    
-    // Get order details from Firestore
-    const orderDoc = await firestore3.collection("whatsappInsuranceOrders").doc(orderId).get();
-    
-   // if (!orderDoc.exists) {
-   //   return res.status(404).json({ success: false, message: "Order not found" });
-   // }
-    
-    const orderData = orderDoc.data();
-    
-    // Generate PDF proforma invoice
-    const pdfBytes = await generateProformaInvoice(orderData);
-    
-    // Upload PDF to Firebase Storage
-    const proformaFileName = `proformas/${orderId}_${Date.now()}.pdf`;
-    const file = bucket.file(proformaFileName);
-    
-    await file.save(Buffer.from(pdfBytes), {
-      metadata: {
-        contentType: 'application/pdf',
-      }
-    });
-    
-    // Get download URL
-    const [url] = await file.getSignedUrl({
-      action: 'read',
-      expires: '03-01-2500', // Long expiration
-    });
-    
-    // Update order with proforma URL and change status
-    await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
-      proformaUrl: url,
-      status: "proforma",
-      proformaSentAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-    
-    // Send WhatsApp message with proforma to customer
-    if (orderData.userPhone) {
-      const phoneNumber = orderData.userPhone.startsWith('+') 
-        ? orderData.userPhone.substring(1) 
-        : orderData.userPhone;
-        
-     // await sendWhatsAppMessage(
-     //   phoneNumber,
-     //   `Your insurance proforma invoice is ready. Please review and complete payment to finalize your policy. Thank you for choosing us for your insurance needs.`
-     // );
 
-      const payload = {
-    type: "interactive",
-    interactive: {
-      type: "button",
-      body: {
-        text: `Your insurance proforma invoice is ready. Please review and complete payment to finalize your policy.`,
-      },
-      action: {
-        buttons: [
-          {
-            type: "reply",
-            reply: {
-              id: "done_verification",
-              title: "Done",
-            },
-          },
-          
-        ],
-      },
-    },
-  };
-
-  await sendWhatsAppMessage(phoneNumber, payload, "561637583695258");
-      
-      // Send the PDF document
-      await sendWhatsAppDocument(phoneNumber, url, "Proforma Invoice", "Please review your proforma invoice", "561637583695258");
-    }
-    
-    return res.status(200).json({ 
-      success: true, 
-      message: "Proforma sent successfully",
-      proformaUrl: url
-    });
-    
-  } catch (error) {
-    console.error("Error sending proforma:", error);
-    return res.status(500).json({ success: false, message: "Failed to send proforma", error: error.message });
-  }
-});
 
 // Endpoint to mark order as paid
 app.post("/api/mark-as-paid", async (req, res) => {
