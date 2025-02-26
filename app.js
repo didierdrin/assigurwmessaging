@@ -5772,10 +5772,17 @@ app.post("/api/mark-as-paid", async (req, res) => {
       const phoneNumber = orderData.userPhone.startsWith('+') 
         ? orderData.userPhone.substring(1) 
         : orderData.userPhone;
-        
+
+      const payload = {
+    type: "text",
+    text: {
+      body: `*Thank you for your payment!* Your insurance policy is now active. We've attached your insurance certificate for your records.`,
+    },
+  };
+      
       await sendWhatsAppMessage(
         phoneNumber,
-        `Thank you for your payment! Your insurance policy is now active. We've attached your insurance certificate for your records.`,
+        payload,
         "561637583695258"
       );
       
