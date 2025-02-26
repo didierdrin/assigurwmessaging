@@ -9,6 +9,9 @@ import https from "https";
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
 import admin from "firebase-admin";
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { Timestamp } from 'firebase-admin/firestore';
+
 import { CalculatePricing } from './pricing.js';
 import { VehicleModel } from './vehicle.js';
 
@@ -5573,6 +5576,729 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
 
   console.log("______________________________________");
   console.log("User context after all flows:", userContext);
+}
+
+// Proforma
+
+// Add these endpoints to your existing Express app
+
+// Endpoint to send proforma invoice
+app.post("/api/send-proforma", async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: "Order ID is required" });
+    }
+    
+    // Get order details from Firestore
+    const orderDoc = await firestore.collection("whatsappInsuranceOrders").doc(orderId).get();
+    
+    if (!orderDoc.exists) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+    
+    const orderData = orderDoc.data();
+    
+    // Generate PDF proforma invoice
+    const pdfBytes = await generateProformaInvoice(orderData);
+    
+    // Upload PDF to Firebase Storage
+    const proformaFileName = `proformas/${orderId}_${Date.now()}.pdf`;
+    const file = bucket.file(proformaFileName);
+    
+    await file.save(Buffer.from(pdfBytes), {
+      metadata: {
+        contentType: 'application/pdf',
+      }
+    });
+    
+    // Get download URL
+    const [url] = await file.getSignedUrl({
+      action: 'read',
+      expires: '03-01-2500', // Long expiration
+    });
+    
+    // Update order with proforma URL and change status
+    await firestore.collection("whatsappInsuranceOrders").doc(orderId).update({
+      proformaUrl: url,
+      status: "proforma",
+      proformaSentAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // Send WhatsApp message with proforma to customer
+    if (orderData.userPhone) {
+      const phoneNumber = orderData.userPhone.startsWith('+') 
+        ? orderData.userPhone.substring(1) 
+        : orderData.userPhone;
+        
+      await sendWhatsAppMessage(
+        phoneNumber,
+        `Your insurance proforma invoice is ready. Please review and complete payment to finalize your policy. Thank you for choosing us for your insurance needs.`
+      );
+      
+      // Send the PDF document
+      await sendWhatsAppDocument(phoneNumber, url, "Proforma Invoice", "Please review your proforma invoice");
+    }
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: "Proforma sent successfully",
+      proformaUrl: url
+    });
+    
+  } catch (error) {
+    console.error("Error sending proforma:", error);
+    return res.status(500).json({ success: false, message: "Failed to send proforma", error: error.message });
+  }
+});
+
+// Endpoint to mark order as paid
+app.post("/api/mark-as-paid", async (req, res) => {
+  try {
+    const { orderId, paymentReference = null } = req.body;
+    
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: "Order ID is required" });
+    }
+    
+    // Get order details from Firestore
+    const orderDoc = await firestore.collection("whatsappInsuranceOrders").doc(orderId).get();
+    
+    if (!orderDoc.exists) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+    
+    const orderData = orderDoc.data();
+    
+    // Update order with payment details
+    await firestore.collection("whatsappInsuranceOrders").doc(orderId).update({
+      status: "completed",
+      paidAmount: orderData.totalCost,
+      paymentReference: paymentReference || `PAY-${Date.now()}`,
+      paidAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // Generate insurance certificate
+    const certificatePdfBytes = await generateInsuranceCertificate(orderData);
+    
+    // Upload certificate to Firebase Storage
+    const certificateFileName = `certificates/${orderId}_${Date.now()}.pdf`;
+    const certificateFile = bucket.file(certificateFileName);
+    
+    await certificateFile.save(Buffer.from(certificatePdfBytes), {
+      metadata: {
+        contentType: 'application/pdf',
+      }
+    });
+    
+    // Get download URL for certificate
+    const [certificateUrl] = await certificateFile.getSignedUrl({
+      action: 'read',
+      expires: '03-01-2500', // Long expiration
+    });
+    
+    // Update order with certificate URL
+    await firestore.collection("whatsappInsuranceOrders").doc(orderId).update({
+      certificateUrl: certificateUrl
+    });
+    
+    // Send WhatsApp message with certificate to customer
+    if (orderData.userPhone) {
+      const phoneNumber = orderData.userPhone.startsWith('+') 
+        ? orderData.userPhone.substring(1) 
+        : orderData.userPhone;
+        
+      await sendWhatsAppMessage(
+        phoneNumber,
+        `Thank you for your payment! Your insurance policy is now active. We've attached your insurance certificate for your records.`
+      );
+      
+      // Send the certificate document
+      await sendWhatsAppDocument(phoneNumber, certificateUrl, "Insurance Certificate", "Your insurance certificate");
+    }
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: "Payment processed successfully",
+      certificateUrl: certificateUrl
+    });
+    
+  } catch (error) {
+    console.error("Error processing payment:", error);
+    return res.status(500).json({ success: false, message: "Failed to process payment", error: error.message });
+  }
+});
+
+// Function to generate a PDF proforma invoice
+async function generateProformaInvoice(orderData) {
+  // Create a new PDF document
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
+  const { width, height } = page.getSize();
+  
+  // Get fonts
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  
+  // Document title
+  page.drawText('PROFORMA INVOICE', {
+    x: 50,
+    y: height - 50,
+    size: 24,
+    font: boldFont,
+  });
+  
+  // Company information
+  page.drawText('Your Insurance Company', {
+    x: 50,
+    y: height - 100,
+    size: 12,
+    font: boldFont,
+  });
+  
+  page.drawText('123 Insurance Street', {
+    x: 50,
+    y: height - 120,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText('Phone: +123 456 7890', {
+    x: 50,
+    y: height - 140,
+    size: 10,
+    font: font,
+  });
+  
+  // Invoice information
+  page.drawText(`Proforma Number: PRO-${orderData.id}`, {
+    x: 300,
+    y: height - 100,
+    size: 10,
+    font: font,
+  });
+  
+  const today = new Date();
+  page.drawText(`Date: ${today.toLocaleDateString()}`, {
+    x: 300,
+    y: height - 120,
+    size: 10,
+    font: font,
+  });
+  
+  // Customer information
+  page.drawText('CUSTOMER DETAILS', {
+    x: 50,
+    y: height - 180,
+    size: 14,
+    font: boldFont,
+  });
+  
+  page.drawText(`Name: ${orderData.policyholderName || 'N/A'}`, {
+    x: 50,
+    y: height - 200,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Phone: ${orderData.userPhone || 'N/A'}`, {
+    x: 50,
+    y: height - 220,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`TIN: ${orderData.tin || 'N/A'}`, {
+    x: 50,
+    y: height - 240,
+    size: 10,
+    font: font,
+  });
+  
+  // Vehicle information
+  page.drawText('VEHICLE DETAILS', {
+    x: 50,
+    y: height - 280,
+    size: 14,
+    font: boldFont,
+  });
+  
+  page.drawText(`Plate Number: ${orderData.plateNumber || 'N/A'}`, {
+    x: 50,
+    y: height - 300,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Make/Model: ${orderData.markAndType || 'N/A'}`, {
+    x: 50,
+    y: height - 320,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Chassis Number: ${orderData.chassis || 'N/A'}`, {
+    x: 50,
+    y: height - 340,
+    size: 10,
+    font: font,
+  });
+  
+  // Insurance details
+  page.drawText('INSURANCE DETAILS', {
+    x: 50,
+    y: height - 380,
+    size: 14,
+    font: boldFont,
+  });
+  
+  page.drawText(`Coverage Type: ${orderData.selectedCoverTypes || 'N/A'}`, {
+    x: 50,
+    y: height - 400,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Start Date: ${orderData.insuranceStartDate || 'N/A'}`, {
+    x: 50,
+    y: height - 420,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Expiry Date: ${orderData.expiryDate || 'N/A'}`, {
+    x: 50,
+    y: height - 440,
+    size: 10,
+    font: font,
+  });
+  
+  // Payment information
+  page.drawText('PAYMENT DETAILS', {
+    x: 50,
+    y: height - 480,
+    size: 14,
+    font: boldFont,
+  });
+  
+  // Draw table header
+  page.drawText('Description', {
+    x: 50,
+    y: height - 500,
+    size: 10,
+    font: boldFont,
+  });
+  
+  page.drawText('Amount', {
+    x: 400,
+    y: height - 500,
+    size: 10,
+    font: boldFont,
+  });
+  
+  // Draw line
+  page.drawLine({
+    start: { x: 50, y: height - 510 },
+    end: { x: 500, y: height - 510 },
+    thickness: 1,
+    color: rgb(0, 0, 0),
+  });
+  
+  // Base premium
+  page.drawText('Base Premium', {
+    x: 50,
+    y: height - 530,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`${orderData.netPremium || 0}`, {
+    x: 400,
+    y: height - 530,
+    size: 10,
+    font: font,
+  });
+  
+  // Personal accident coverage
+  page.drawText('Personal Accident Coverage', {
+    x: 50,
+    y: height - 550,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`${orderData.selectedPersonalAccidentCoverage || 0}`, {
+    x: 400,
+    y: height - 550,
+    size: 10,
+    font: font,
+  });
+  
+  // Draw line
+  page.drawLine({
+    start: { x: 50, y: height - 570 },
+    end: { x: 500, y: height - 570 },
+    thickness: 1,
+    color: rgb(0, 0, 0),
+  });
+  
+  // Total
+  page.drawText('Total Amount Due', {
+    x: 50,
+    y: height - 590,
+    size: 12,
+    font: boldFont,
+  });
+  
+  page.drawText(`${orderData.totalCost || 0}`, {
+    x: 400,
+    y: height - 590,
+    size: 12,
+    font: boldFont,
+  });
+  
+  // Payment instructions
+  page.drawText('PAYMENT INSTRUCTIONS', {
+    x: 50,
+    y: height - 630,
+    size: 14,
+    font: boldFont,
+  });
+  
+  page.drawText('Please make payment using Mobile Money to the following number:', {
+    x: 50,
+    y: height - 650,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText('Mobile Money: +123 456 789', {
+    x: 50,
+    y: height - 670,
+    size: 10,
+    font: boldFont,
+  });
+  
+  page.drawText(`Reference: PRO-${orderData.id}`, {
+    x: 50,
+    y: height - 690,
+    size: 10,
+    font: boldFont,
+  });
+  
+  // Note
+  page.drawText('Note: This proforma invoice is valid for 7 days from the issue date.', {
+    x: 50,
+    y: height - 730,
+    size: 10,
+    font: font,
+    color: rgb(0.5, 0, 0),
+  });
+  
+  // Get PDF as bytes
+  const pdfBytes = await pdfDoc.save();
+  
+  return pdfBytes;
+}
+
+// Function to generate an insurance certificate
+async function generateInsuranceCertificate(orderData) {
+  // Create a new PDF document
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
+  const { width, height } = page.getSize();
+  
+  // Get fonts
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  
+  // Document title
+  page.drawText('INSURANCE CERTIFICATE', {
+    x: 50,
+    y: height - 50,
+    size: 24,
+    font: boldFont,
+  });
+  
+  // Company information
+  page.drawText('Your Insurance Company', {
+    x: 50,
+    y: height - 100,
+    size: 12,
+    font: boldFont,
+  });
+  
+  page.drawText('123 Insurance Street', {
+    x: 50,
+    y: height - 120,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText('Phone: +123 456 7890', {
+    x: 50,
+    y: height - 140,
+    size: 10,
+    font: font,
+  });
+  
+  // Certificate information
+  page.drawText(`Policy Number: ${orderData.policyNo || `POL-${orderData.id}`}`, {
+    x: 300,
+    y: height - 100,
+    size: 10,
+    font: boldFont,
+  });
+  
+  const today = new Date();
+  page.drawText(`Issue Date: ${today.toLocaleDateString()}`, {
+    x: 300,
+    y: height - 120,
+    size: 10,
+    font: font,
+  });
+  
+  // Customer information
+  page.drawText('INSURED DETAILS', {
+    x: 50,
+    y: height - 180,
+    size: 14,
+    font: boldFont,
+  });
+  
+  page.drawText(`Name: ${orderData.policyholderName || 'N/A'}`, {
+    x: 50,
+    y: height - 200,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`National ID: ${orderData.nationalIdNumber || 'N/A'}`, {
+    x: 50,
+    y: height - 220,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Phone: ${orderData.userPhone || 'N/A'}`, {
+    x: 50,
+    y: height - 240,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`TIN: ${orderData.tin || 'N/A'}`, {
+    x: 50,
+    y: height - 260,
+    size: 10,
+    font: font,
+  });
+  
+  // Vehicle information
+  page.drawText('VEHICLE DETAILS', {
+    x: 50,
+    y: height - 300,
+    size: 14,
+    font: boldFont,
+  });
+  
+  page.drawText(`Plate Number: ${orderData.plateNumber || 'N/A'}`, {
+    x: 50,
+    y: height - 320,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Make/Model: ${orderData.markAndType || 'N/A'}`, {
+    x: 50,
+    y: height - 340,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Chassis Number: ${orderData.chassis || 'N/A'}`, {
+    x: 50,
+    y: height - 360,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Body Type: ${orderData.carBodyType || 'N/A'}`, {
+    x: 50,
+    y: height - 380,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Licensed to Carry: ${orderData.licensedToCarryNo || 'N/A'}`, {
+    x: 50,
+    y: height - 400,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Usage: ${orderData.usage || 'N/A'}`, {
+    x: 50,
+    y: height - 420,
+    size: 10,
+    font: font,
+  });
+  
+  // Coverage information
+  page.drawText('COVERAGE DETAILS', {
+    x: 50,
+    y: height - 460,
+    size: 14,
+    font: boldFont,
+  });
+  
+  page.drawText(`Coverage Type: ${orderData.selectedCoverTypes || 'N/A'}`, {
+    x: 50,
+    y: height - 480,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Personal Accident Cover: ${orderData.selectedPersonalAccidentCoverage ? 'Yes' : 'No'}`, {
+    x: 50,
+    y: height - 500,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Start Date: ${orderData.insuranceStartDate || 'N/A'}`, {
+    x: 50,
+    y: height - 520,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Expiry Date: ${orderData.expiryDate || 'N/A'}`, {
+    x: 50,
+    y: height - 540,
+    size: 10,
+    font: font,
+  });
+  
+  // Premium information
+  page.drawText('PREMIUM DETAILS', {
+    x: 50,
+    y: height - 580,
+    size: 14,
+    font: boldFont,
+  });
+  
+  page.drawText(`Total Premium Paid: ${orderData.totalCost || 0}`, {
+    x: 50,
+    y: height - 600,
+    size: 10,
+    font: font,
+  });
+  
+  page.drawText(`Payment Date: ${today.toLocaleDateString()}`, {
+    x: 50,
+    y: height - 620,
+    size: 10,
+    font: font,
+  });
+  
+  // Legal text
+  page.drawText('This certificate is evidence of a contract of insurance and is issued', {
+    x: 50,
+    y: height - 660,
+    size: 8,
+    font: font,
+  });
+  
+  page.drawText('as a matter of information only. It confers no rights upon the certificate holder.', {
+    x: 50,
+    y: height - 675,
+    size: 8,
+    font: font,
+  });
+  
+  // Signature
+  page.drawText('Authorized Signature:', {
+    x: 50,
+    y: height - 720,
+    size: 10,
+    font: boldFont,
+  });
+  
+  page.drawLine({
+    start: { x: 150, y: height - 730 },
+    end: { x: 250, y: height - 730 },
+    thickness: 1,
+    color: rgb(0, 0, 0),
+  });
+  
+  // Get PDF as bytes
+  const pdfBytes = await pdfDoc.save();
+  
+  return pdfBytes;
+}
+
+// Function to send WhatsApp message
+async function sendWhatsAppMessage(phoneNumber, message) {
+  try {
+    const response = await axios.post(
+      `https://graph.facebook.com/${VERSION}/112946818471244/messages`,
+      {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: phoneNumber,
+        type: "text",
+        text: {
+          body: message
+        }
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${ACCESS_TOKEN}`
+        }
+      }
+    );
+    
+    console.log("WhatsApp message sent successfully:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error sending WhatsApp message:", error);
+    throw error;
+  }
+}
+
+// Function to send WhatsApp document
+async function sendWhatsAppDocument(phoneNumber, documentUrl, fileName, caption) {
+  try {
+    const response = await axios.post(
+      `https://graph.facebook.com/${VERSION}/112946818471244/messages`,
+      {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: phoneNumber,
+        type: "document",
+        document: {
+          link: documentUrl,
+          filename: fileName,
+          caption: caption
+        }
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${ACCESS_TOKEN}`
+        }
+      }
+    );
+    
+    console.log("WhatsApp document sent successfully:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error sending WhatsApp document:", error);
+    throw error;
+  }
 }
 
 
