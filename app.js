@@ -6239,35 +6239,7 @@ async function generateInsuranceCertificate(orderData) {
   return pdfBytes;
 }
 
-// Function to send WhatsApp message
-async function sendWhatsAppMessage(phoneNumber, message) {
-  try {
-    const response = await axios.post(
-      `https://graph.facebook.com/${VERSION}/112946818471244/messages`,
-      {
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to: phoneNumber,
-        type: "text",
-        text: {
-          body: message
-        }
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${ACCESS_TOKEN}`
-        }
-      }
-    );
-    
-    console.log("WhatsApp message sent successfully:", response.data);
-    return response.data;
-  } catch (error) {
-    console.error("Error sending WhatsApp message:", error);
-    throw error;
-  }
-}
+
 
 // Function to send WhatsApp document
 async function sendWhatsAppDocument(phoneNumber, documentUrl, fileName, caption) {
