@@ -1653,12 +1653,12 @@ await docRef.update({
           if (expectedDocumentType === "nationalId" || expectedDocumentType === "nationalId_rw") {
             // Save national ID data
             await docRef.update({
-              nationalIdNames: extractedData.Names || "",
-              nationalIdNumber: extractedData.National_Id_No || ""
+              nationalIdNames: extractedData["Amazina/Names"] || "",
+              nationalIdNumber: extractedData["Indangamuntu/National Id No"] || ""
             });
             
-            userContext.nationalIdNames = extractedData.Names;
-            userContext.nationalIdNumber = extractedData.National_Id_No;
+            userContext.nationalIdNames = extractedData["Amazina/Names"];
+            userContext.nationalIdNumber = extractedData["Indangamuntu/National Id No"];
             
           } else if (expectedDocumentType === "yellowCard" || expectedDocumentType === "yellowCard_rw") {
             // Save yellow card data
@@ -1681,18 +1681,18 @@ await docRef.update({
             const {
               policyholder_name: policyholderName = "",
               policy_no: policyNo = "",
-              inception_date: insuranceStartDate = "",
+              //inception_date: insuranceStartDate = "",
               expiry_date: expiryDate = "",
               mark_and_type: markAndType = "",
               registration_plate_no: plateNumber = "",
               chassis = "",
-              licensed_to_carry_no: licensedToCarryNo = "",
+              licensed_to_carry_no: "",
               usage = "",
               insurer = "",
             } = extractedData;
             
             await docRef.update({
-              insuranceStartDate,
+            //  insuranceStartDate,
               plateNumber,
               policyholderName,
               policyNo,
@@ -4288,6 +4288,9 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
     plateNumber: userContext.plateNumber ? String(userContext.plateNumber) : "",
     insuranceStartDate: userContext.insuranceStartDate
       ? String(userContext.insuranceStartDate)
+      : "",
+    insuranceEndDate: userContext.insuranceEndDate
+      ? String(userContext.insuranceEndDate)
       : "",
     selectedCoverTypes: userContext.selectedCoverTypes
       ? String(userContext.selectedCoverTypes)
