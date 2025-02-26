@@ -5693,7 +5693,7 @@ app.post("/api/send-proforma", async (req, res) => {
     },
   };
 
-  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+  await sendWhatsAppMessage(phoneNumber, payload, phoneNumberId);
       
       // Send the PDF document
       await sendWhatsAppDocument(phoneNumber, url, "Proforma Invoice", "Please review your proforma invoice");
