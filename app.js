@@ -5792,7 +5792,7 @@ app.post("/api/send-proforma-old", async (req, res) => {
     },
   };
 
-  await sendWhatsAppMessage(phoneNumber, payload, phoneNumberId);
+  await sendWhatsAppMessage(phoneNumber, payload, 561637583695258);
       
       // Send the PDF document
       await sendWhatsAppDocument(phoneNumber, url, "Proforma Invoice", "Please review your proforma invoice");
@@ -5868,7 +5868,8 @@ app.post("/api/mark-as-paid", async (req, res) => {
         
       await sendWhatsAppMessage(
         phoneNumber,
-        `Thank you for your payment! Your insurance policy is now active. We've attached your insurance certificate for your records.`
+        `Thank you for your payment! Your insurance policy is now active. We've attached your insurance certificate for your records.`,
+        561637583695258
       );
       
       // Send the certificate document
@@ -6402,7 +6403,7 @@ async function generateInsuranceCertificate(orderData) {
 async function sendWhatsAppDocument(phoneNumber, documentUrl, fileName, caption) {
   try {
     const response = await axios.post(
-      `https://graph.facebook.com/${VERSION}/112946818471244/messages`,
+      `https://graph.facebook.com/${VERSION}/561637583695258/messages`,
       {
         messaging_product: "whatsapp",
         recipient_type: "individual",
