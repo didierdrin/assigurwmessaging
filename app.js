@@ -427,6 +427,11 @@ const handleNFMReply = async (message, phone, phoneNumberId) => {
       userContext.bodyType = "Jeep/SUV"; 
       userContext.usageTypeManual = "Private";
       await noticeProforma(phone, phoneNumberId);
+
+        // Update the document to include its own ID userContext.insuranceDocRef
+await userContext.insuranceDocRef.update({
+  status: "processing"  // Set the id field to match the document's ID
+});
       //await selectPaymentPlan(phone, phoneNumberId);
       //await selectVehicleBodyType(phone, phoneNumberId); 
       //await selectToAddPersonalAccidentCover(phone, phoneNumberId);
@@ -588,7 +593,15 @@ const handlePaymentTermsReply = async (
       break;
 
     case "done_verification":
-      await selectPaymentPlan(phone, phoneNumberId);
+      userContext.selectedInstallment = "i_catf";
+      userContexts.set(phone, userContext);
+      await confirmAndPay(
+        phone,
+        userContext.selectedInstallment,
+        phoneNumberId
+      );
+      
+      //await selectPaymentPlan(phone, phoneNumberId);
 
       break;
     case "less_than_a_year":
@@ -963,6 +976,11 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       userContext.usageTypeManual = "Private";
       userContexts.set(phone, userContext);
       await noticeProformaRW(phone, phoneNumberId);
+
+          // Update the document to include its own ID userContext.insuranceDocRef
+await userContext.insuranceDocRef.update({
+  status: "processing"  // Set the id field to match the document's ID
+});
       //await selectPaymentPlanRW(phone, phoneNumberId);
       //await selectVehicleBodyTypeRW(phone, phoneNumberId); 
       break;
@@ -1504,7 +1522,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
 
       const initialData = {
         userPhone: phone,
-        status: 'processing',
+        status: '',
         creationDate: admin.firestore.Timestamp.now(),
         // These will be filled in later as needed
         plateNumber: "",
@@ -1521,7 +1539,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
         .collection("whatsappInsuranceOrders")
         .add(initialData);
 
-      // Update the document to include its own ID
+      // Update the document to include its own ID userContext.insuranceDocRef
 await docRef.update({
   id: docRef.id  // Set the id field to match the document's ID
 });
