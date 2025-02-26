@@ -5634,9 +5634,9 @@ app.post("/api/send-proforma", async (req, res) => {
     // Get order details from Firestore
     const orderDoc = await firestore.collection("whatsappInsuranceOrders").doc(orderId).get();
     
-    if (!orderDoc.exists) {
-      return res.status(404).json({ success: false, message: "Order not found" });
-    }
+   // if (!orderDoc.exists) {
+   //   return res.status(404).json({ success: false, message: "Order not found" });
+   // }
     
     const orderData = orderDoc.data();
     
