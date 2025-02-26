@@ -425,7 +425,8 @@ const handleNFMReply = async (message, phone, phoneNumberId) => {
       userContext.coverType = 'Rwanda';
       userContext.bodyType = "Jeep/SUV"; 
       userContext.usageTypeManual = "Private";
-      await selectPaymentPlan(phone, phoneNumberId);
+      await noticeProforma(phone, phoneNumberId);
+      //await selectPaymentPlan(phone, phoneNumberId);
       //await selectVehicleBodyType(phone, phoneNumberId); 
       //await selectToAddPersonalAccidentCover(phone, phoneNumberId);
     }
@@ -582,6 +583,11 @@ const handlePaymentTermsReply = async (
       } else {
         console.log("Not the right button");
       }
+
+      break;
+
+    case "done_verification":
+      await selectPaymentPlan(phone, phoneNumberId);
 
       break;
     case "less_than_a_year":
@@ -955,7 +961,8 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       userContext.bodyType = "Jeep/SUV"; 
       userContext.usageTypeManual = "Private";
       userContexts.set(phone, userContext);
-      await selectPaymentPlanRW(phone, phoneNumberId);
+      await noticeProformaRW(phone, phoneNumberId);
+      //await selectPaymentPlanRW(phone, phoneNumberId);
       //await selectVehicleBodyTypeRW(phone, phoneNumberId); 
       break;
 
@@ -3875,6 +3882,19 @@ async function selectVehicleBodyTypeDraft(phone, phoneNumberId) {
 
 
 
+// Function to give notice to the customer about the proforma
+async function noticeProforma(phone, phoneNumberId) {
+  const payload = {
+    type: "text",
+    text: {
+      body: `*Bear with us a little*\nWe're verifying and generating the proforma.`,
+    },
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+
+}
+
 
 
 async function selectPaymentPlan(phone, phoneNumberId) {
@@ -5138,6 +5158,20 @@ async function selectVehicleBodyTypeDraftRW(phone, phoneNumberId) {
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
 }
 
+// Function to give notice to the customer about the proforma
+async function noticeProformaRW(phone, phoneNumberId) {
+  const payload = {
+    type: "text",
+    text: {
+      body: `*Turi gutegura proforma y'ubwishingizi*\nMurakoze! Mutegereze gato, turi gutegura proforma y'ubwishingizi turayohereza mu kanya gato.`,
+    },
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+
+}
+
+
 // Select Payment Plan – RW
 // (Keep the premium summary and installment options in English)
 async function selectPaymentPlanRW(phone, phoneNumberId) {
@@ -5632,10 +5666,34 @@ app.post("/api/send-proforma", async (req, res) => {
         ? orderData.userPhone.substring(1) 
         : orderData.userPhone;
         
-      await sendWhatsAppMessage(
-        phoneNumber,
-        `Your insurance proforma invoice is ready. Please review and complete payment to finalize your policy. Thank you for choosing us for your insurance needs.`
-      );
+     // await sendWhatsAppMessage(
+     //   phoneNumber,
+     //   `Your insurance proforma invoice is ready. Please review and complete payment to finalize your policy. Thank you for choosing us for your insurance needs.`
+     // );
+
+      const payload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: `Your insurance proforma invoice is ready. Please review and complete payment to finalize your policy.`,
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "done_verification",
+              title: "Done",
+            },
+          },
+          
+        ],
+      },
+    },
+  };
+
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
       
       // Send the PDF document
       await sendWhatsAppDocument(phoneNumber, url, "Proforma Invoice", "Please review your proforma invoice");
