@@ -43,7 +43,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://assigurwmessaging.onrender.com"],
+    origin: ["http://localhost:3000", "https://assigurwmessaging.onrender.com", "https://assigu-wa-dashboard.vercel.app"],
     methods: ["GET", "POST"],
     credentials: true,
   })
