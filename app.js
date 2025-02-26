@@ -49,8 +49,8 @@ app.use(
   })
 );
 
-app.use(express.json());
-//app.use(bodyParser.json());
+//app.use(express.json());
+app.use(bodyParser.json());
 
 // WhatsApp API Credentials
 const ACCESS_TOKEN =
