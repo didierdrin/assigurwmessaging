@@ -654,7 +654,7 @@ const handlePaymentTermsReply = async (
       break;
 
     case "name_1":
-      if (userContext.stage === "EXPECTING_CONFIRM_PAY") {
+      
       userContext.insuranceDocRef.update({
         paidBool: true, 
       });
@@ -667,36 +667,32 @@ const handlePaymentTermsReply = async (
         }
       };
 
-      await sendWhatsappMessage(phone, payloadName1, phoneNumberId);
+      await sendWhatsAppMessage(phone, payloadName1, phoneNumberId);
 
-          return
-      }
       break;
       
     case "name_2":
-      if (userContext.stage === "EXPECTING_CONFIRM_PAY") {
+
       const payloadName2 = {
         type: "text",
         text: {
           body: `*Amazina siyo!*\nMurebe neza`
         }
       };
-      await sendWhatsappMessage(phone, payloadName2, phoneNumberId);
-        return
-      }
+      await sendWhatsAppMessage(phone, payloadName2, phoneNumberId);
+ 
       break;
       
     case "name_3":
-      if (userContext.stage === "EXPECTING_CONFIRM_PAY") {
+     
       const payloadName3 = {
         type: "text",
         text: {
           body: `*Amazina siyo!*\nMurebe neza`
         }
       };
-      await sendWhatsappMessage(phone, payloadName3, phoneNumberId);
-    return
-      }
+      await sendWhatsAppMessage(phone, payloadName3, phoneNumberId);
+ 
       break;
     
 
