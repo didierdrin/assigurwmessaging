@@ -658,34 +658,34 @@ const handlePaymentTermsReply = async (
         paidBool: true, 
       });
 
-      const payload = {
+      const payloadName1 = {
         type: "text",
         text: {
           body: `*Twakiriye ubwishyu!*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy’Ubwishingizi. Mutegereze gato.`
         }
       };
 
-      await sendWhatsappMessage(phone, payload, phoneNumberId);
+      await sendWhatsappMessage(phone, payloadName1, phoneNumberId);
       break;
       
     case "name_2":
-      const payload = {
+      const payloadName2 = {
         type: "text",
         text: {
           body: `*Amazina siyo!*\nMurebe neza`
         }
       };
-      await sendWhatsappMessage(phone, payload, phoneNumberId);
+      await sendWhatsappMessage(phone, payloadName2, phoneNumberId);
       break;
       
     case "name_3":
-      const payload = {
+      const payloadName3 = {
         type: "text",
         text: {
           body: `*Amazina siyo!*\nMurebe neza`
         }
       };
-      await sendWhatsappMessage(phone, payload, phoneNumberId);
+      await sendWhatsappMessage(phone, payloadName3, phoneNumberId);
       break;
     
 
