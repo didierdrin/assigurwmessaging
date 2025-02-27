@@ -614,7 +614,7 @@ const handlePaymentTermsReply = async (
     case "done_verification":
       userContext.selectedInstallment = "i_catf";
       userContexts.set(phone, userContext);
-      await confirmAndPayRW(
+      await processPaymentRW(
         phone,
         userContext.selectedInstallment,
         phoneNumberId
@@ -959,7 +959,7 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
   // Store the original phone number format without parsing to integer
   // This helps preserve the format for proper comparison
   const paidPhoneNumber = messageText;
-    const formattedPaidPhoneNumber = "+25" + paidPhoneNumber;
+    const formattedPaidPhoneNumber = "25" + paidPhoneNumber;
   
   // Store in user context
   userContext.paidPhoneNo = paidPhoneNumber;
@@ -5648,7 +5648,7 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   const paymentPayload = {
     type: "text",
     text: {
-      body: `*Kwishyura Ubwishingizi*\nMurakoze! Noneho ishyura ukoresheje MoMo kuri iyi nimero: ${250788767816}\n e.g: \*182\*1\*1\*{nimero}#\nIzina: IKANISA.`
+      body: `*Kwishyura Ubwishingizi*\nTotal: FRW 0\nMurakoze! Noneho ishyura ukoresheje MoMo kuri iyi nimero: ${250788767816}\n e.g: \*182\*1\*1\*{nimero}#\nIzina: IKANISA.`
     }
   };
 
