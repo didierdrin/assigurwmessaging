@@ -448,7 +448,8 @@ const handleNFMReply = async (message, phone, phoneNumberId) => {
 
         // Update the document to include its own ID userContext.insuranceDocRef
 await userContext.insuranceDocRef.update({
-  status: "processing"  // Set the id field to match the document's ID
+  status: "processing",  // Set the id field to match the document's ID
+  selectedCoverTypes: selectedCoverTypes
 });
       //await selectPaymentPlan(phone, phoneNumberId);
       //await selectVehicleBodyType(phone, phoneNumberId); 
@@ -1007,7 +1008,8 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
 
           // Update the document to include its own ID userContext.insuranceDocRef
 await userContext.insuranceDocRef.update({
-  status: "processing"  // Set the id field to match the document's ID
+  status: "processing",  // Set the id field to match the document's ID
+  selectedCoverTypes: userContext.selectedCoverTypes
 });
       //await selectPaymentPlanRW(phone, phoneNumberId);
       //await selectVehicleBodyTypeRW(phone, phoneNumberId); 
@@ -4338,9 +4340,9 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
   //  insuranceEndDate: userContext.insuranceEndDate
   //    ? String(userContext.insuranceEndDate)
   //    : "",
-    selectedCoverTypes: userContext.selectedCoverTypes
-      ? String(userContext.selectedCoverTypes)
-      : "",
+   // selectedCoverTypes: userContext.selectedCoverTypes
+   //   ? String(userContext.selectedCoverTypes)
+   //   : "",
     selectedPersonalAccidentCoverage: userContext.selectedCoverage
       ? parseFloat(userContext.selectedCoverage)
       : 0.0,
@@ -5496,7 +5498,7 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
     userPhone: userContext.userPhone ? String(userContext.userPhone) : "",
     plateNumber: userContext.plateNumber ? String(userContext.plateNumber) : "",
     //insuranceStartDate: userContext.insuranceStartDate ? String(userContext.insuranceStartDate) : "",
-    selectedCoverTypes: userContext.selectedCoverTypes ? String(userContext.selectedCoverTypes) : "",
+    // selectedCoverTypes: userContext.selectedCoverTypes ? String(userContext.selectedCoverTypes) : "",
     selectedPersonalAccidentCoverage: userContext.selectedCoverage ? parseFloat(userContext.selectedCoverage) : 0.0,
     totalCost: totalCost,
     numberOfCoveredPeople: userContext.numberOfCoveredPeople ? parseFloat(userContext.numberOfCoveredPeople) : 0.0,
