@@ -955,33 +955,71 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
       );
     }
   } else if (userContext.stage === "EXPECTING_PAID_PHONENUMBER") {
-    const messageText = message.text.body.trim();
-    const paidPhoneNumber = parseInt(messageText);
-
-    userContext.paidPhoneNo = paidPhoneNumber;
-        userContexts.set(phone, userContext);
-
-    userContext.insuranceDocRef.update({
-        paidBool: true, 
-      });
-      
-
-      if (paidPhoneNumber == paymentConfirm) {
-        const payloadName1 = {
+  const messageText = message.text.body.trim();
+  // Store the original phone number format without parsing to integer
+  // This helps preserve the format for proper comparison
+  const paidPhoneNumber = messageText;
+  
+  // Store in user context
+  userContext.paidPhoneNo = paidPhoneNumber;
+  userContexts.set(phone, userContext);
+  
+  try {
+    // Query the paymentConfirm collection to check if this phone number exists
+    const paymentConfirmSnapshot = await firestore3.collection("paymentConfirm")
+      .where("phoneNumber", "==", paidPhoneNumber)
+      .limit(1)
+      .get();
+   
+    
+    // Check if we found a matching payment confirmation
+    if (!paymentConfirmSnapshot.empty) {
+      // Payment confirmed in the collection
+      const payloadName1 = {
         type: "text",
         text: {
-          body: `*Twakiriye ubwishyu!*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy’Ubwishingizi. Mutegereze gato.`
+          body: `*Twakiriye ubwishyu!*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy'Ubwishingizi. Mutegereze gato.`
         }
       };
-
       await sendWhatsAppMessage(phone, payloadName1, phoneNumberId);
-        return;
-      } else {
-        console.log("The phone number is has not paid");
-      }
 
+       // (you may want to change this depending on your business logic)
+    await userContext.insuranceDocRef.update({
+      paidBool: true,
+      paidPhoneNumber: paidPhoneNumber,
+      paymentReference: paymentReference || `PAY-${Date.now()}`,
+      paidAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+      
+      // Proceed to generate and send certificate
+      // You might want to call a function here that handles certificate generation
+      // Example: await generateAndSendCertificate(userContext, phone, phoneNumberId);
+      
+      return;
+    } else {
+      // Phone number not found in payment confirmations
+      console.log("The phone number has not paid");
+      
+      const payloadNotFound = {
+        type: "text",
+        text: {
+          body: `Ntabwo twabashije kubona ubwishyu buhuye n'iyi numero. Mwongere mugerageze cyangwa muvugane n'umukozi wacu.`
+        }
+      };
+      await sendWhatsAppMessage(phone, payloadNotFound, phoneNumberId);
+    }
+  } catch (error) {
+    console.error("Error verifying payment:", error);
     
+    const payloadError = {
+      type: "text",
+      text: {
+        body: `Hari ikibazo cyavutse. Mwongere mugerageze nyuma y'akanya gato.`
+      }
+    };
+    await sendWhatsAppMessage(phone, payloadError, phoneNumberId);
   }
+}
   
 };
 
@@ -5807,9 +5845,7 @@ app.post("/api/mark-as-paid", async (req, res) => {
     // Update order with payment details
     await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
       status: "completed",
-      paidAmount: orderData.totalCost,
-      paymentReference: paymentReference || `PAY-${Date.now()}`,
-      paidAt: admin.firestore.FieldValue.serverTimestamp()
+      paidAmount: orderData.totalCost
     });
     
     let finalCertificateUrl;
