@@ -5483,7 +5483,7 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   const paymentPayload = {
     type: "text",
     text: {
-      body: `*Kwishyura Ubwishingizi*\nMurakoze! Noneho ishyura ukoresheje MoMo kuri iyi nimero: ${250788767816}\n e.g: \*182\*1\*1\*{nimero}# Izina: Ikanisa\n_______________________\nWishyuye igiciro cya ${installmentBreakdown}, urahabwa icyemezo mu gihe gito.`
+      body: `*Kwishyura Ubwishingizi*\nMurakoze! Noneho ishyura ukoresheje MoMo kuri iyi nimero: ${250788767816}\n e.g: \*182\*1\*1\*{nimero}# Izina: Ikanisa\n_______________________\n${installmentBreakdown}, urahabwa icyemezo mu gihe gito.`
     }
   };
 
