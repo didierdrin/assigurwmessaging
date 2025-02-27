@@ -954,7 +954,30 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
         phoneNumberId
       );
     }
+  } else if (userContext.stage === "EXPECTING_PAID_PHONENUMBER") {
+    const messageText = message.text.body.trim();
+    const paidPhoneNumber = parseInt(messageText);
+
+    userContext.paidPhoneNo = paidPhoneNumber;
+        userContexts.set(phone, userContext);
+
+    userContext.insuranceDocRef.update({
+        paidBool: true, 
+      });
+      
+
+      const payloadName1 = {
+        type: "text",
+        text: {
+          body: `*Twakiriye ubwishyu!*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy’Ubwishingizi. Mutegereze gato.`
+        }
+      };
+
+      await sendWhatsAppMessage(phone, payloadName1, phoneNumberId);
+
+    
   }
+  
 };
 
 
@@ -5539,7 +5562,7 @@ async function confirmAndPayRW(phone, selectedInstallmentChoice, phoneNumberId) 
 async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   const userContext = userContexts.get(phone) || {};
   userContext.userPhone = phone;
-  userContexts.set(phone, userContext);
+  
 
   const totalCost = userContext.calculatedTotal || userContext.totalCost || 0;
   const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -5586,41 +5609,16 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   };
 
   const namePayload = {
-    type: "interactive",
-    interactive: {
-      type: "button",
-      body: {
-        text: `*Kwemeza Izina rya MOMO ry'uwishyuye*\nKugira ngo tumenye neza ko byose biri mu buryo, hitamo izina nyaryo ry’uwishyuye (Izina rya MOMO). Hitamo izina nyaryo muri aya mazina akurikira:`
-      },
-      action: {
-        buttons: [
-          {
-            type: "reply",
-            reply: {
-              id: "name_1",
-              title: "Christian Mupenzi"
-            }
-          },
-          {
-            type: "reply",
-            reply: {
-              id: "name_2",
-              title: "Claude Bizimana"
-            }
-          },
-          {
-            type: "reply",
-            reply: {
-              id: "name_3",
-              title: "Emelyne Keza"
-            }
-          }
-        ]
-      }
+    type: "text",
+    text: {
+      body: `*Emeza nimero ya MOMO ry'uwishyuye*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy’Ubwishingizi. Mutegereze gato.`
     }
+    
   };
 
   console.log("Processing payment for:", phone, paymentPlan);
+  userContext.stage = "EXPECTING_PAID_PHONENUMBER";
+  userContexts.set(phone, userContext);
 
   await sendWhatsAppMessage(phone, paymentPayload, phoneNumberId);
   await new Promise(resolve => setTimeout(resolve, 3000));
