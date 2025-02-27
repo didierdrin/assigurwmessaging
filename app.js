@@ -5544,9 +5544,45 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
     }
   };
 
+  const namePayload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: `*Kwemeza Izina rya MOMO ry'uwishyuye*\nKugira ngo tumenye neza ko byose biri mu buryo, hitamo izina nyaryo ry’uwishyuye (Izina rya MOMO). Hitamo izina nyaryo muri aya mazina akurikira:`
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "name_1",
+              title: "Didier Nsengiyumva"
+            }
+          },
+          {
+            type: "reply",
+            reply: {
+              id: "name_2",
+              title: "Claude Bizimana"
+            }
+          },
+          {
+            type: "reply",
+            reply: {
+              id: "name_3",
+              title: "Emelyne Keza"
+            }
+          }
+        ]
+      }
+    }
+  };
+
   console.log("Processing payment for:", phone, paymentPlan);
 
   await sendWhatsAppMessage(phone, paymentPayload, phoneNumberId);
+  await sendWhatsAppMessage(phone, namePayload, phoneNumberId);
 
   const todayFirebase = new Date();
   const formattedDateFirebase = `${todayFirebase.getDate().toString().padStart(2, "0")}/${(todayFirebase.getMonth() + 1).toString().padStart(2, "0")}/${todayFirebase.getFullYear()}`;
