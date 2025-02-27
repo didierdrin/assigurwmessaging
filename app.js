@@ -654,9 +654,11 @@ const handlePaymentTermsReply = async (
       break;
 
     case "name_1":
+      if (userContext.stage === "EXPECTING_CONFIRM_PAY") {
       userContext.insuranceDocRef.update({
         paidBool: true, 
       });
+      
 
       const payloadName1 = {
         type: "text",
@@ -666,9 +668,13 @@ const handlePaymentTermsReply = async (
       };
 
       await sendWhatsappMessage(phone, payloadName1, phoneNumberId);
+
+          return
+      }
       break;
       
     case "name_2":
+      if (userContext.stage === "EXPECTING_CONFIRM_PAY") {
       const payloadName2 = {
         type: "text",
         text: {
@@ -676,9 +682,12 @@ const handlePaymentTermsReply = async (
         }
       };
       await sendWhatsappMessage(phone, payloadName2, phoneNumberId);
+        return
+      }
       break;
       
     case "name_3":
+      if (userContext.stage === "EXPECTING_CONFIRM_PAY") {
       const payloadName3 = {
         type: "text",
         text: {
@@ -686,6 +695,8 @@ const handlePaymentTermsReply = async (
         }
       };
       await sendWhatsappMessage(phone, payloadName3, phoneNumberId);
+    return
+      }
       break;
     
 
@@ -5500,10 +5511,7 @@ async function confirmAndPayRW(phone, selectedInstallmentChoice, phoneNumberId) 
         text: "Emeza & Wishyure"
       },
       body: {
-        text: "Mubyo wahisemo harimo amafaranga y'ikiguzi, VAT, na SGF. Urabyemera gukomeza kwishyura?"
-      },
-      footer: {
-        text: `Total: FRW ${formatNum(installmentBreakdown)} kuri uyu kwezi`
+        text: `Total: FRW ${formatNum(installmentBreakdown)}`
       },
       action: {
         buttons: [
