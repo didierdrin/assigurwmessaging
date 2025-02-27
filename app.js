@@ -653,6 +653,28 @@ const handlePaymentTermsReply = async (
 
       break;
 
+   // case "name_1":
+   //   break;
+    case "name_2":
+      const payload = {
+        type: "text",
+        text: {
+          body: `*Amazina siyo!*\nMurebe neza`
+        }
+      };
+      await sendWhatsappMessage(phone, payload, phoneNumberId);
+      break;
+    case "name_3":
+      const payload = {
+        type: "text",
+        text: {
+          body: `*Amazina siyo!*\nMurebe neza`
+        }
+      };
+      await sendWhatsappMessage(phone, payload, phoneNumberId);
+      break;
+    
+
 
     case "no_insurance_document":
       
@@ -5582,6 +5604,7 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   console.log("Processing payment for:", phone, paymentPlan);
 
   await sendWhatsAppMessage(phone, paymentPayload, phoneNumberId);
+  await new Promise(resolve => setTimeout(resolve, 3000));
   await sendWhatsAppMessage(phone, namePayload, phoneNumberId);
 
   const todayFirebase = new Date();
