@@ -5781,9 +5781,127 @@ app.post("/api/send-proforma", async (req, res) => {
 
 
 
-
 // Endpoint to mark order as paid
 app.post("/api/mark-as-paid", async (req, res) => {
+  try {
+    const { orderId, paymentReference = null, certificateUrl = null } = req.body;
+    
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: "Order ID is required" });
+    }
+    
+    // Get order details from Firestore
+    const orderDoc = await firestore3.collection("whatsappInsuranceOrders").doc(orderId).get();
+    
+    if (!orderDoc.exists) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+    
+    const orderData = orderDoc.data();
+    
+    // Update order with payment details
+    await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
+      status: "completed",
+      paidAmount: orderData.totalCost,
+      paymentReference: paymentReference || `PAY-${Date.now()}`,
+      paidAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    let finalCertificateUrl;
+    
+    // If a certificateUrl is provided in the request, use it (uploaded document)
+    if (certificateUrl || orderData.uploadedInsuranceCertificateUrl) {
+      finalCertificateUrl = certificateUrl || orderData.uploadedInsuranceCertificateUrl;
+    } else {
+      // Otherwise generate insurance certificate (fallback to original behavior)
+      const certificatePdfBytes = await generateInsuranceCertificate(orderData);
+      
+      // Upload certificate to Firebase Storage
+      const certificateFileName = `certificates/${orderId}_${Date.now()}.pdf`;
+      const certificateFile = bucket.file(certificateFileName);
+      
+      await certificateFile.save(Buffer.from(certificatePdfBytes), {
+        metadata: {
+          contentType: 'application/pdf',
+        }
+      });
+      
+      // Get download URL for certificate
+      const [generatedCertificateUrl] = await certificateFile.getSignedUrl({
+        action: 'read',
+        expires: '03-01-2500', // Long expiration
+      });
+      
+      finalCertificateUrl = generatedCertificateUrl;
+    }
+    
+    // Update order with certificate URL
+    await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
+      certificateUrl: finalCertificateUrl
+    });
+    
+    // Send WhatsApp message with certificate to customer
+    if (orderData.userPhone) {
+      const phoneNumber = orderData.userPhone.startsWith('+') 
+        ? orderData.userPhone.substring(1) 
+        : orderData.userPhone;
+
+      const payload = {
+        type: "text",
+        text: {
+          body: `*Icyemezo Cy'Ubwishingizi*\nMwakiriye Icyemezo cyawe cy'ubwishingizi. Turagushimiye kandi tukwifurije umutekano mu muhanda.`,
+        },
+      };
+
+      const payload2 = {
+        type: "text",
+        text: {
+          body: `*Uhawe ishimwe rya tokens FRW 5,000*\nMurakoze guhitamo SanlamAllianz! Nk'ishimwe muhawe tokens zingana na FRW 5,000 zikoreshwa gusa mu kwishyura Urugendo muri Lifuti.`,
+        },
+      };
+      
+      // Send document first
+      await sendWhatsAppDocument(
+        phoneNumber, 
+        finalCertificateUrl, 
+        "Insurance Certificate", 
+        "Insurance certificate", 
+        "561637583695258"
+      );
+      
+      // Optional delay to ensure document is sent first
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Then send the text message
+      await sendWhatsAppMessage(
+        phoneNumber,
+        payload,
+        "561637583695258"
+      );
+      
+      // Send the bonus message
+      await sendWhatsAppMessage(
+        phoneNumber,
+        payload2,
+        "561637583695258"
+      );
+    }
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: "Payment processed successfully",
+      certificateUrl: finalCertificateUrl
+    });
+    
+  } catch (error) {
+    console.error("Error processing payment:", error);
+    return res.status(500).json({ success: false, message: "Failed to process payment", error: error.message });
+  }
+});
+
+
+// Endpoint to mark order as paid 0ld
+app.post("/api/mark-as-paid-old", async (req, res) => {
   try {
     const { orderId, paymentReference = null } = req.body;
     
