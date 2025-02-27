@@ -3378,7 +3378,7 @@ async function requestNationalId(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: `*National ID*\nPlease upload a clear image or PDF of your National ID document.`,
+      body: `*National ID*\nPlease upload a clear image(only image) of your National ID document.`,
     },
   };
 
@@ -3400,7 +3400,7 @@ async function requestInsuranceDocument(phone, phoneNumberId) {
     interactive: {
       type: "button",
       body: {
-        text: `*Insurance Certificate*\nThank you for your National ID. Now, please upload a clear image or PDF of your current or old insurance certificate.`
+        text: `*Insurance Certificate*\nThank you for your National ID. Now, please upload a clear image(only image) of your current or old insurance certificate.`
       },
       action: {
         buttons: [
@@ -3431,7 +3431,7 @@ async function requestYellowCard(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: `*Yellow Card*\nThank you for your insurance certificate. Now, please upload a clear image or PDF of your Yellow Card.`,
+      body: `*Yellow Card*\nThank you for your insurance certificate. Now, please upload a clear image(only image) of your Yellow Card.`,
     },
   };
 
@@ -4593,7 +4593,7 @@ async function requestNationalIdRW(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: `*Twohereze Indangamuntu*\nOk! Noneho, ohereza kopi/ifoto y'indangamuntu ya nyiri iki kinyabiziga. Ibi bidufasha kwemeza amakuru yawe byihuse.`
+      body: `*Twohereze Indangamuntu*\nOk! Noneho, ohereza ifoto y'indangamuntu(ifoto gusa) ya nyiri iki kinyabiziga. Ibi bidufasha kwemeza amakuru yawe byihuse.`
     }
   };
 
@@ -4613,7 +4613,7 @@ async function requestInsuranceDocumentRW(phone, phoneNumberId) {
     interactive: {
       type: "button",
       body: {
-        text: `*Icyemezo cy'Ubwishingizi Gisanzwe(Niba gihari)*\nNiba ufite icyemezo cy'ubwishingizi gisanzwe, twohereze ifoto/pdf. Niba utagifite, kanda kuri 'Ntacyo' maze dukomeze.`
+        text: `*Icyemezo cy'Ubwishingizi Gisanzwe(Niba gihari)*\nNiba ufite icyemezo cy'ubwishingizi gisanzwe, twohereze ifoto(ifoto gusa). Niba utagifite, kanda kuri 'Ntacyo' maze dukomeze.`
       },
       action: {
         buttons: [
@@ -4643,7 +4643,7 @@ async function requestYellowCardRW(phone, phoneNumberId) {
   const payload = {
     type: "text",
     text: {
-      body: `*Carte Jaune(Yellow Card)/Logbook*\nDukomeze! Ubu noneho twohereze ifoto/pdf ya Carte Jaune(Yellow Card)/Logbook y'ikinyabiziga kugirango tumenye neza amakuru y'imodoka.`
+      body: `*Carte Jaune(Yellow Card)/Logbook*\nDukomeze! Ubu noneho twohereze ifoto(ifoto gusa) ya Carte Jaune(Yellow Card)/Logbook y'ikinyabiziga kugirango tumenye neza amakuru y'imodoka.`
     }
   };
 
