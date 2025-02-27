@@ -966,7 +966,8 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
       });
       
 
-      const payloadName1 = {
+      if (paidPhoneNumber == paymentConfirm) {
+        const payloadName1 = {
         type: "text",
         text: {
           body: `*Twakiriye ubwishyu!*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy’Ubwishingizi. Mutegereze gato.`
@@ -974,6 +975,10 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
       };
 
       await sendWhatsAppMessage(phone, payloadName1, phoneNumberId);
+        return;
+      } else {
+        console.log("The phone number is has not paid");
+      }
 
     
   }
