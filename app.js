@@ -5724,7 +5724,7 @@ app.post("/api/mark-as-paid", async (req, res) => {
       );
       
       // Send the certificate document
-      await sendWhatsAppDocument(phoneNumber, certificateUrl, "Insurance Certificate", "Your insurance certificate", "561637583695258");
+      await sendWhatsAppDocument(phoneNumber, certificateUrl, "Insurance Certificate", "Insurance certificate", "561637583695258");
     }
     
     return res.status(200).json({ 
