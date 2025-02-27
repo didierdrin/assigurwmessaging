@@ -652,6 +652,30 @@ const handlePaymentTermsReply = async (
       }
 
       break;
+
+
+    case "no_insurance_document":
+      
+        await requestYellowCard(
+          phone,
+          phoneNumberId
+        );
+        return;
+      
+
+      break;
+
+    case "no_insurance_document_rw":
+      
+        await requestYellowCardRW(
+          phone,
+          phoneNumberId
+        );
+        return;
+      
+
+      break;
+      
     case "less_than_a_year_rw":
       if (userContext.stage === "EXPECTING_STATE_INSURANCE_DURATION") {
         await startDateRW(phone, phoneNumberId);
@@ -3369,11 +3393,28 @@ async function requestNationalId(phone, phoneNumberId) {
 
 // Function to request insurance document (second in flow)
 async function requestInsuranceDocument(phone, phoneNumberId) {
+  
+
   const payload = {
-    type: "text",
-    text: {
-      body: `*Insurance Certificate*\nThank you for your National ID. Now, please upload a clear image or PDF of your current or old insurance certificate.`,
-    },
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: `*Insurance Certificate*\nThank you for your National ID. Now, please upload a clear image or PDF of your current or old insurance certificate.`
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "no_insurance_document",
+              title: "Not available"
+            }
+          }
+          
+        ]
+      }
+    }
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
@@ -4566,10 +4607,26 @@ async function requestNationalIdRW(phone, phoneNumberId) {
 
 // Request Insurance Document – RW
 async function requestInsuranceDocumentRW(phone, phoneNumberId) {
+  
   const payload = {
-    type: "text",
-    text: {
-      body: `*Icyemezo cy'Ubwishingizi Gisanzwe(Niba gihari)*\nNiba ufite icyemezo cy'ubwishingizi gisanzwe, twohereze ifoto/pdf. Niba utagifite, kanda kuri 'Ntacyo' maze dukomeze.`
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: `*Icyemezo cy'Ubwishingizi Gisanzwe(Niba gihari)*\nNiba ufite icyemezo cy'ubwishingizi gisanzwe, twohereze ifoto/pdf. Niba utagifite, kanda kuri 'Ntacyo' maze dukomeze.`
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "no_insurance_document_rw",
+              title: "Ntacyo"
+            }
+          }
+          
+        ]
+      }
     }
   };
 
