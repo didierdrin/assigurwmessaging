@@ -653,8 +653,21 @@ const handlePaymentTermsReply = async (
 
       break;
 
-   // case "name_1":
-   //   break;
+    case "name_1":
+      userContext.insuranceDocRef.update({
+        paidBool: true, 
+      });
+
+      const payload = {
+        type: "text",
+        text: {
+          body: `*Twakiriye ubwishyu!*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy’Ubwishingizi. Mutegereze gato.`
+        }
+      };
+
+      await sendWhatsappMessage(phone, payload, phoneNumberId);
+      break;
+      
     case "name_2":
       const payload = {
         type: "text",
@@ -664,6 +677,7 @@ const handlePaymentTermsReply = async (
       };
       await sendWhatsappMessage(phone, payload, phoneNumberId);
       break;
+      
     case "name_3":
       const payload = {
         type: "text",
@@ -5580,7 +5594,7 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
             type: "reply",
             reply: {
               id: "name_1",
-              title: "Didier Nsengiyumva"
+              title: "Christian Mupenzi"
             }
           },
           {
