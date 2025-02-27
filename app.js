@@ -1598,6 +1598,7 @@ const handleDocumentUpload = async (message, phone, phoneNumberId) => {
 
       const initialData = {
         userPhone: phone,
+        paidBool: false,
         status: '',
         creationDate: admin.firestore.Timestamp.now(),
         // These will be filled in later as needed
