@@ -959,6 +959,7 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
   // Store the original phone number format without parsing to integer
   // This helps preserve the format for proper comparison
   const paidPhoneNumber = messageText;
+    const formattedPaidPhoneNumber = "+25" + paidPhoneNumber;
   
   // Store in user context
   userContext.paidPhoneNo = paidPhoneNumber;
@@ -966,8 +967,8 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
   
   try {
     // Query the paymentConfirm collection to check if this phone number exists
-    const paymentConfirmSnapshot = await firestore3.collection("paymentConfirm")
-      .where("phoneNumber", "==", paidPhoneNumber)
+    const paymentConfirmSnapshot = await firestore2.collection("paymentConfirm")
+      .where("payer", "==", formattedPaidPhoneNumber)
       .limit(1)
       .get();
    
