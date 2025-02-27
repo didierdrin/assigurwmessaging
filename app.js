@@ -5627,6 +5627,8 @@ app.post("/api/send-proforma", async (req, res) => {
       };
 
       await sendWhatsAppDocument(phoneNumber, orderData.uploadedProformaUrl, "Proforma Invoice", "", "561637583695258");
+      // Optional delay to ensure document is sent first
+      await new Promise(resolve => setTimeout(resolve, 1000));
       await sendWhatsAppMessage(phoneNumber, payload, "561637583695258");
       
     }
