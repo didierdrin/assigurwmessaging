@@ -614,7 +614,7 @@ const handlePaymentTermsReply = async (
     case "done_verification":
       userContext.selectedInstallment = "i_catf";
       userContexts.set(phone, userContext);
-      await confirmAndPay(
+      await confirmAndPayRW(
         phone,
         userContext.selectedInstallment,
         phoneNumberId
@@ -4758,8 +4758,8 @@ const payload = {
             rows: [
               {
                 id: "third_party_rw",
-                title: "Sanlum",
-                description: "Third party cover",
+                title: "Third Party Cover",
+                description: "Motor Insurance",
               },
               
             ],
@@ -5403,10 +5403,10 @@ async function confirmAndPayRW(phone, selectedInstallmentChoice, phoneNumberId) 
       type: "button",
       header: {
         type: "text",
-        text: "Emeza kandi Wishyure"
+        text: "Emeza & Wishyure"
       },
       body: {
-        text: "Icyo wahisemo kirimo amafaranga y'ubuyobozi, VAT, na SGF. Urabyemera gukomeza kwishyura?"
+        text: "Mubyo wahisemo harimo amafaranga y'ikiguzi, VAT, na SGF. Urabyemera gukomeza kwishyura?"
       },
       footer: {
         text: `Total: FRW ${formatNum(installmentBreakdown)} kuri uyu kwezi`
@@ -5417,7 +5417,7 @@ async function confirmAndPayRW(phone, selectedInstallmentChoice, phoneNumberId) 
             type: "reply",
             reply: {
               id: "agree_to_terms_rw",
-              title: "Emeza kandi Wishyure"
+              title: "Emeza & Wishyure"
             }
           },
           {
@@ -5483,7 +5483,7 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   const paymentPayload = {
     type: "text",
     text: {
-      body: `*Kwishyura Ubwishingizi*\nMurakoze! Noneho ishyura ukoresheje MoMo/Airtel kuri iyi nimero: ${250788767816}\nIzina: Ikanisa\n_______________________\nWishyuye igiciro cya ${installmentBreakdown}, urahabwa icyemezo mu gihe gito.`
+      body: `*Kwishyura Ubwishingizi*\nMurakoze! Noneho ishyura ukoresheje MoMo kuri iyi nimero: ${250788767816}\n e.g: \*182\*1\*1\*{nimero}# Izina: Ikanisa\n_______________________\nWishyuye igiciro cya ${installmentBreakdown}, urahabwa icyemezo mu gihe gito.`
     }
   };
 
@@ -5706,7 +5706,14 @@ app.post("/api/mark-as-paid", async (req, res) => {
       const payload = {
     type: "text",
     text: {
-      body: `*Thank you for your payment!* Your insurance policy is now active. We've attached your insurance certificate for your records.`,
+      body: `*Icyemezo Cy'Ubwishingizi*\nMwakiriye Icyemezo cyawe cy’ubwishingizi. Turagushimiye kandi tukwifurije umutekano mu muhanda.`,
+    },
+  };
+
+      const payload2 = {
+    type: "text",
+    text: {
+      body: `*Uhawe ishimwe rya tokens FRW 5,000*\nMurakoze guhitamo SanlamAllianz! Nk'ishimwe muhawe tokens zingana na FRW 5,000 zikoreshwa gusa mu kwishyura Urugendo muri Lifuti.`,
     },
   };
       
