@@ -1635,7 +1635,7 @@ await docRef.update({
               break;
               
             case "yellowCard_rw":
-              isValidDocument = extractedData.N0_Immatriculation && extractedData.Nom;
+              isValidDocument = extractedData["N0 Immatriculation"] && extractedData["Nom"]; //extractedData.N0_Immatriculation && extractedData.Nom;
               break;
               
             case "insurance_rw":
