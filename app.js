@@ -182,6 +182,9 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
             userContext.stage = "EXPECTING_END_DATE";
             userContexts.set(phone, userContext);
             await endDate(phone, phoneNumberId);
+            await userContext.insuranceDocRef.update({
+  insuranceStartDate: userContext.insuranceStartDate  // Set the id field to match the document's ID
+});
             break;
 
           case "EXPECTING_END_DATE":
@@ -213,6 +216,9 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
             userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
             userContexts.set(phone, userContext);
             await selectInsuranceCoverType(phone, phoneNumberId);
+            await userContext.insuranceDocRef.update({
+  insuranceEndDate: userContext.insuranceEndDate  // Set the id field to match the document's ID
+});
             break;
 
           case "EXPECTING_START_DATE_RW":
@@ -227,6 +233,9 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
             userContext.stage = "EXPECTING_END_DATE_RW";
             userContexts.set(phone, userContext);
             await endDateRW(phone, phoneNumberId);
+            await userContext.insuranceDocRef.update({
+  insuranceStartDate: userContext.insuranceStartDate  // Set the id field to match the document's ID
+});
             break;
 
           case "EXPECTING_END_DATE_RW":
@@ -258,6 +267,9 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
             userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
             userContexts.set(phone, userContext);
             await selectInsuranceCoverTypeRW(phone, phoneNumberId);
+            await userContext.insuranceDocRef.update({
+  insuranceEndDate: userContext.insuranceEndDate  // Set the id field to match the document's ID
+});
             break;
 
           case "CUSTOM_DATE_INPUT":
@@ -265,6 +277,9 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
             userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
             userContexts.set(phone, userContext);
             await selectInsuranceCoverType(phone, phoneNumberId);
+            await userContext.insuranceDocRef.update({
+  insuranceStartDate: userContext.insuranceStartDate  // Set the id field to match the document's ID
+});
             break;
 
           case "CUSTOM_DATE_INPUT_RW":
@@ -272,6 +287,9 @@ const handleDateValidation = async (message, phone, phoneNumberId) => {
             userContext.stage = "EXPECTING_INSURANCE_COVER_TYPE";
             userContexts.set(phone, userContext);
             await selectInsuranceCoverTypeRW(phone, phoneNumberId);
+            await userContext.insuranceDocRef.update({
+  insuranceStartDate: userContext.insuranceStartDate  // Set the id field to match the document's ID
+});
             break;
 
           default:
@@ -725,6 +743,10 @@ const handlePaymentTermsReply = async (
         userContext.insuranceStartDate = formattedDate;
         userContexts.set(phone, userContext);
         await selectInsuranceCoverType(phone, phoneNumberId);
+        await userContext.insuranceDocRef.update({
+  insuranceStartDate: userContext.insuranceStartDate,   // Set the id field to match the document's ID
+          insuranceEndDate: userContext.insuranceEndDate
+});
         console.log("Expecting start_today button reply");
         return;
       }
@@ -776,6 +798,10 @@ const handlePaymentTermsReply = async (
         userContext.insuranceStartDate = formattedDate;
         userContexts.set(phone, userContext);
         await selectInsuranceCoverTypeRW(phone, phoneNumberId);
+        await userContext.insuranceDocRef.update({
+  insuranceStartDate: userContext.insuranceStartDate,  // Set the id field to match the document's ID
+          insuranceEndDate: userContext.insuranceEndDate
+});
         console.log("Expecting start_today_rw button reply");
         return;
       }
@@ -4306,12 +4332,12 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
   const insuranceOrderData = {
     userPhone: userContext.userPhone ? String(userContext.userPhone) : "",
     plateNumber: userContext.plateNumber ? String(userContext.plateNumber) : "",
-    insuranceStartDate: userContext.insuranceStartDate
-      ? String(userContext.insuranceStartDate)
-      : "",
-    insuranceEndDate: userContext.insuranceEndDate
-      ? String(userContext.insuranceEndDate)
-      : "",
+  //  insuranceStartDate: userContext.insuranceStartDate
+  //    ? String(userContext.insuranceStartDate)
+  //    : "",
+  //  insuranceEndDate: userContext.insuranceEndDate
+  //    ? String(userContext.insuranceEndDate)
+  //    : "",
     selectedCoverTypes: userContext.selectedCoverTypes
       ? String(userContext.selectedCoverTypes)
       : "",
@@ -4429,101 +4455,6 @@ const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",
   console.log("User context after all flows:", userContext);
 }
 
-// Last message - get insurance
-async function processPaymentOld(phone, paymentPlan, phoneNumberId) {
-  const userContext = userContexts.get(phone) || {};
-
-  userContext.userPhone = phone;
-  userContexts.set(phone, userContext);
-
-  const totalCost = userContext.totalCost || 0;
-
-  let installmentBreakdown = "";
-
-  switch (paymentPlan) {
-    case "i_cat1":
-      installmentBreakdown = `1M: FRW ${totalCost * 0.25}`;
-      break;
-    case "i_cat2":
-      installmentBreakdown = `3M: FRW ${totalCost * 0.5}`;
-      break;
-    case "i_cat3":
-      installmentBreakdown = `6M: FRW ${totalCost * 0.75}`;
-      break;
-    case "i_cat4":
-      installmentBreakdown = `8M: FRW ${totalCost * 0.4}`;
-      break;
-    case "i_catf":
-      installmentBreakdown = `Full payment: FRW ${totalCost}`;
-      break;
-    default:
-      installmentBreakdown = "Unknown payment plan.";
-  }
-
-  const paymentPayload = {
-    type: "text",
-    text: {
-      body: `Please pay with \nMoMo/Airtel to ${250788767816}\nName: Ikanisa\n_______________________\nYour purchase for ${installmentBreakdown} is being processed after your payment is received, you will receive a confirmation shortly.`,
-    },
-  };
-
-  console.log("Processing payment for:", phone, paymentPlan);
-
-  // Simulate Payment
-  await sendWhatsAppMessage(phone, paymentPayload, phoneNumberId);
-
-  const todayFirebase = new Date();
-  const formattedDateFirebase = `${todayFirebase
-    .getDate()
-    .toString()
-    .padStart(2, "0")}/${(todayFirebase.getMonth() + 1)
-    .toString()
-    .padStart(2, "0")}/${todayFirebase.getFullYear()}`;
-  //const realCreationDate3 = new admin.firestore.Timestamp.fromDate(formattedDateFirebase);
-
-  const insuranceOrderData = {
-    userPhone: userContext.userPhone ? String(userContext.userPhone) : "",
-    plateNumber: userContext.plateNumber ? String(userContext.plateNumber) : "",
-    insuranceStartDate: userContext.insuranceStartDate
-      ? String(userContext.insuranceStartDate)
-      : "",
-    selectedCoverTypes: userContext.selectedCoverTypes
-      ? String(userContext.selectedCoverTypes)
-      : "",
-    selectedPersonalAccidentCoverage: userContext.selectedCoverage
-      ? parseFloat(userContext.selectedCoverage)
-      : 0.0,
-    totalCost: userContext.totalCost ? parseFloat(userContext.totalCost) : 0.0,
-    numberOfCoveredPeople: userContext.numberOfCoveredPeople
-      ? parseFloat(userContext.numberOfCoveredPeople)
-      : 0.0,
-    selectedInstallment: userContext.selectedInstallment
-      ? String(userContext.selectedInstallment)
-      : "",
-    insuranceDocumentUrl: userContext.insuranceDocumentUrl
-      ? String(userContext.insuranceDocumentUrl)
-      : "",
-    extractedData: userContext.extractedData ? userContext.extractedData : {},
-    creationDate: todayFirebase,
-  };
-
-  try {
-    const docRef = await firestore3
-      .collection("whatsappInsuranceOrders")
-      .add(insuranceOrderData);
-    console.log(
-      "User data successfully saved to Firestore with ID:",
-      docRef.id
-    );
-    console.log(insuranceOrderData);
-  } catch (error) {
-    console.error("Error saving user data to Firestore:", error.message);
-  }
-
-  // Add logic to integrate with payment gateway API if needed.
-  console.log("______________________________________");
-  console.log("User context after all flows:", userContext);
-}
 
 // Kinyarwanda flows
 // ---------- RW versions of Insurance Services Functions ----------
@@ -5564,7 +5495,7 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   const insuranceOrderData = {
     userPhone: userContext.userPhone ? String(userContext.userPhone) : "",
     plateNumber: userContext.plateNumber ? String(userContext.plateNumber) : "",
-    insuranceStartDate: userContext.insuranceStartDate ? String(userContext.insuranceStartDate) : "",
+    //insuranceStartDate: userContext.insuranceStartDate ? String(userContext.insuranceStartDate) : "",
     selectedCoverTypes: userContext.selectedCoverTypes ? String(userContext.selectedCoverTypes) : "",
     selectedPersonalAccidentCoverage: userContext.selectedCoverage ? parseFloat(userContext.selectedCoverage) : 0.0,
     totalCost: totalCost,
