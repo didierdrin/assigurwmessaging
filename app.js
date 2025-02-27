@@ -974,6 +974,8 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       userContext.coverType = 'Rwanda'; 
       userContext.bodyType = "Jeep/SUV"; 
       userContext.usageTypeManual = "Private";
+      userContext.selectedCoverTypes = "0_Third-Party_Cover_";
+  
       userContexts.set(phone, userContext);
       await noticeProformaRW(phone, phoneNumberId);
 
