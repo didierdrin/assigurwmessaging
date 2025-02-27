@@ -988,7 +988,6 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
     await userContext.insuranceDocRef.update({
       paidBool: true,
       paidPhoneNumber: paidPhoneNumber,
-      paymentReference: paymentReference || `PAY-${Date.now()}`,
       paidAt: admin.firestore.FieldValue.serverTimestamp()
     });
       
