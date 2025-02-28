@@ -5683,24 +5683,16 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   
   // Add a button to copy the USSD code
   const copyUssdPayloadTwo = {
-    type: "interactive",
-    interactive: {
-      type: "button",
-      body: {
-        text: `*Kwishyura Ubwishingizi*\nTotal: FRW ${formatNumber(totalCost)}\nMurakoze! Noneho ishyura ukoresheje MoMo kuri iyi nimero: ${250788767816} kanda *Fata Kode*\nIzina: IKANISA.`
-      },
-      action: {
-        buttons: [
-          {
-            type: "copy_code",
-            reply: {
-              id: "copy_ussd",
-              title: "Fata kode"
-            },
-            copy_code: ussdCode
-          }
-        ]
-      }
+    type: "text",
+    text: {
+      body: `*Kwishyura Ubwishingizi*\nTotal: FRW ${formatNumber(totalCost)}\nMurakoze! Noneho ishyura ukoresheje MoMo kuri iyi nimero: ${250788767816}\nIzina: IKANISA.`        
+    }
+  };
+
+  const ussdText = {
+    type: "text",
+    text: {
+      body: `${ussdCode}`
     }
   };
 
@@ -5741,7 +5733,8 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   //await sendWhatsAppMessage(phone, paymentPayload, phoneNumberId);
   
   // Send the copy USSD button
-  await sendWhatsAppMessage(phone, copyUssdPayload, phoneNumberId);
+  await sendWhatsAppMessage(phone, copyUssdPayloadTwo, phoneNumberId);
+  await sendWhatsAppMessage(phone, ussdText, phoneNumberId);
   await new Promise(resolve => setTimeout(resolve, 3000));
    await sendWhatsAppMessage(phone, namePayload, phoneNumberId);
 
