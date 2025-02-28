@@ -5682,7 +5682,7 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   };
   
   // Add a button to copy the USSD code
-  const copyUssdPayload = {
+  const copyUssdPayloadTwo = {
     type: "interactive",
     interactive: {
       type: "button",
@@ -5704,6 +5704,34 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
     }
   };
 
+
+  const copyUssdPayload = {
+  type: "interactive",
+  interactive: {
+    type: "button",
+    body: {
+      text: `*Kwishyura Ubwishingizi*\nTotal: FRW ${formatNumber(totalCost)}\nMurakoze! Noneho ishyura ukoresheje MoMo kuri iyi nimero: 250788767816\nIzina: IKANISA.\nKode: ${ussdCode}`
+    },
+    action: {
+      buttons: [
+        {
+          type: "phone_number",
+          phone_number: "0788767816",
+          text: "Fata Kode"
+        }
+      ]
+    }
+  }
+};
+
+  const namePayload = {
+    type: "text",
+    text: {
+      body: `*Emeza nimero ya MOMO ry'uwishyuye*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy’Ubwishingizi. Mutegereze gato.`
+    }
+    
+  };
+
   
 
   console.log("Processing payment for:", phone, paymentPlan);
@@ -5714,8 +5742,8 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   
   // Send the copy USSD button
   await sendWhatsAppMessage(phone, copyUssdPayload, phoneNumberId);
-  //await new Promise(resolve => setTimeout(resolve, 3000));
-  // await sendWhatsAppMessage(phone, namePayload, phoneNumberId);
+  await new Promise(resolve => setTimeout(resolve, 3000));
+   await sendWhatsAppMessage(phone, namePayload, phoneNumberId);
 
   const todayFirebase = new Date();
   const formattedDateFirebase = `${todayFirebase.getDate().toString().padStart(2, "0")}/${(todayFirebase.getMonth() + 1).toString().padStart(2, "0")}/${todayFirebase.getFullYear()}`;
