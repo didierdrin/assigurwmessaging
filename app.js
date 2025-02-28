@@ -5686,7 +5686,7 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
     interactive: {
       type: "button",
       body: {
-        text: ""
+        text: `*Kwishyura Ubwishingizi*\nTotal: FRW ${formatNumber(totalCost)}\nMurakoze! Noneho ishyura ukoresheje MoMo kuri iyi nimero: ${250788767816} kanda *Fata Kode*\nIzina: IKANISA.`
       },
       action: {
         buttons: [
@@ -5709,7 +5709,7 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   userContext.stage = "EXPECTING_PAID_PHONENUMBER";
   userContexts.set(phone, userContext);
 
-  await sendWhatsAppMessage(phone, paymentPayload, phoneNumberId);
+  //await sendWhatsAppMessage(phone, paymentPayload, phoneNumberId);
   
   // Send the copy USSD button
   await sendWhatsAppMessage(phone, copyUssdPayload, phoneNumberId);
