@@ -653,6 +653,17 @@ const handlePaymentTermsReply = async (
 
       break;
 
+    case "copy_ussd":
+      const namePayload = {
+    type: "text",
+    text: {
+      body: `*Emeza nimero ya MOMO ry'uwishyuye*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy’Ubwishingizi. Mutegereze gato.`
+    }
+    
+  };
+      await sendWhatsAppMessage(phone, namePayload,phoneNumberId);
+      break;
+
     case "name_1":
       
       userContext.insuranceDocRef.update({
@@ -5607,7 +5618,21 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   userContext.userPhone = phone;
   
 
-  const totalCost = userContext.calculatedTotal || userContext.totalCost || 0;
+// Get totalCost from the userContext or Firebase if available
+  let totalCost = 0;
+  
+  // If we have insuranceDocRef, fetch the latest totalCost from Firebase
+  if (userContext.insuranceDocRef) {
+    try {
+      const docSnap = await getDoc(userContext.insuranceDocRef);
+      if (docSnap.exists()) {
+        totalCost = docSnap.data().totalCost || totalCost;
+      }
+    } catch (error) {
+      console.error("Error fetching totalCost from Firebase:", error);
+    }
+  }
+  
   const formatNumber = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   let installmentBreakdown = "";
 
@@ -5647,25 +5672,45 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   const paymentPayload = {
     type: "text",
     text: {
-      body: `*Kwishyura Ubwishingizi*\nTotal: FRW 0\nMurakoze! Noneho ishyura ukoresheje MoMo kuri iyi nimero: ${250788767816}\n e.g: \*182\*1\*1\*{nimero}#\nIzina: IKANISA.`
+      body: `*Kwishyura Ubwishingizi*\nTotal: FRW ${formatNumber(totalCost)}\nMurakoze! Noneho ishyura ukoresheje MoMo kuri iyi nimero: ${250788767816}\n e.g: ${ussdCode}\nIzina: IKANISA.`
+    }
+  };
+  
+  // Add a button to copy the USSD code
+  const copyUssdPayload = {
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: ""
+      },
+      action: {
+        buttons: [
+          {
+            type: "copy_code",
+            reply: {
+              id: "copy_ussd",
+              title: "Fata kode"
+            },
+            copy_code: ussdCode
+          }
+        ]
+      }
     }
   };
 
-  const namePayload = {
-    type: "text",
-    text: {
-      body: `*Emeza nimero ya MOMO ry'uwishyuye*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy’Ubwishingizi. Mutegereze gato.`
-    }
-    
-  };
+  
 
   console.log("Processing payment for:", phone, paymentPlan);
   userContext.stage = "EXPECTING_PAID_PHONENUMBER";
   userContexts.set(phone, userContext);
 
   await sendWhatsAppMessage(phone, paymentPayload, phoneNumberId);
-  await new Promise(resolve => setTimeout(resolve, 3000));
-  await sendWhatsAppMessage(phone, namePayload, phoneNumberId);
+  
+  // Send the copy USSD button
+  await sendWhatsAppMessage(phone, copyUssdPayload, phoneNumberId);
+  //await new Promise(resolve => setTimeout(resolve, 3000));
+  // await sendWhatsAppMessage(phone, namePayload, phoneNumberId);
 
   const todayFirebase = new Date();
   const formattedDateFirebase = `${todayFirebase.getDate().toString().padStart(2, "0")}/${(todayFirebase.getMonth() + 1).toString().padStart(2, "0")}/${todayFirebase.getFullYear()}`;
