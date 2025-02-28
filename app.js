@@ -11,6 +11,7 @@ import dotenv from "dotenv";
 import admin from "firebase-admin";
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { Timestamp } from 'firebase-admin/firestore';
+import { getDoc } from "firebase/firestore";
 
 import { CalculatePricing } from './pricing.js';
 import { VehicleModel } from './vehicle.js';
@@ -5669,6 +5670,8 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   }
 
   userContext.totalCost = totalCost;
+
+  const ussdCode = `*182*1*1*0788767816*${totalCost}#`;
 
   const paymentPayload = {
     type: "text",
