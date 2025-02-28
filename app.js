@@ -661,6 +661,7 @@ const handlePaymentTermsReply = async (
     }
     
   };
+      await new Promise(resolve => setTimeout(resolve, 5000));
       await sendWhatsAppMessage(phone, namePayload,phoneNumberId);
       break;
 
