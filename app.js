@@ -1009,9 +1009,22 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
       paidAt: admin.firestore.FieldValue.serverTimestamp()
     });
       
-      // Proceed to generate and send certificate
-      // You might want to call a function here that handles certificate generation
-      // Example: await generateAndSendCertificate(userContext, phone, phoneNumberId);
+      
+  // Read all fields from the original insuranceDocRef (Firestore3)
+  const insuranceDocSnapshot = await userContext.insuranceDocRef.get();
+  if (insuranceDocSnapshot.exists) {
+    // Get the data from the source document
+    const insuranceData = insuranceDocSnapshot.data();
+    
+    // Add/update the payment-related fields
+    //insuranceData.paidBool = true;
+    //insuranceData.paidPhoneNumber = paidPhoneNumber;
+    //insuranceData.paidAt = admin.firestore.FieldValue.serverTimestamp();
+    
+    // Save the entire document to the target Firestore (another firebase app) 
+    await firestore.collection("whatsappInsuranceOrders").doc(insuranceDocSnapshot.id).set(insuranceData, { merge: true });
+    console.log(`Saved insurance document ${insuranceDocSnapshot.id} with updated payment info to new Firestore.`);
+  } else {
       
       return;
     } else {
