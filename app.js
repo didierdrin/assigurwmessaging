@@ -5932,7 +5932,8 @@ app.post("/api/mark-as-paid", async (req, res) => {
     // Update order with payment details
     await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
       status: "completed",
-      paidAmount: orderData.totalCost
+      paidAmount: orderData.totalCost,
+      tokens: orderData.tokens
     });
 
     // Update order with payment details
