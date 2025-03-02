@@ -1026,8 +1026,6 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
     console.log(`Saved insurance document ${insuranceDocSnapshot.id} with updated payment info to new Firestore.`);
   } else {
       
-      return;
-    } else {
       // Phone number not found in payment confirmations
       console.log("The phone number has not paid");
       
