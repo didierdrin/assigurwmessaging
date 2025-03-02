@@ -6715,6 +6715,11 @@ const initializeDefaultCases = () => {
     await sendLifutiWelcomeMessage(phone, phoneNumberId);
   });
 
+  // New case: send default catalog (using the keyword "catalog")
+  textMessageCases.set('catalog', async (userContext, phone, phoneNumberId) => {
+    await sendDefaultCatalog(phone, phoneNumberId);
+  });
+
   
   // Add your existing static cases
   textMessageCases.set('menu1', {
@@ -7283,6 +7288,132 @@ async function sendPaymentInfo(phone, phoneNumberId) {
   
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
   userContexts.delete(phone);
+}
+
+
+// Multivendor with the other style of catalog
+
+// Function to fetch products for the vendor from Firebase using a structured query.
+async function getFirebaseProducts() {
+  try {
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJ3EwNw_WXwmuB5PgEj6JCh8JxXWvBkoE",
+      projectId: "icupa-396da",
+    };
+    const { apiKey, projectId } = firebaseConfig;
+    const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
+    const queryUrl = `${baseUrl}:runQuery?key=${apiKey}`;
+
+    const requestBody = {
+      structuredQuery: {
+        from: [{ collectionId: "mt_products" }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: "vendor" },
+            op: "EQUAL",
+            value: { stringValue: "01hg3nZj5DeyaE8dflJh" }
+          }
+        }
+      }
+    };
+
+    const response = await axios.post(queryUrl, requestBody);
+    const dataArray = response.data;
+    
+    // Filter out items without a document and extract the doc id.
+    const documents = dataArray
+      .filter(item => item.document)
+      .map(item => {
+        const doc = item.document;
+        const docId = doc.name.split('/').pop();
+        return { ...doc, docId };
+      });
+      
+    return documents;
+  } catch (error) {
+    console.error("Error fetching firebase products:", error.message);
+    throw error;
+  }
+}
+
+// Function to send the default catalog via WhatsApp.
+async function sendDefaultCatalog(phone, phoneNumberId) {
+  try {
+    // Retrieve products from Firebase.
+    const products = await getFirebaseProducts();
+
+    // Separate products into Food and Drinks arrays.
+    const foodItems = [];
+    const drinkItems = [];
+    products.forEach(product => {
+      // Assuming product.fields.classes.stringValue indicates the category.
+      if (product.fields.classes && product.fields.classes.stringValue === "Food") {
+        foodItems.push({ product_retailer_id: product.docId });
+      } else {
+        // Adjust the condition here if you have an explicit value for drinks.
+        drinkItems.push({ product_retailer_id: product.docId });
+      }
+    });
+
+    // Limit each category to a maximum of 30 items.
+    const foodSectionItems = foodItems.slice(0, 30);
+    const drinkSectionItems = drinkItems.slice(0, 30);
+
+    // Build the sections array dynamically.
+    const sections = [];
+    if (drinkSectionItems.length > 0) {
+      sections.push({
+        title: "Drinks",
+        product_items: drinkSectionItems
+      });
+    }
+    if (foodSectionItems.length > 0) {
+      sections.push({
+        title: "Food",
+        product_items: foodSectionItems
+      });
+    }
+
+    // Build the WhatsApp catalog payload.
+    const url = `https://graph.facebook.com/${VERSION}/${phoneNumberId}/messages`;
+    const payload = {
+      messaging_product: "whatsapp",
+      to: phone,
+      type: "interactive",
+      interactive: {
+        type: "product_list",
+        header: {
+          type: "text",
+          text: "ICUPA App"
+        },
+        body: { text: "Order drinks directly & get free delivery!" },
+        action: {
+          catalog_id: "1366407087873393",
+          sections: sections
+        }
+      }
+    };
+
+    // Send the catalog via your HTTP client (axios).
+    const response = await axios({
+      method: "POST",
+      url: url,
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      data: payload,
+    });
+
+    console.log("Default catalog sent successfully to:", phone);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error sending default catalog:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
 }
 
 
