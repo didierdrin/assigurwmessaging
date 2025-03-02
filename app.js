@@ -7371,7 +7371,7 @@ async function sendMessageWithUSSDCallButton(phone, phoneNumberId) {
           },
           {
             type: "button",
-            sub_type: "phone_number",
+            sub_type: "VOICE_CALL",
             index: 0,
             parameters: [
               {
