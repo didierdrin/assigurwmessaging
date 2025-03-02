@@ -1561,7 +1561,8 @@ async function handleSecondInteractiveMessages(message, phone, phoneNumberId) {
          // );
         } else if (buttonId === "ORDER") {
           //await sendOrderSummary(phone, phoneNumberId);
-          await sendTable(phone, phoneNumberId);
+          //await sendTable(phone, phoneNumberId);
+          await sendPaymentInfo(phone, phoneNumberId); 
         }
       }
       break;
