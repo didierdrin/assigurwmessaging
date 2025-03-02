@@ -655,7 +655,7 @@ const handlePaymentTermsReply = async (
       break;
 
     case "ORDERTWO":
-      await sendPaymentInfo(phone, phoneNumberId); 
+      await sendPaymentInfoTwo(phone, phoneNumberId); 
       break; 
 
     case "copy_ussd":
@@ -7305,6 +7305,31 @@ async function sendPaymentInfo(phone, phoneNumberId) {
         }
       ]
     }
+  };
+  
+  await sendWhatsAppMessage(phone, payload, phoneNumberId);
+  userContexts.delete(phone);
+}
+
+
+
+// Payment Information
+async function sendPaymentInfoTwo(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  if (!userContext) {
+    console.log("No user context found for phone:", phone);
+    return;
+  }
+  
+
+  const payload = {
+    messaging_product: "whatsapp",
+    to: phone,
+    type: "text",
+    text: {
+      body: `USSD code with button`
+    }
+   
   };
   
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
