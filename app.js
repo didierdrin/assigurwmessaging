@@ -5911,8 +5911,129 @@ app.post("/api/send-proforma", async (req, res) => {
 
 
 
+
 // Endpoint to mark order as paid
 app.post("/api/mark-as-paid", async (req, res) => {
+  try {
+    const { orderId, paymentReference = null, certificateUrl = null } = req.body;
+    
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: "Order ID is required" });
+    }
+    
+    // Get order details from Firestore (primary Firestore instance)
+    const orderDoc = await firestore3.collection("whatsappInsuranceOrders").doc(orderId).get();
+    
+    if (!orderDoc.exists) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+    
+    const orderData = orderDoc.data();
+    
+    // Mark the order as completed and update paidAmount
+    await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
+      status: "completed",
+      paidAmount: orderData.totalCost,
+    });
+
+    // Query for all completed orders of this user to accumulate tokens
+    const completedOrdersSnapshot = await firestore3
+      .collection("whatsappInsuranceOrders")
+      .where("userPhone", "==", orderData.userPhone)
+      .where("status", "==", "completed")
+      .get();
+
+    // Calculate total tokens: each completed order adds 5000 tokens
+    const totalTokens = completedOrdersSnapshot.size * 5000;
+
+    // Update tokens for the current order in both Firestore instances
+    await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
+      tokens: totalTokens,
+    });
+    await firestore.collection("whatsappInsuranceOrders").doc(orderId).update({
+      tokens: totalTokens,
+    });
+    
+    // Determine the final certificate URL
+    let finalCertificateUrl;
+    if (certificateUrl || orderData.uploadedInsuranceCertificateUrl) {
+      finalCertificateUrl = certificateUrl || orderData.uploadedInsuranceCertificateUrl;
+    } else {
+      // Generate insurance certificate as fallback
+      const certificatePdfBytes = await generateInsuranceCertificate(orderData);
+      const certificateFileName = `certificates/${orderId}_${Date.now()}.pdf`;
+      const certificateFile = bucket.file(certificateFileName);
+      
+      await certificateFile.save(Buffer.from(certificatePdfBytes), {
+        metadata: { contentType: "application/pdf" },
+      });
+      
+      const [generatedCertificateUrl] = await certificateFile.getSignedUrl({
+        action: "read",
+        expires: "03-01-2500", // Long expiration date
+      });
+      
+      finalCertificateUrl = generatedCertificateUrl;
+    }
+    
+    // Update order with the certificate URL
+    await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
+      certificateUrl: finalCertificateUrl,
+    });
+    
+    // Send WhatsApp message with certificate to customer, if a phone is provided
+    if (orderData.userPhone) {
+      const phoneNumber = orderData.userPhone.startsWith('+')
+        ? orderData.userPhone.substring(1)
+        : orderData.userPhone;
+
+      const payload = {
+        type: "text",
+        text: {
+          body: `*Icyemezo Cy'Ubwishingizi*\nMwakiriye Icyemezo cyawe cy'ubwishingizi. Turagushimiye kandi tukwifurije umutekano mu muhanda.`,
+        },
+      };
+
+      const payload2 = {
+        type: "text",
+        text: {
+          body: `*Uhawe ishimwe rya tokens FRW ${totalTokens}*\nMurakoze guhitamo SanlamAllianz! Nk'ishimwe, mumenyeshwa tokens zose muzabona zikubye FRW 5,000 ku bw'ibicuruzwa byanyu byuzuye.`,
+        },
+      };
+      
+      // Send the certificate document first
+      await sendWhatsAppDocument(
+        phoneNumber, 
+        finalCertificateUrl, 
+        "Insurance Certificate", 
+        "Insurance certificate", 
+        "561637583695258"
+      );
+      
+      // Small delay to ensure the document is sent first
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Then send the text messages
+      await sendWhatsAppMessage(phoneNumber, payload, "561637583695258");
+      await sendWhatsAppMessage(phoneNumber, payload2, "561637583695258");
+    }
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: "Payment processed successfully",
+      certificateUrl: finalCertificateUrl,
+      tokens: totalTokens
+    });
+    
+  } catch (error) {
+    console.error("Error processing payment:", error);
+    return res.status(500).json({ success: false, message: "Failed to process payment", error: error.message });
+  }
+});
+
+
+// Endpoint to mark order as paid
+app.post("/api/mark-as-paid-old-two", async (req, res) => {
   try {
     const { orderId, paymentReference = null, certificateUrl = null } = req.body;
     
