@@ -926,11 +926,7 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
     const messageText = message.text.body.trim();
     const numberOfPeople = parseInt(messageText);
 
-    if (
-      !isNaN(numberOfPeople) &&
-      numberOfPeople > 0 &&
-      numberOfPeople <= 1000
-    ) {
+    if (!isNaN(numberOfPeople) && numberOfPeople > 0 && numberOfPeople <= 1000) {
       try {
         console.log("Number of Covered People Validation Result:", {
           input: messageText,
@@ -946,16 +942,14 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
         userContext.numberOfCoveredPeople = numberOfPeople;
         userContexts.set(phone, userContext);
 
-        await selectVehicleBodyType(phone, phoneNumberId); //await selectPaymentPlan(phone, phoneNumberId);
+        await selectVehicleBodyType(phone, phoneNumberId); // or selectPaymentPlan(phone, phoneNumberId);
       } catch (error) {
         console.error("Processing error:", error);
         await sendWhatsAppMessage(
           phone,
           {
             type: "text",
-            text: {
-              body: "An error occurred. Please try again.",
-            },
+            text: { body: "An error occurred. Please try again." },
           },
           phoneNumberId
         );
@@ -965,92 +959,84 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
         phone,
         {
           type: "text",
-          text: {
-            body: "Invalid input. Please enter a number between 1 and 1000. For example: 3",
-          },
+          text: { body: "Invalid input. Please enter a number between 1 and 1000. For example: 3" },
         },
         phoneNumberId
       );
     }
   } else if (userContext.stage === "EXPECTING_PAID_PHONENUMBER") {
-  const messageText = message.text.body.trim();
-  // Store the original phone number format without parsing to integer
-  // This helps preserve the format for proper comparison
-  const paidPhoneNumber = messageText;
+    const messageText = message.text.body.trim();
+    // Preserve the original phone number format
+    const paidPhoneNumber = messageText;
     const formattedPaidPhoneNumber = "25" + paidPhoneNumber;
-  
-  // Store in user context
-  userContext.paidPhoneNo = paidPhoneNumber;
-  userContexts.set(phone, userContext);
-  
-  try {
-    // Query the paymentConfirm collection to check if this phone number exists
-    const paymentConfirmSnapshot = await firestore2.collection("paymentConfirm")
-      .where("payer", "==", formattedPaidPhoneNumber)
-      .limit(1)
-      .get();
-   
-    
-    // Check if we found a matching payment confirmation
-    if (!paymentConfirmSnapshot.empty) {
-      // Payment confirmed in the collection
-      const payloadName1 = {
-        type: "text",
-        text: {
-          body: `*Twakiriye ubwishyu!*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy'Ubwishingizi. Mutegereze gato.`
-        }
-      };
-      await sendWhatsAppMessage(phone, payloadName1, phoneNumberId);
 
-       // (you may want to change this depending on your business logic)
-    await userContext.insuranceDocRef.update({
-      paidBool: true,
-      paidPhoneNumber: paidPhoneNumber,
-      paidAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-      
-      
-  // Read all fields from the original insuranceDocRef (Firestore3)
-  const insuranceDocSnapshot = await userContext.insuranceDocRef.get();
-  if (insuranceDocSnapshot.exists) {
-    // Get the data from the source document
-    const insuranceData = insuranceDocSnapshot.data();
-    
-    // Add/update the payment-related fields
-    //insuranceData.paidBool = true;
-    //insuranceData.paidPhoneNumber = paidPhoneNumber;
-    //insuranceData.paidAt = admin.firestore.FieldValue.serverTimestamp();
-    
-    // Save the entire document to the target Firestore (another firebase app) 
-    await firestore.collection("whatsappInsuranceOrders").doc(insuranceDocSnapshot.id).set(insuranceData, { merge: true });
-    console.log(`Saved insurance document ${insuranceDocSnapshot.id} with updated payment info to new Firestore.`);
-  } else {
-      
-      // Phone number not found in payment confirmations
-      console.log("The phone number has not paid");
-      
-      const payloadNotFound = {
-        type: "text",
-        text: {
-          body: `Ntabwo twabashije kubona ubwishyu buhuye n'iyi numero. Mwongere mugerageze cyangwa muvugane n'umukozi wacu.`
+    // Store in user context
+    userContext.paidPhoneNo = paidPhoneNumber;
+    userContexts.set(phone, userContext);
+
+    try {
+      // Query the paymentConfirm collection to check if this phone number exists
+      const paymentConfirmSnapshot = await firestore2
+        .collection("paymentConfirm")
+        .where("payer", "==", formattedPaidPhoneNumber)
+        .limit(1)
+        .get();
+
+      // Check if we found a matching payment confirmation
+      if (!paymentConfirmSnapshot.empty) {
+        // Payment confirmed in the collection
+        const payloadName1 = {
+          type: "text",
+          text: {
+            body: `*Twakiriye ubwishyu!*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy'Ubwishingizi. Mutegereze gato.`,
+          },
+        };
+        await sendWhatsAppMessage(phone, payloadName1, phoneNumberId);
+
+        // Update the insurance document with payment info
+        await userContext.insuranceDocRef.update({
+          paidBool: true,
+          paidPhoneNumber: paidPhoneNumber,
+          paidAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Read all fields from the original insuranceDocRef (Firestore3)
+        const insuranceDocSnapshot = await userContext.insuranceDocRef.get();
+        if (insuranceDocSnapshot.exists) {
+          const insuranceData = insuranceDocSnapshot.data();
+
+          // Save the entire document to the target Firestore (another firebase app)
+          await firestore
+            .collection("whatsappInsuranceOrders")
+            .doc(insuranceDocSnapshot.id)
+            .set(insuranceData, { merge: true });
+          console.log(
+            `Saved insurance document ${insuranceDocSnapshot.id} with updated payment info to new Firestore.`
+          );
+        } else {
+          console.log("The phone number has not paid");
+
+          const payloadNotFound = {
+            type: "text",
+            text: {
+              body: `Ntabwo twabashije kubona ubwishyu buhuye n'iyi numero. Mwongere mugerageze cyangwa muvugane n'umukozi wacu.`,
+            },
+          };
+          await sendWhatsAppMessage(phone, payloadNotFound, phoneNumberId);
         }
+      } // End if payment confirmation exists
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+
+      const payloadError = {
+        type: "text",
+        text: { body: `Hari ikibazo cyavutse. Mwongere mugerageze nyuma y'akanya gato.` },
       };
-      await sendWhatsAppMessage(phone, payloadNotFound, phoneNumberId);
+      await sendWhatsAppMessage(phone, payloadError, phoneNumberId);
     }
-  } catch (error) {
-    console.error("Error verifying payment:", error);
-    
-    const payloadError = {
-      type: "text",
-      text: {
-        body: `Hari ikibazo cyavutse. Mwongere mugerageze nyuma y'akanya gato.`
-      }
-    };
-    await sendWhatsAppMessage(phone, payloadError, phoneNumberId);
   }
-}
-  
 };
+
 
 
 // Updated handleTextMessages function
@@ -5998,7 +5984,7 @@ app.post("/api/mark-as-paid", async (req, res) => {
       const payload2 = {
         type: "text",
         text: {
-          body: `*Uhawe ishimwe rya tokens FRW 5,000*\nMurakoze guhitamo SanlamAllianz! Nk'ishimwe muhawe tokens zingana na FRW 5,000 zikoreshwa gusa mu kwishyura Urugendo muri Lifuti.`,
+          body: `*Uhawe ishimwe rya tokens FRW 5,000*\nMurakoze guhitamo SanlamAllianz! Nk'ishimwe muhawe tokens zingana na FRW 5,000 zikoreshwa gusa mu kwishyura Urugendo kuri Lifuti.`,
         },
       };
       
@@ -6108,7 +6094,7 @@ app.post("/api/mark-as-paid-old", async (req, res) => {
       const payload2 = {
     type: "text",
     text: {
-      body: `*Uhawe ishimwe rya tokens FRW 5,000*\nMurakoze guhitamo SanlamAllianz! Nk'ishimwe muhawe tokens zingana na FRW 5,000 zikoreshwa gusa mu kwishyura Urugendo muri Lifuti.`,
+      body: `*Uhawe ishimwe rya tokens FRW 5,000*\nMurakoze guhitamo SanlamAllianz! Nk'ishimwe muhawe tokens zingana na FRW 5,000 zikoreshwa gusa mu kwishyura Urugendo kuri Lifuti.`,
     },
   };
       
