@@ -7336,7 +7336,9 @@ async function getFirebaseProducts() {
   }
 }
 
-// Function to send the default catalog via WhatsApp.
+
+
+
 async function sendDefaultCatalog(phone, phoneNumberId) {
   try {
     // Retrieve products from Firebase.
@@ -7350,14 +7352,29 @@ async function sendDefaultCatalog(phone, phoneNumberId) {
       if (product.fields.classes && product.fields.classes.stringValue === "Food") {
         foodItems.push({ product_retailer_id: product.docId });
       } else {
-        // Adjust the condition here if you have an explicit value for drinks.
+        // Otherwise, treat it as a drink.
         drinkItems.push({ product_retailer_id: product.docId });
       }
     });
 
-    // Limit each category to a maximum of 30 items.
-    const foodSectionItems = foodItems.slice(0, 30);
-    const drinkSectionItems = drinkItems.slice(0, 30);
+    // Define the maximum allowed items across sections.
+    const maxTotalItems = 30;
+    let foodLimit = foodItems.length;
+    let drinkLimit = drinkItems.length;
+
+    // If both sections are present and exceed the limit,
+    // we split the limit between them (e.g., 15 each).
+    if (foodItems.length > 0 && drinkItems.length > 0) {
+      foodLimit = Math.min(foodItems.length, Math.floor(maxTotalItems / 2));
+      drinkLimit = Math.min(drinkItems.length, maxTotalItems - foodLimit);
+    } else {
+      // If only one category is present, limit that category to maxTotalItems.
+      foodLimit = foodItems.length > 0 ? Math.min(foodItems.length, maxTotalItems) : 0;
+      drinkLimit = drinkItems.length > 0 ? Math.min(drinkItems.length, maxTotalItems) : 0;
+    }
+
+    const foodSectionItems = foodItems.slice(0, foodLimit);
+    const drinkSectionItems = drinkItems.slice(0, drinkLimit);
 
     // Build the sections array dynamically.
     const sections = [];
@@ -7372,6 +7389,12 @@ async function sendDefaultCatalog(phone, phoneNumberId) {
         title: "Food",
         product_items: foodSectionItems
       });
+    }
+
+    // Ensure the total number of items does not exceed 30.
+    const totalItems = drinkSectionItems.length + foodSectionItems.length;
+    if (totalItems > maxTotalItems) {
+      throw new Error("Total number of product items exceeds the 30-item limit.");
     }
 
     // Build the WhatsApp catalog payload.
@@ -7415,9 +7438,6 @@ async function sendDefaultCatalog(phone, phoneNumberId) {
     throw error;
   }
 }
-
-
-
 
 
 
