@@ -7293,49 +7293,6 @@ async function sendPaymentInfo(phone, phoneNumberId) {
 
 // Multivendor with the other style of catalog
 
-// Function to fetch products for the vendor from Firebase using a structured query.
-async function getFirebaseProducts() {
-  try {
-    const firebaseConfig = {
-      apiKey: "AIzaSyAJ3EwNw_WXwmuB5PgEj6JCh8JxXWvBkoE",
-      projectId: "icupa-396da",
-    };
-    const { apiKey, projectId } = firebaseConfig;
-    const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
-    const queryUrl = `${baseUrl}:runQuery?key=${apiKey}`;
-
-    const requestBody = {
-      structuredQuery: {
-        from: [{ collectionId: "mt_products" }],
-        where: {
-          fieldFilter: {
-            field: { fieldPath: "vendor" },
-            op: "EQUAL",
-            value: { stringValue: "01hg3nZj5DeyaE8dflJh" }
-          }
-        }
-      }
-    };
-
-    const response = await axios.post(queryUrl, requestBody);
-    const dataArray = response.data;
-    
-    // Filter out items without a document and extract the doc id.
-    const documents = dataArray
-      .filter(item => item.document)
-      .map(item => {
-        const doc = item.document;
-        const docId = doc.name.split('/').pop();
-        return { ...doc, docId };
-      });
-      
-    return documents;
-  } catch (error) {
-    console.error("Error fetching firebase products:", error.message);
-    throw error;
-  }
-}
-
 
 
 
