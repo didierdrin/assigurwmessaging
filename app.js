@@ -7339,21 +7339,117 @@ async function getFirebaseProducts() {
 
 
 
+// Function to fetch products for the vendor from Firebase using a structured query.
+async function getFirebaseProducts() {
+  try {
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJ3EwNw_WXwmuB5PgEj6JCh8JxXWvBkoE",
+      projectId: "icupa-396da",
+    };
+    const { apiKey, projectId } = firebaseConfig;
+    const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
+    const queryUrl = `${baseUrl}:runQuery?key=${apiKey}`;
+
+    const requestBody = {
+      structuredQuery: {
+        from: [{ collectionId: "mt_products" }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: "vendor" },
+            op: "EQUAL",
+            value: { stringValue: "01hg3nZj5DeyaE8dflJh" }
+          }
+        }
+      }
+    };
+
+    const response = await axios.post(queryUrl, requestBody);
+    const dataArray = response.data;
+    
+    // Filter out items without a document and extract the doc id.
+    const documents = dataArray
+      .filter(item => item.document)
+      .map(item => {
+        const doc = item.document;
+        const docId = doc.name.split('/').pop();
+        return { ...doc, docId };
+      });
+      
+    return documents;
+  } catch (error) {
+    console.error("Error fetching firebase products:", error.message);
+    throw error;
+  }
+}
+
+// Function to fetch all subcategories from mt_subCategories.
+async function getSubCategories() {
+  try {
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJ3EwNw_WXwmuB5PgEj6JCh8JxXWvBkoE",
+      projectId: "icupa-396da",
+    };
+    const { apiKey, projectId } = firebaseConfig;
+    const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
+    const queryUrl = `${baseUrl}:runQuery?key=${apiKey}`;
+    
+    const requestBody = {
+      structuredQuery: {
+        from: [{ collectionId: "mt_subCategories" }]
+      }
+    };
+
+    const response = await axios.post(queryUrl, requestBody);
+    const dataArray = response.data;
+    const documents = dataArray
+      .filter(item => item.document)
+      .map(item => {
+        const doc = item.document;
+        const docId = doc.name.split('/').pop();
+        return { ...doc, docId };
+      });
+    return documents;
+  } catch (error) {
+    console.error("Error fetching subcategories:", error.message);
+    throw error;
+  }
+}
+
 async function sendDefaultCatalog(phone, phoneNumberId) {
   try {
     // Retrieve products from Firebase.
     const products = await getFirebaseProducts();
+    // Retrieve subcategories.
+    const subCategoriesDocs = await getSubCategories();
+
+    // Create a mapping from subCategory document id to its name.
+    const subCatMapping = {};
+    subCategoriesDocs.forEach(doc => {
+      if (doc.fields && doc.fields.name && doc.fields.name.stringValue) {
+        subCatMapping[doc.docId] = doc.fields.name.stringValue.toUpperCase();
+      }
+    });
+
+    // Define allowed soft drink subcategory names.
+    const allowedSoftDrinks = new Set(["SODA", "JUICES", "WATER", "COFFEE", "TEA", "ENERGY DRINKS"]);
 
     // Separate products into Food and Drinks arrays.
     const foodItems = [];
     const drinkItems = [];
     products.forEach(product => {
-      // Assuming product.fields.classes.stringValue indicates the category.
-      if (product.fields.classes && product.fields.classes.stringValue === "Food") {
+      const productClass = product.fields && product.fields.classes && product.fields.classes.stringValue;
+      if (productClass === "Food") {
+        // Add to foodItems.
         foodItems.push({ product_retailer_id: product.docId });
       } else {
-        // Otherwise, treat it as a drink.
-        drinkItems.push({ product_retailer_id: product.docId });
+        // For drinks, use the subcategory mapping to determine if it's a soft drink.
+        const subCatId = product.fields && product.fields.subcategory && product.fields.subcategory.stringValue;
+        if (subCatId && subCatMapping[subCatId]) {
+          const subCatName = subCatMapping[subCatId];
+          if (allowedSoftDrinks.has(subCatName)) {
+            drinkItems.push({ product_retailer_id: product.docId });
+          }
+        }
       }
     });
 
@@ -7362,13 +7458,12 @@ async function sendDefaultCatalog(phone, phoneNumberId) {
     let foodLimit = foodItems.length;
     let drinkLimit = drinkItems.length;
 
-    // If both sections are present and exceed the limit,
-    // we split the limit between them (e.g., 15 each).
+    // If both sections are present, split the limit.
     if (foodItems.length > 0 && drinkItems.length > 0) {
       foodLimit = Math.min(foodItems.length, Math.floor(maxTotalItems / 2));
       drinkLimit = Math.min(drinkItems.length, maxTotalItems - foodLimit);
     } else {
-      // If only one category is present, limit that category to maxTotalItems.
+      // If only one category exists, limit that category to maxTotalItems.
       foodLimit = foodItems.length > 0 ? Math.min(foodItems.length, maxTotalItems) : 0;
       drinkLimit = drinkItems.length > 0 ? Math.min(drinkItems.length, maxTotalItems) : 0;
     }
@@ -7409,7 +7504,7 @@ async function sendDefaultCatalog(phone, phoneNumberId) {
           type: "text",
           text: "ICUPA App"
         },
-        body: { text: "Order drinks directly & get free delivery!" },
+        body: { text: "Order food & soft drinks and enjoy free delivery!" },
         action: {
           catalog_id: "1366407087873393",
           sections: sections
