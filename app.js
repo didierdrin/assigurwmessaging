@@ -7355,28 +7355,29 @@ async function sendMessageWithUSSDCallButton(phone, phoneNumberId) {
       messaging_product: "whatsapp",
       recipient_type: "individual",
       to: phone,
-      type: "interactive",
-      interactive: {
-        type: "button",
-        header: {
-          type: "text",
-          text: "Payment Info"
+      type: "template",
+      template: {
+        name: "paymentmessage",
+        language: {
+          code: "en_US"
         },
-        body: {
-          text: "Click the button below to pay via MOMO USSD."
-        },
-        footer: {
-          text: "Thank you for your order."
-        },
-        action: {
-          buttons: [
-            {
-              type: "url",
-              url: telUrl,
-              title: "Pay"
-            }
-          ]
-        }
+        components: [
+          {
+            type: "body",
+            // No parameters in body if your template doesn't have any
+          },
+          {
+            type: "button",
+            sub_type: "URL",  // Use URL type for telephone URLs
+            index: 0,
+            parameters: [
+              {
+                type: "text",
+                text: telUrl  // Format: tel:%2A123%2A456%23
+              }
+            ]
+          }
+        ]
       }
     };
 
