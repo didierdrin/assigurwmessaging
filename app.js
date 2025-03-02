@@ -1845,7 +1845,7 @@ await docRef.update({
               {
                 type: "text",
                 text: {
-                  body: `The uploaded ${expectedDocumentType} document appears to be invalid. Please ensure it contains all required information and upload again.`,
+                  body: `*Suzuma neza*\nBisa n’aho icyangombwa wohereje kitari mu buryo bukwiriye. Reba neza niba ari cyo ubundi wongere wohereze.`,
                 },
               },
               phoneNumberId
