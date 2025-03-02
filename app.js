@@ -1475,8 +1475,10 @@ async function handleSecondInteractiveMessages(message, phone, phoneNumberId) {
         const classId = message.interactive.button_reply.id; // "CLASS_FOOD" or "CLASS_DRINKS"
         const selectedClass = classId === "CLASS_FOOD" ? "Food" : "Drinks";
         userContext.selectedClass = selectedClass;
+
         
-        await sendCategorySelectionMessage(phone, phoneNumberId, userContext.selectedClass);
+        //await sendCategorySelectionMessage(phone, phoneNumberId, userContext.selectedClass);
+        await sendDefaultCatalog(phone, phoneNumberId, selectedClass); 
         userContext.stage = "CATEGORY_SELECTION";
         userContexts.set(phone, userContext);
       }
@@ -7372,82 +7374,53 @@ async function getSubCategories() {
   }
 }
 
-async function sendDefaultCatalog(phone, phoneNumberId) {
+async function sendDefaultCatalog(phone, phoneNumberId, selectedClass) {
   try {
     // Retrieve products from Firebase.
     const products = await getFirebaseProducts();
-    // Retrieve subcategories.
-    const subCategoriesDocs = await getSubCategories();
+    let items = [];
 
-    // Create a mapping from subCategory document id to its name.
-    const subCatMapping = {};
-    subCategoriesDocs.forEach(doc => {
-      if (doc.fields && doc.fields.name && doc.fields.name.stringValue) {
-        subCatMapping[doc.docId] = doc.fields.name.stringValue.toUpperCase();
-      }
-    });
+    if (selectedClass === "Food") {
+      // Filter products to only include Food.
+      items = products.filter(product => {
+        return product.fields && product.fields.classes && product.fields.classes.stringValue === "Food";
+      }).map(product => ({ product_retailer_id: product.docId }));
+    } else if (selectedClass === "Drinks") {
+      // For drinks, first fetch subcategories.
+      const subCategoriesDocs = await getSubCategories();
+      const subCatMapping = {};
+      subCategoriesDocs.forEach(doc => {
+        if (doc.fields && doc.fields.name && doc.fields.name.stringValue) {
+          subCatMapping[doc.docId] = doc.fields.name.stringValue.toUpperCase();
+        }
+      });
+      // Define allowed soft drink subcategory names.
+      const allowedSoftDrinks = new Set(["SODA", "JUICES", "WATER", "COFFEE", "TEA", "ENERGY DRINKS"]);
 
-    // Define allowed soft drink subcategory names.
-    const allowedSoftDrinks = new Set(["SODA", "JUICES", "WATER", "COFFEE", "TEA", "ENERGY DRINKS"]);
-
-    // Separate products into Food and Drinks arrays.
-    const foodItems = [];
-    const drinkItems = [];
-    products.forEach(product => {
-      const productClass = product.fields && product.fields.classes && product.fields.classes.stringValue;
-      if (productClass === "Food") {
-        // Add to foodItems.
-        foodItems.push({ product_retailer_id: product.docId });
-      } else {
-        // For drinks, use the subcategory mapping to determine if it's a soft drink.
-        const subCatId = product.fields && product.fields.subcategory && product.fields.subcategory.stringValue;
-        if (subCatId && subCatMapping[subCatId]) {
-          const subCatName = subCatMapping[subCatId];
-          if (allowedSoftDrinks.has(subCatName)) {
-            drinkItems.push({ product_retailer_id: product.docId });
+      // Filter products that are not Food and whose subcategory name is allowed.
+      items = products.filter(product => {
+        if (product.fields && product.fields.classes && product.fields.classes.stringValue !== "Food") {
+          const subCatId = product.fields.subcategory && product.fields.subcategory.stringValue;
+          if (subCatId && subCatMapping[subCatId]) {
+            const subCatName = subCatMapping[subCatId];
+            return allowedSoftDrinks.has(subCatName);
           }
         }
-      }
-    });
-
-    // Define the maximum allowed items across sections.
-    const maxTotalItems = 30;
-    let foodLimit = foodItems.length;
-    let drinkLimit = drinkItems.length;
-
-    // If both sections are present, split the limit.
-    if (foodItems.length > 0 && drinkItems.length > 0) {
-      foodLimit = Math.min(foodItems.length, Math.floor(maxTotalItems / 2));
-      drinkLimit = Math.min(drinkItems.length, maxTotalItems - foodLimit);
-    } else {
-      // If only one category exists, limit that category to maxTotalItems.
-      foodLimit = foodItems.length > 0 ? Math.min(foodItems.length, maxTotalItems) : 0;
-      drinkLimit = drinkItems.length > 0 ? Math.min(drinkItems.length, maxTotalItems) : 0;
+        return false;
+      }).map(product => ({ product_retailer_id: product.docId }));
     }
 
-    const foodSectionItems = foodItems.slice(0, foodLimit);
-    const drinkSectionItems = drinkItems.slice(0, drinkLimit);
-
-    // Build the sections array dynamically.
-    const sections = [];
-    if (drinkSectionItems.length > 0) {
-      sections.push({
-        title: "Drinks",
-        product_items: drinkSectionItems
-      });
-    }
-    if (foodSectionItems.length > 0) {
-      sections.push({
-        title: "Food",
-        product_items: foodSectionItems
-      });
+    // Limit to maximum 30 items.
+    const limitedItems = items.slice(0, 30);
+    if (limitedItems.length === 0) {
+      throw new Error(`No ${selectedClass} products found.`);
     }
 
-    // Ensure the total number of items does not exceed 30.
-    const totalItems = drinkSectionItems.length + foodSectionItems.length;
-    if (totalItems > maxTotalItems) {
-      throw new Error("Total number of product items exceeds the 30-item limit.");
-    }
+    // Build a single section for the selected class.
+    const sections = [{
+      title: selectedClass,
+      product_items: limitedItems
+    }];
 
     // Build the WhatsApp catalog payload.
     const url = `https://graph.facebook.com/${VERSION}/${phoneNumberId}/messages`;
@@ -7457,11 +7430,8 @@ async function sendDefaultCatalog(phone, phoneNumberId) {
       type: "interactive",
       interactive: {
         type: "product_list",
-        header: {
-          type: "text",
-          text: "ICUPA App"
-        },
-        body: { text: "Order food & soft drinks and enjoy free delivery!" },
+        header: { type: "text", text: "ICUPA App" },
+        body: { text: `Order ${selectedClass} and enjoy free delivery!` },
         action: {
           catalog_id: "1366407087873393",
           sections: sections
@@ -7480,16 +7450,14 @@ async function sendDefaultCatalog(phone, phoneNumberId) {
       data: payload,
     });
 
-    console.log("Default catalog sent successfully to:", phone);
+    console.log("Catalog sent successfully to:", phone);
     return response.data;
   } catch (error) {
-    console.error(
-      "Error sending default catalog:",
-      error.response?.data || error.message
-    );
+    console.error("Error sending catalog:", error.response?.data || error.message);
     throw error;
   }
 }
+
 
 
 
