@@ -1484,7 +1484,7 @@ async function handleSecondInteractiveMessages(message, phone, phoneNumberId) {
         userContexts.set(phone, userContext);
         
         // Forward the selected class to the catalog function.
-        await sendCategorySelectionMessage(phone, phoneNumberId, selectedClass);
+        await sendDefaultCatalog(phone, phoneNumberId, selectedClass);
         userContext.stage = "CATEGORY_SELECTION";
         userContexts.set(phone, userContext);
       }
@@ -6725,7 +6725,6 @@ const initializeDefaultCases = () => {
 
   // New case: send default catalog (using the keyword "catalog")
   textMessageCases.set('catalog', async (userContext, phone, phoneNumberId) => {
-    //await sendDefaultCatalog(phone, phoneNumberId);
     await sendClassSelectionMessage(phone, phoneNumberId);
   });
 
