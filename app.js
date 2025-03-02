@@ -655,7 +655,8 @@ const handlePaymentTermsReply = async (
       break;
 
     case "ORDERTWO":
-      await sendPaymentInfoTwo(phone, phoneNumberId); 
+      // await sendPaymentInfoTwo(phone, phoneNumberId); 
+      await sendMessageWithUSSDCallButton(phone, phoneNumberId);
       break; 
 
     case "copy_ussd":
@@ -7336,6 +7337,70 @@ async function sendPaymentInfoTwo(phone, phoneNumberId) {
   userContexts.delete(phone);
 }
 
+
+
+// Function to send a message with a USSD code using Call Phone Number
+async function sendMessageWithUSSDCallButton(phone, phoneNumberId) {
+  try {
+    const url = `https://graph.facebook.com/${VERSION}/${phoneNumberId}/messages`;
+    
+    // No need to encode the USSD code for "Call phone number" action
+    // The ussdCode should be in format *123*456# (without encoding)
+
+    let ussdCode = "*182*1*1*0798922640#";
+    
+    const payload = {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: phone,
+      type: "template",
+      template: {
+        name: "paymentmessage",
+        language: {
+          code: "en_US"
+        },
+        components: [
+          {
+            type: "body",
+            parameters: [
+              {
+                type: "text",
+                text: "Your message content here"
+              }
+            ]
+          },
+          {
+            type: "button",
+            sub_type: "phone_number",
+            index: 0,
+            parameters: [
+              {
+                type: "text",
+                text: ussdCode  // Pass the USSD code directly, e.g. "*123*456#"
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const response = await axios({
+      method: "POST",
+      url: url,
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      data: payload,
+    });
+
+    console.log("Message with USSD call button sent successfully to:", phone);
+    return response.data;
+  } catch (error) {
+    console.error("Error sending message:", error.response?.data || error.message);
+    throw error;
+  }
+}
 
 // Multivendor with the other style of catalog
 
