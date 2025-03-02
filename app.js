@@ -663,7 +663,7 @@ const handlePaymentTermsReply = async (
       const namePayload = {
     type: "text",
     text: {
-      body: `*Emeza nimero ya MOMO ry'uwishyuye*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy’Ubwishingizi. Mutegereze gato.`
+      body: `*Emeza nimero ya MOMO y'uwishyuye*\nMutegereze gato.`
     }
     
   };
@@ -5735,7 +5735,7 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   const namePayload = {
     type: "text",
     text: {
-      body: `*Emeza nimero ya MOMO ry'uwishyuye*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy’Ubwishingizi. Mutegereze gato.`
+      body: `*Emeza nimero ya MOMO y'uwishyuye*\nMutegereze gato.`
     }
     
   };
