@@ -7492,7 +7492,7 @@ const handleOrder = async (message, changes, displayPhoneNumber) => {
   
 
     //await sendTable(phone, phoneNumberId); 
-    await sendOrderPrompt(phone, phoneNumberId);
+    await sendOrderPrompt(customerInfo.phone, phoneNumberId);
     console.log("Order saved successfully.");
   } catch (error) {
     console.error("Error saving order:", error.message);
