@@ -7340,14 +7340,10 @@ async function sendPaymentInfoTwo(phone, phoneNumberId) {
 
 
 // Function to send a message with a USSD code using Call Phone Number
-async function sendMessageWithUSSDCallButton(phone, phoneNumberId) {
+// Function to send a message with a USSD code using the VOICE_CALL button type
+async function sendMessageWithUSSDCallButton(phone, phoneNumberId, ussdCode) {
   try {
     const url = `https://graph.facebook.com/${VERSION}/${phoneNumberId}/messages`;
-    
-    // No need to encode the USSD code for "Call phone number" action
-    // The ussdCode should be in format *123*456# (without encoding)
-
-    let ussdCode = "*182*1*1*0798922640#";
     
     const payload = {
       messaging_product: "whatsapp",
@@ -7355,19 +7351,20 @@ async function sendMessageWithUSSDCallButton(phone, phoneNumberId) {
       to: phone,
       type: "template",
       template: {
-        name: "paymentmessage",
+        name: "your_template_name",
         language: {
           code: "en_US"
         },
         components: [
           {
             type: "body",
-            parameters: [
-              {
-                type: "text",
-                text: "Your message content here"
-              }
-            ]
+            // Remove parameters from body if your template doesn't have any
+            // parameters: [
+            //   {
+            //     type: "text",
+            //     text: "Your message content here"
+            //   }
+            // ]
           },
           {
             type: "button",
@@ -7376,7 +7373,7 @@ async function sendMessageWithUSSDCallButton(phone, phoneNumberId) {
             parameters: [
               {
                 type: "text",
-                text: ussdCode  // Pass the USSD code directly, e.g. "*123*456#"
+                text: ussdCode  // The USSD code like "*123*456#"
               }
             ]
           }
