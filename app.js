@@ -1472,13 +1472,19 @@ async function handleSecondInteractiveMessages(message, phone, phoneNumberId) {
   switch (userContext.stage) {
     case "CLASS_SELECTION":
       if (message.interactive?.button_reply) {
-        const classId = message.interactive.button_reply.id; // "CLASS_FOOD" or "CLASS_DRINKS"
-        const selectedClass = classId === "CLASS_FOOD" ? "Food" : "Drinks";
-        userContext.selectedClass = selectedClass;
-
+        const classId = message.interactive.button_reply.id; // Expecting "CLASS_FOOD" or "CLASS_DRINKS"
+        const selectedClass = classId === "CLASS_FOOD" ? "Food" : classId === "CLASS_DRINKS" ? "Drinks" : undefined;
         
-        //await sendCategorySelectionMessage(phone, phoneNumberId, userContext.selectedClass);
-        await sendDefaultCatalog(phone, phoneNumberId, selectedClass); 
+        if (!selectedClass) {
+          console.error("Invalid class selection received:", classId);
+          throw new Error("Invalid class selection received.");
+        }
+        
+        userContext.selectedClass = selectedClass;
+        userContexts.set(phone, userContext);
+        
+        // Forward the selected class to the catalog function.
+        await sendCategorySelectionMessage(phone, phoneNumberId, selectedClass);
         userContext.stage = "CATEGORY_SELECTION";
         userContexts.set(phone, userContext);
       }
