@@ -1045,7 +1045,8 @@ const handleTextMessages = async (message, phone, phoneNumberId) => {
   if (userContext.stage === "TABLE_SELECTION") {
     const table = message.text.body.trim();
     userContext.table = table;
-    await sendOrderSummary(phone, phoneNumberId);
+    //await sendOrderSummary(phone, phoneNumberId);
+    await sendOrderPrompt(phone, phoneNumberId);
     userContexts.set(phone, userContext);
     return;
   }
@@ -2717,6 +2718,10 @@ app.post("/webhook", async (req, res) => {
 
 async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
   switch (message.type) {
+      case "order":
+            await handleOrder(message, changes, changes.value.metadata.display_phone_number);
+            break;
+      
     case "text":
       await handleTextMessages(message, phone, phoneNumberId);
       await handlePlateNumberValidation(message, phone, phoneNumberId);
@@ -7465,6 +7470,34 @@ async function sendDefaultCatalog(phone, phoneNumberId, selectedClass) {
 }
 
 
+// handleOrder
+
+const handleOrder = async (message, changes, displayPhoneNumber) => {
+  const order = message.order;
+  const orderId = message.id;
+  const customerInfo = {
+    phone: changes.value.contacts[0].wa_id,
+    receiver: displayPhoneNumber,
+  };
+  const items = order.product_items;
+  const totalAmount = items.reduce((total, item) => total + item.item_price * item.quantity, 0);
+
+  try {
+    //await axios.post(`https://seasoned-cuddly-success.glitch.me/api/save-order`, {
+    //  orderId,
+    //  customerInfo,
+    //  items,
+    //});
+
+  
+
+    //await sendTable(phone, phoneNumberId); 
+    await sendOrderPrompt(phone, phoneNumberId);
+    console.log("Order saved successfully.");
+  } catch (error) {
+    console.error("Error saving order:", error.message);
+  }
+};
 
 
 
