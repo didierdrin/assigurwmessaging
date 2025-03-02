@@ -2720,7 +2720,7 @@ app.post("/webhook", async (req, res) => {
 async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
   switch (message.type) {
       case "order":
-            await handleOrder(message, changes, changes.value.metadata.display_phone_number);
+            await handleOrder(message, changes, changes.value.metadata.display_phone_number, phoneNumberId);
             break;
       
     case "text":
@@ -7473,7 +7473,7 @@ async function sendDefaultCatalog(phone, phoneNumberId, selectedClass) {
 
 // handleOrder
 
-const handleOrder = async (message, changes, displayPhoneNumber) => {
+const handleOrder = async (message, changes, displayPhoneNumber, phoneNumberId) => {
   const order = message.order;
   const orderId = message.id;
   const customerInfo = {
