@@ -7351,7 +7351,7 @@ async function sendMessageWithUSSDCallButton(phone, phoneNumberId, ussdCode) {
       to: phone,
       type: "template",
       template: {
-        name: "your_template_name",
+        name: "paymentmessage",
         language: {
           code: "en_US"
         },
