@@ -6725,7 +6725,8 @@ const initializeDefaultCases = () => {
 
   // New case: send default catalog (using the keyword "catalog")
   textMessageCases.set('catalog', async (userContext, phone, phoneNumberId) => {
-    await sendDefaultCatalog(phone, phoneNumberId);
+    //await sendDefaultCatalog(phone, phoneNumberId);
+    await sendClassSelectionMessage(phone, phoneNumberId);
   });
 
   
