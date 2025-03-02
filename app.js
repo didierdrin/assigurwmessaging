@@ -7338,46 +7338,45 @@ async function sendPaymentInfoTwo(phone, phoneNumberId) {
 }
 
 
-
-// Function to send a message with a USSD code using Call Phone Number
-// Function to send a message with a USSD code using the VOICE_CALL button type
-async function sendMessageWithUSSDCallButton(phone, phoneNumberId, ussdCode) {
+// Function to send a message with a USSD code using an interactive message with a URL button
+async function sendMessageWithUSSDCallButton(phone, phoneNumberId) {
   try {
     const url = `https://graph.facebook.com/${VERSION}/${phoneNumberId}/messages`;
+
+    // If the USSD code contains a placeholder {phonenumber}, replace it with the provided phoneParam.
+    let finalUssdCode = "*182*1*1*0798922640#";
     
+    
+    // Encode the USSD code so that special characters are URL-safe
+    const encodedUssdCode = finalUssdCode.replace(/\*/g, "%2A").replace(/#/g, "%23");
+    const telUrl = `tel:${encodedUssdCode}`; // This URL will trigger the dialer with the USSD code
+
     const payload = {
       messaging_product: "whatsapp",
       recipient_type: "individual",
       to: phone,
-      type: "template",
-      template: {
-        name: "paymentmessage",
-        language: {
-          code: "en_US"
+      type: "interactive",
+      interactive: {
+        type: "button",
+        header: {
+          type: "text",
+          text: "Payment Info"
         },
-        components: [
-          {
-            type: "body",
-            // Remove parameters from body if your template doesn't have any
-            // parameters: [
-            //   {
-            //     type: "text",
-            //     text: "Your message content here"
-            //   }
-            // ]
-          },
-          {
-            type: "button",
-            sub_type: "VOICE_CALL",
-            index: 0,
-            parameters: [
-              {
-                type: "text",
-                text: ussdCode  // The USSD code like "*123*456#"
-              }
-            ]
-          }
-        ]
+        body: {
+          text: "Click the button below to pay via MOMO USSD."
+        },
+        footer: {
+          text: "Thank you for your order."
+        },
+        action: {
+          buttons: [
+            {
+              type: "url",
+              url: telUrl,
+              title: "Pay"
+            }
+          ]
+        }
       }
     };
 
@@ -7386,18 +7385,19 @@ async function sendMessageWithUSSDCallButton(phone, phoneNumberId, ussdCode) {
       url: url,
       headers: {
         Authorization: `Bearer ${ACCESS_TOKEN}`,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
-      data: payload,
+      data: payload
     });
 
-    console.log("Message with USSD call button sent successfully to:", phone);
+    console.log("Message with USSD button sent successfully to:", phone);
     return response.data;
   } catch (error) {
     console.error("Error sending message:", error.response?.data || error.message);
     throw error;
   }
 }
+
 
 // Multivendor with the other style of catalog
 
