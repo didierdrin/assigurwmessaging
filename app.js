@@ -654,6 +654,10 @@ const handlePaymentTermsReply = async (
 
       break;
 
+    case "ORDERTWO":
+      await sendPaymentInfo(phone, phoneNumberId); 
+      break; 
+
     case "copy_ussd":
       const namePayload = {
     type: "text",
@@ -1559,7 +1563,7 @@ async function handleSecondInteractiveMessages(message, phone, phoneNumberId) {
          //   userContext.selectedClass,
          //   userContext.selectedCategory
          // );
-        } else if (buttonId === "ORDER") {
+        } else if (buttonId === "ORDERTWO") {
           //await sendOrderSummary(phone, phoneNumberId);
           //await sendTable(phone, phoneNumberId);
           await sendPaymentInfo(phone, phoneNumberId); 
@@ -7122,6 +7126,7 @@ async function sendProductSelectionMessageDraft(phone, phoneNumberId, selectedCl
 // --- 4. Send Order Prompt ---
 // After a product selection, ask the user if they want to add more items or finish the order.
 async function sendOrderPrompt(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
   const payload = {
     type: "interactive",
     interactive: {
@@ -7130,13 +7135,15 @@ async function sendOrderPrompt(phone, phoneNumberId) {
       action: {
         buttons: [
           { type: "reply", reply: { id: "MORE", title: "More" } },
-          { type: "reply", reply: { id: "ORDER", title: "Checkout" } }
+          { type: "reply", reply: { id: "ORDERTWO", title: "Checkout" } }
         ]
       }
     }
   };
 
   await sendWhatsAppMessage(phone, payload, phoneNumberId);
+  userContext.stage = "PAY_PROMPT";
+    userContexts.set(phone, userContext);
 }
 
 async function sendTable(phone, phoneNumberId) {
