@@ -5852,7 +5852,8 @@ app.post("/api/send-payment-confirmation", async (req, res) => {
         message: "Order ID and phone number are required" 
       });
     }
-    
+
+     const userContext = userContexts.get(phone) || {};
     // Update order with payment timestamp if needed
     await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
       paidBool: true
