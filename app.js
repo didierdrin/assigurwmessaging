@@ -7755,8 +7755,8 @@ async function sendDefaultCatalog(phone, phoneNumberId, selectedClass) {
           subCatMapping[doc.docId] = doc.fields.name.stringValue.toUpperCase();
         }
       });
-      // Define allowed soft drink subcategory names. "SODA", "JUICES", "WATER", "COFFEE", "TEA", "ENERGY DRINKS", 
-      const allowedSoftDrinks = new Set(["BEERS", "COCKTAILS", "GIN", "LIQUORS", "WHISKEY", "RUM", "WINES"]);
+      // Define allowed soft drink subcategory names. "SODA", "JUICES", "WATER", "COFFEE", "TEA", "ENERGY DRINKS", "WHISKEY", "RUM", "GIN", 
+      const allowedSoftDrinks = new Set(["BEERS", "COCKTAILS", "LIQUORS", "WINES"]);
 
       // Filter products that are not Food and whose subcategory name is allowed.
       items = products.filter(product => {
