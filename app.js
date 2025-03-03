@@ -7735,7 +7735,122 @@ async function getSubCategories() {
   }
 }
 
+
 async function sendDefaultCatalog(phone, phoneNumberId, selectedClass) {
+  try {
+    // Retrieve products from Firebase.
+    const products = await getFirebaseProducts();
+    let items = [];
+
+    if (selectedClass === "Food") {
+      // Filter products to only include Food.
+      items = products.filter(product => {
+        return product.fields && product.fields.classes && product.fields.classes.stringValue === "Food";
+      }).map(product => ({ product_retailer_id: product.docId }));
+    } else if (selectedClass === "Drinks") {
+      // For drinks, first fetch subcategories.
+      const subCategoriesDocs = await getSubCategories();
+      const subCatMapping = {};
+      subCategoriesDocs.forEach(doc => {
+        if (doc.fields && doc.fields.name && doc.fields.name.stringValue) {
+          subCatMapping[doc.docId] = doc.fields.name.stringValue.toUpperCase();
+        }
+      });
+      // Define allowed soft drink subcategory names.
+      const allowedSoftDrinks = new Set(["BEERS", "COCKTAILS", "LIQUORS", "WINES"]);
+
+      // Group products by subcategory.
+      const drinksBySubCat = {};
+      products.forEach(product => {
+        if (product.fields && product.fields.classes && product.fields.classes.stringValue !== "Food") {
+          const subCatId = product.fields.subcategory && product.fields.subcategory.stringValue;
+          if (subCatId && subCatMapping[subCatId]) {
+            const subCatName = subCatMapping[subCatId];
+            if (allowedSoftDrinks.has(subCatName)) {
+              if (!drinksBySubCat[subCatName]) {
+                drinksBySubCat[subCatName] = [];
+              }
+              drinksBySubCat[subCatName].push(product);
+            }
+          }
+        }
+      });
+
+      // Limit each subcategory group to maximum 5 items.
+      for (const subCatName in drinksBySubCat) {
+        drinksBySubCat[subCatName] = drinksBySubCat[subCatName].slice(0, 5);
+      }
+
+      // Order products in round-robin fashion:
+      // Loop through each subcategory taking one item per round until all groups are exhausted.
+      const orderedDrinks = [];
+      let roundIndex = 0;
+      let itemsRemaining = true;
+      while (itemsRemaining) {
+        itemsRemaining = false;
+        Object.keys(drinksBySubCat).forEach(subCatName => {
+          const group = drinksBySubCat[subCatName];
+          if (group.length > roundIndex) {
+            orderedDrinks.push(group[roundIndex]);
+            itemsRemaining = true;
+          }
+        });
+        roundIndex++;
+      }
+      // Map orderedDrinks to the required format.
+      items = orderedDrinks.map(product => ({ product_retailer_id: product.docId }));
+    }
+
+    // Limit to maximum 30 items.
+    const limitedItems = items.slice(0, 30);
+    if (limitedItems.length === 0) {
+      throw new Error(`No ${selectedClass} products found.`);
+    }
+
+    // Build a single section for the selected class.
+    const sections = [{
+      title: selectedClass,
+      product_items: limitedItems
+    }];
+
+    // Build the WhatsApp catalog payload.
+    const url = `https://graph.facebook.com/${VERSION}/${phoneNumberId}/messages`;
+    const payload = {
+      messaging_product: "whatsapp",
+      to: phone,
+      type: "interactive",
+      interactive: {
+        type: "product_list",
+        header: { type: "text", text: "ICUPA App" },
+        body: { text: `Order ${selectedClass} and enjoy free delivery!` },
+        action: {
+          catalog_id: "1366407087873393",
+          sections: sections
+        }
+      }
+    };
+
+    // Send the catalog via your HTTP client (axios).
+    const response = await axios({
+      method: "POST",
+      url: url,
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      data: payload,
+    });
+
+    console.log("Catalog sent successfully to:", phone);
+    return response.data;
+  } catch (error) {
+    console.error("Error sending catalog:", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+// Old
+async function sendDefaultCatalogTwo(phone, phoneNumberId, selectedClass) {
   try {
     // Retrieve products from Firebase.
     const products = await getFirebaseProducts();
