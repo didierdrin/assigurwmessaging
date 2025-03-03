@@ -7778,7 +7778,7 @@ async function sendDefaultCatalog(phone, phoneNumberId, selectedClass) {
 
       // Limit each subcategory group to maximum 5 items.
       for (const subCatName in drinksBySubCat) {
-        drinksBySubCat[subCatName] = drinksBySubCat[subCatName].slice(0, 5);
+        drinksBySubCat[subCatName] = drinksBySubCat[subCatName].slice(0, 1);
       }
 
       // Order products in round-robin fashion:
