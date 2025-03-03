@@ -7693,7 +7693,7 @@ async function sendDefaultCatalog(phone, phoneNumberId, selectedClass) {
         }
       });
       // Define allowed soft drink subcategory names.
-      const allowedSoftDrinks = new Set(["SODA", "JUICES", "WATER", "COFFEE", "TEA", "ENERGY DRINKS"]);
+      const allowedSoftDrinks = new Set(["SODA", "JUICES", "WATER", "COFFEE", "TEA", "ENERGY DRINKS", "BEERS", "COCKTAILS", "GIN", "LIQUORS", "WHISKEY", "RUM", "WINES"]);
 
       // Filter products that are not Food and whose subcategory name is allowed.
       items = products.filter(product => {
