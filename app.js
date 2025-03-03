@@ -7011,16 +7011,16 @@ const createMenuQrCodesFromVendors = async () => {
       
       // Format the vendor name for URL (replace spaces with %20)
       const vendorNameForUrl = vendorData.name.replace(/ /g, '%20');
-      
+
+      const lifutiPhone = "+250795467385";
       // Create WhatsApp URL with vendor name in the text parameter
-      const vendorUrl = `https://wa.me/${vendorData.phone}?text=${vendorNameForUrl}'s%20Bistro`;
+      const vendorUrl = `https://wa.me/${lifutiPhone}?text=${vendorNameForUrl}`;
       
       // Prepare the document data
       const qrCodeData = {
         vendorId: vendorId,
         vendorName: vendorData.name,
         vendorUrl: vendorUrl,
-        createdAt: firestore2.FieldValue.serverTimestamp(),
         // Add any other fields you need
       };
       
