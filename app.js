@@ -6954,6 +6954,12 @@ const initializeExistingVendors = async () => {
       const vendorId = doc.id;
       const vendorData = doc.data();
       
+      if (vendorData.name) {
+        const name = vendorData.name;
+        const keyword = name; //`${name}ICUPA`;
+        addKeywordToTextHandler(keyword, vendorId);
+      }
+      
       if (vendorData.phone) {
         const phoneWithoutCountry = removeCountryCode(vendorData.phone);
         const keyword = `${phoneWithoutCountry}ICUPA`;
