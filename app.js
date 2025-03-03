@@ -5751,8 +5751,8 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
   // Send the copy USSD button
   await sendWhatsAppMessage(phone, copyUssdPayloadTwo, phoneNumberId);
   await sendWhatsAppMessage(phone, ussdText, phoneNumberId);
-  await new Promise(resolve => setTimeout(resolve, 3000));
-   await sendWhatsAppMessage(phone, namePayload, phoneNumberId);
+  //await new Promise(resolve => setTimeout(resolve, 3000));
+   //await sendWhatsAppMessage(phone, namePayload, phoneNumberId);
 
   const todayFirebase = new Date();
   const formattedDateFirebase = `${todayFirebase.getDate().toString().padStart(2, "0")}/${(todayFirebase.getMonth() + 1).toString().padStart(2, "0")}/${todayFirebase.getFullYear()}`;
@@ -5840,6 +5840,52 @@ async function processPaymentRW(phone, paymentPlan, phoneNumberId) {
 // Proforma
 
 // Add these endpoints to your existing Express app
+
+// Endpoint to send payment confirmation
+app.post("/api/send-payment-confirmation", async (req, res) => {
+  try {
+    const { orderId, phone } = req.body;
+    
+    if (!orderId || !phone) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Order ID and phone number are required" 
+      });
+    }
+    
+    // Update order with payment timestamp if needed
+    await firestore3.collection("whatsappInsuranceOrders").doc(orderId).update({
+      paidBool: true
+      //paidAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // Send WhatsApp payment confirmation message
+    const payloadName2 = {
+      type: "text",
+      text: {
+        body: `*Twakiriye ubwishyu!*\nTwakiriye ubwishyu! Ubu turi gukora ibikenewe ngo twohereze icyemezo cy'Ubwishingizi. Mutegereze gato.`,
+      },
+    };
+    
+    // Get phone number ID from your configuration or pass it as needed
+    const phoneNumberId = "561637583695258"; // Use your actual phone number ID
+    
+    await sendWhatsAppMessage(phone, payloadName2, phoneNumberId);
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: "Payment confirmation sent successfully"
+    });
+    
+  } catch (error) {
+    console.error("Error sending payment confirmation:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Failed to send payment confirmation", 
+      error: error.message 
+    });
+  }
+});
 
 // Endpoint to send proforma invoice
 app.post("/api/send-proforma", async (req, res) => {
