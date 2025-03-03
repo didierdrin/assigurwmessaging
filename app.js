@@ -5871,7 +5871,7 @@ app.post("/api/send-payment-confirmation", async (req, res) => {
             .set(insuranceData, { merge: true });
           console.log(
             `Saved insurance document ${insuranceDocSnapshot.id} with updated payment info to new Firestore.`
-          );
+          );}
     
     // Send WhatsApp payment confirmation message
     const payloadName2 = {
