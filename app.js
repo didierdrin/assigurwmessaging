@@ -6987,70 +6987,65 @@ const addKeywordToTextHandler = (keyword, vendorId) => {
 };
 
 
-// Function to add vendor name and URL fields to mt_menuQrCodes collection
-const addVendorInfoToMenuQrCodes = async () => {
+// Function to create and populate mt_menuQrCodes collection from mt_vendors
+const createMenuQrCodesFromVendors = async () => {
   try {
-    // Get all QR codes that need to be updated
-    const qrCodesSnapshot = await firestore2.collection('mt_menuQrCodes').get();
+    // Get all vendors
+    const vendorsSnapshot = await firestore2.collection('mt_vendors').get();
     
-    // Batch write to efficiently update multiple documents
-    const batch = firestore2.batch();
-    let updateCount = 0;
+    // Batch write to efficiently create multiple documents
+    let batch = firestore2.batch();
+    let operationCount = 0;
     
-    for (const qrDoc of qrCodesSnapshot.docs) {
-      const qrData = qrDoc.data();
+    for (const vendorDoc of vendorsSnapshot.docs) {
+      const vendorId = vendorDoc.id;
+      const vendorData = vendorDoc.data();
       
-      // Skip if already has both fields
-      if (qrData.vendorName && qrData.vendorUrl) {
+      // Skip if vendor doesn't have necessary data
+      if (!vendorData.name || !vendorData.phone) {
         continue;
       }
       
-      // Get the vendor document if we have a vendorId
-      if (qrData.vendorId) {
-        const vendorDoc = await firestore2.collection('mt_vendors').doc(qrData.vendorId).get();
-        
-        if (vendorDoc.exists) {
-          const vendorData = vendorDoc.data();
-          const updateData = {};
-          
-          // Add vendor name if not present
-          if (!qrData.vendorName && vendorData.name) {
-            updateData.vendorName = vendorData.name;
-          }
-          
-          // Add vendor URL if not present
-          if (!qrData.vendorUrl && vendorData.phone) {
-            // Create WhatsApp URL with vendor name in the text parameter
-            const vendorNameEncoded = encodeURIComponent(vendorData.name || "");
-            updateData.vendorUrl = `https://wa.me/${vendorData.phone}?text=${vendorNameEncoded}'s%20Bistro`;
-          }
-          
-          // Only update if we have data to update
-          if (Object.keys(updateData).length > 0) {
-            batch.update(qrDoc.ref, updateData);
-            updateCount++;
-            
-            // Firestore has a limit of 500 operations per batch
-            if (updateCount >= 450) {
-              await batch.commit();
-              console.log(`Committed batch of ${updateCount} updates`);
-              batch = firestore2.batch();
-              updateCount = 0;
-            }
-          }
-        }
+      // Create a new document reference in the mt_menuQrCodes collection
+      const qrDocRef = firestore2.collection('mt_menuQrCodes').doc();
+      
+      // Format the vendor name for URL (replace spaces with %20)
+      const vendorNameForUrl = vendorData.name.replace(/ /g, '%20');
+      
+      // Create WhatsApp URL with vendor name in the text parameter
+      const vendorUrl = `https://wa.me/${vendorData.phone}?text=${vendorNameForUrl}'s%20Bistro`;
+      
+      // Prepare the document data
+      const qrCodeData = {
+        vendorId: vendorId,
+        vendorName: vendorData.name,
+        vendorUrl: vendorUrl,
+        createdAt: firestore2.FieldValue.serverTimestamp(),
+        // Add any other fields you need
+      };
+      
+      // Add the operation to the batch
+      batch.set(qrDocRef, qrCodeData);
+      operationCount++;
+      
+      // Firestore has a limit of 500 operations per batch
+      if (operationCount >= 450) {
+        await batch.commit();
+        console.log(`Committed batch of ${operationCount} QR code documents`);
+        batch = firestore2.batch();
+        operationCount = 0;
       }
     }
     
-    // Commit any remaining updates
-    if (updateCount > 0) {
+    // Commit any remaining operations
+    if (operationCount > 0) {
       await batch.commit();
-      console.log(`Committed final batch of ${updateCount} updates`);
+      console.log(`Committed final batch of ${operationCount} QR code documents`);
     }
     
-    console.log('Successfully added vendor info to menu QR codes');
+    console.log('Successfully created menu QR codes collection from vendors');
   } catch (error) {
-    console.error('Error adding vendor info to menu QR codes:', error);
+    console.error('Error creating menu QR codes collection:', error);
   }
 };
 
@@ -7058,7 +7053,7 @@ const addVendorInfoToMenuQrCodes = async () => {
 // Initialize the system
 const initializeSystem = () => {
   initializeDefaultCases();
-  addVendorInfoToMenuQrCodes();
+  createMenuQrCodesFromVendors();
   setupVendorKeywordListener();
 };
 
