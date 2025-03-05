@@ -1051,6 +1051,10 @@ const handleTextMessages = async (message, phone, phoneNumberId) => {
     userContext.table = table;
     //await sendOrderSummary(phone, phoneNumberId);
     // await sendOrderPrompt(phone, phoneNumberId);
+
+    // Save the order to Firestore
+    await createWhatsappOrder(phone);
+    
     const payload = {
       type: "text",
       text: {
@@ -1059,6 +1063,7 @@ const handleTextMessages = async (message, phone, phoneNumberId) => {
     };
 
     await sendWhatsAppMessage(phone, payload, phoneNumberId); 
+    userContext.stage = null;
     userContexts.set(phone, userContext);
     return;
   }
@@ -7498,6 +7503,10 @@ async function createWhatsappOrder(phone) {
   if (!userContext) return;
   
   const order = userContext.order || [];
+  if (order.length === 0) {
+    console.error("No items in the order for phone:", phone);
+    return;
+  }
   const totalAmount = order.reduce((sum, item) => sum + Number(item.price), 0);
   
   // Generate order ID: "ORD-" + YYYYMMDD + "-" + random 6-digit number.
