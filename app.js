@@ -657,7 +657,8 @@ const handlePaymentTermsReply = async (
     case "ORDERTWO":
       // await sendPaymentInfoTwo(phone, phoneNumberId); 
       // await sendMessageWithUSSDCallButton(phone, phoneNumberId);
-      await sendPaidPhoneNumber(phone, phoneNumberId); 
+      //await sendPaidPhoneNumber(phone, phoneNumberId); 
+      await sendTable(phone, phoneNumberId); 
       break; 
 
     case "copy_ussd":
@@ -1049,7 +1050,15 @@ const handleTextMessages = async (message, phone, phoneNumberId) => {
     const table = message.text.body.trim();
     userContext.table = table;
     //await sendOrderSummary(phone, phoneNumberId);
-    await sendOrderPrompt(phone, phoneNumberId);
+    // await sendOrderPrompt(phone, phoneNumberId);
+    const payload = {
+      type: "text",
+      text: {
+        body: `*Order Placed*\nYou'll get your order in a little bit.`
+      }
+    };
+
+    await sendWhatsAppMessage(phone, payload, phoneNumberId); 
     userContexts.set(phone, userContext);
     return;
   }
