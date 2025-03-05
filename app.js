@@ -656,7 +656,8 @@ const handlePaymentTermsReply = async (
 
     case "ORDERTWO":
       // await sendPaymentInfoTwo(phone, phoneNumberId); 
-      await sendMessageWithUSSDCallButton(phone, phoneNumberId);
+      // await sendMessageWithUSSDCallButton(phone, phoneNumberId);
+      await sendPaidPhoneNumber(phone, phoneNumberId); 
       break; 
 
     case "copy_ussd":
@@ -964,7 +965,7 @@ const handleNumberOfPeople = async (message, phone, phoneNumberId) => {
         phoneNumberId
       );
     }
-  } else if (userContext.stage === "EXPECTING_PAID_PHONENUMBER") {
+  } else if (userContext.stage === "EXPECTING_PAID_PHONENUMBER_OLD") {
     const messageText = message.text.body.trim();
     // Preserve the original phone number format
     const paidPhoneNumber = messageText;
@@ -1488,7 +1489,7 @@ async function handleSecondInteractiveMessages(message, phone, phoneNumberId) {
         
         // Forward the selected class to the catalog function.
         await sendDefaultCatalog(phone, phoneNumberId, selectedClass);
-        userContext.stage = "CATEGORY_SELECTION";
+        userContext.stage = "CLASS_SELECTION";
         userContexts.set(phone, userContext);
       }
       break;
@@ -7414,6 +7415,28 @@ async function sendTable(phone, phoneNumberId) {
   userContext.stage = "TABLE_SELECTION";
     userContexts.set(phone, userContext);
 }
+
+
+async function sendPaidPhoneNumber(phone, phoneNumberId) {
+  const userContext = userContexts.get(phone) || {};
+  const namePayload = {
+    type: "text",
+    text: {
+      body: `*Momo Phone Number*\nProvide the phone number used to pay.`
+    }
+    
+  };
+
+  
+
+  console.log("Processing payment for:", phone, paymentPlan);
+  userContext.stage = "EXPECTING_PAID_PHONENUMBER";
+  userContexts.set(phone, userContext);
+}
+
+
+
+
 // --- 5. Send Order Summary ---
 // When the user finishes ordering, send a summary of the order.
 async function sendOrderSummary(phone, phoneNumberId) {
