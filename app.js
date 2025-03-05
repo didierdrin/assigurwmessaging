@@ -1053,7 +1053,7 @@ const handleTextMessages = async (message, phone, phoneNumberId) => {
     // await sendOrderPrompt(phone, phoneNumberId);
 
     // Save the order to Firestore
-    await createWhatsappOrder(phone);
+    await createWhatsappOrderNew(phone);
     
     const payload = {
       type: "text",
@@ -7977,7 +7977,6 @@ async function sendDefaultCatalogTwo(phone, phoneNumberId, selectedClass) {
 
 
 // handleOrder
-
 const handleOrder = async (message, changes, displayPhoneNumber, phoneNumberId) => {
   const order = message.order;
   const orderId = message.id;
@@ -7989,21 +7988,81 @@ const handleOrder = async (message, changes, displayPhoneNumber, phoneNumberId) 
   const totalAmount = items.reduce((total, item) => total + item.item_price * item.quantity, 0);
 
   try {
-    //await axios.post(`https://seasoned-cuddly-success.glitch.me/api/save-order`, {
-    //  orderId,
-    //  customerInfo,
-    //  items,
-    //});
+    // Get or create user context
+    let userContext = userContexts.get(customerInfo.phone) || {};
+    
+    // Transform catalog order items into order context
+    userContext.orderNew = items.map(item => ({
+      id: item.product_retailer_id,  // Assuming this matches your product ID
+      name: item.item_name,
+      price: item.item_price,
+      quantity: item.quantity
+    }));
 
-  
+    // Save additional order metadata
+    userContext.orderId = orderId;
+    userContext.totalAmount = totalAmount;
 
-    //await sendTable(phone, phoneNumberId); 
+    // Update user context
+    userContexts.set(customerInfo.phone, userContext);
+
+    // Proceed with order flow
     await sendOrderPrompt(customerInfo.phone, phoneNumberId);
     console.log("Order saved successfully.");
   } catch (error) {
     console.error("Error saving order:", error.message);
   }
 };
+
+async function createWhatsappOrderNew(phone) {
+  let userContext = userContexts.get(phone) || {};
+  if (!userContext || !userContext.orderNew || userContext.orderNew.length === 0) {
+    console.error("No items in the order for phone:", phone);
+    return;
+  }
+  
+  const order = userContext.orderNew;
+  const totalAmount = order.reduce((sum, item) => sum + Number(item.price) * (item.quantity || 1), 0);
+  
+  // Generate order ID: "ORD-" + YYYYMMDD + "-" + random 6-digit number.
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const randomDigits = Math.floor(100000 + Math.random() * 900000);
+  const orderId = `ORD-${yyyy}${mm}${dd}-${randomDigits}`;
+  
+  // Build products array with catalog product details
+  const products = order.map(item => ({
+    price: Number(item.price),
+    product: item.id,
+    quantity: item.quantity || 1,
+    name: item.name  // Optional: include product name
+  }));
+  
+  // Build order object using provided structure.
+  const orderObj = {
+    accepted: false,
+    amount: totalAmount,
+    date: admin.firestore.FieldValue.serverTimestamp(),
+    orderId: orderId,
+    paid: false,
+    phone: phone,
+    products: products,
+    rejected: false,
+    served: false,
+    table: userContext.table,
+    user: phone,
+    vendor: userContext.vendorId
+  };
+  
+  try {
+    await firestore2.collection("mt_whatsappOrders").add(orderObj);
+    console.log("Order created with ID:", orderId);
+  } catch (error) {
+    console.error("Error creating order in Firestore:", error.message);
+  }
+}
 
 
 
