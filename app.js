@@ -1058,7 +1058,7 @@ const handleTextMessages = async (message, phone, phoneNumberId) => {
     const payload = {
       type: "text",
       text: {
-        body: `*Order Placed*\nYou'll get your order in a little bit.`
+        body: `*Order Placed | Pay*\nYou'll get your order in a little bit.`
       }
     };
 
@@ -8036,8 +8036,8 @@ async function createWhatsappOrderNew(phone) {
   const products = order.map(item => ({
     price: Number(item.price),
     product: item.id,
-    quantity: item.quantity || 1,
-    name: item.name  // Optional: include product name
+    quantity: item.quantity || 1
+    //name: item.name  // Optional: include product name
   }));
   
   // Build order object using provided structure.
