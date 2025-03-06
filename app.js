@@ -1127,7 +1127,7 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
 
     case "quickrides":
       // Send location request message
-      const locationRequestPayload = {
+      const quickLocationRequestPayload = {
         type: "interactive",
         interactive: {
           type: "location_request_message",
@@ -1140,7 +1140,7 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
         },
       };
 
-      await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
+      await sendWhatsAppMessage(phone, quickLocationRequestPayload, phoneNumberId);
 
       userContext.serviceType = "quickrides";
       userContext.stage = "EXPECTING_PICKUP_ADDRESS_QUICKRIDES";
@@ -2991,7 +2991,7 @@ async function sendLifutiWelcomeMessage(phone, phoneNumberId) {
             title: "Lifuti Services",
             rows: [
               {
-                id: "quickride",
+                id: "quickrides",
                 title: "See nearby drivers",
                 description: "Passenger(s)(Taxi/Cab)",
               },
