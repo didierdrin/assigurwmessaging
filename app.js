@@ -1125,6 +1125,28 @@ const handleInteractiveMessages = async (message, phone, phoneNumberId) => {
       userContexts.set(phone, userContext);
       break;
 
+    case "quickrides":
+      // Send location request message
+      const locationRequestPayload = {
+        type: "interactive",
+        interactive: {
+          type: "location_request_message",
+          body: {
+            text: "Share your current location",
+          },
+          action: {
+            name: "send_location",
+          },
+        },
+      };
+
+      await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
+
+      userContext.serviceType = "quickrides";
+      userContext.stage = "EXPECTING_PICKUP_ADDRESS_QUICKRIDES";
+      userContexts.set(phone, userContext);
+      break;
+
     case "goods":
       // Send location request message
       const locationRequestPayloadGoods = {
@@ -2629,6 +2651,19 @@ const handleLocation = async (location, phone, phoneNumberId) => {
 
       userContext.stage = "EXPECTING_NOW_LATER_GOODS";
       userContexts.set(phone, userContext);
+    }  else if (userContext.stage === "EXPECTING_PICKUP_ADDRESS_QUICKRIDES") {
+      // Retrieve the order from userContext
+      const userContext = userContexts.get(phone) || {};
+
+      userContext.pickupAddress = location.address || "";
+      userContext.pickupLatitude = location.latitude;
+      userContext.pickupLongitude = location.longitude;
+
+     await sendAvailableDriversMessage(phone, phoneNumberId); 
+      //await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
+
+      //userContext.stage = "EXPECTING_DROPOFF_ADDRESS_GOODS";
+      userContexts.set(phone, userContext);
     } else {
       console.log("Not the correct stage");
     }
@@ -2941,10 +2976,10 @@ async function sendLifutiWelcomeMessage(phone, phoneNumberId) {
       type: "list",
       header: {
         type: "text",
-        text: "Welcome to Lifuti\nRide Sharing Services!",
+        text: "Welcome to Lifuti App!",
       },
       body: {
-        text: "What would you like to do today?",
+        text: "What do you want to do today?",
       },
       footer: {
         text: "Select an action to proceed",
@@ -2956,14 +2991,14 @@ async function sendLifutiWelcomeMessage(phone, phoneNumberId) {
             title: "Lifuti Services",
             rows: [
               {
-                id: "passenger",
-                title: "Get a ride",
-                description: "Passenger(Taxi/Cab)",
+                id: "quickride",
+                title: "See nearby drivers",
+                description: "Passenger(s)(Taxi/Cab)",
               },
               {
-                id: "goods",
-                title: "Goods(Transportation)",
-                description: "Move goods to the location of your choice",
+                id: "passenger",
+                title: "Book a ride",
+                description: "Schedule a journey",
               },
             ],
           },
@@ -3388,11 +3423,14 @@ async function handleTimeValidation(message, phone, phoneNumberId) {
 
     if (is24HourFormat || is12HourFormat) {
       userContext.pickupTime = timeInput;
-      userContext.stage = "EXPECTING_SEATS";
-      userContexts.set(phone, userContext);
+      //userContext.stage = "EXPECTING_SEATS";
+      //userContexts.set(phone, userContext);
 
       // Proceed to seat selection
-      await sendSeatSelectionMessage(phone, phoneNumberId);
+      //await sendSeatSelectionMessage(phone, phoneNumberId);
+      await sendAvailableDriversMessage(phone, phoneNumberId);
+        userContext.seats = "0";
+        userContexts.set(phone, userContext);
     } else {
       await sendWhatsAppMessage(
         phone,
