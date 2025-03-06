@@ -601,7 +601,10 @@ const handlePaymentTermsReply = async (
       break;
     case "pickup_now":
       if (userContext.stage === "EXPECTING_NOW_LATER") {
-        await sendSeatSelectionMessage(phone, phoneNumberId);
+        //await sendSeatSelectionMessage(phone, phoneNumberId);
+        await sendAvailableDriversMessage(phone, phoneNumberId);
+      userContext.seats = "0";
+      userContexts.set(phone, userContext);
         return;
       } else if (userContext.stage === "EXPECTING_NOW_LATER_GOODS") {
         await sendQuantitySelectionMessage(phone, phoneNumberId);
