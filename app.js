@@ -589,7 +589,8 @@ const handlePaymentTermsReply = async (
       break;
     case "pickup_later":
       if (userContext.stage === "EXPECTING_NOW_LATER") {
-        await sendCustomPickupTimeMessage(phone, phoneNumberId);
+        //await sendCustomPickupTimeMessage(phone, phoneNumberId);
+        await sendAvailableDriversMessage(phone, phoneNumberId);
         return;
       } else if (userContext.stage === "EXPECTING_NOW_LATER_GOODS") {
         await sendCustomPickupTimeMessageGoods(phone, phoneNumberId);
@@ -2556,38 +2557,25 @@ const handleLocation = async (location, phone, phoneNumberId) => {
       userContext.dropoffLatitude = location.latitude;
       userContext.dropoffLongitude = location.longitude;
 
-      const requestTimePayload = {
-        type: "interactive",
-        interactive: {
-          type: "button",
-          body: {
-            text: "When do you want to be picked up?",
-          },
-          action: {
-            buttons: [
-              {
-                type: "reply",
-                reply: {
-                  id: "pickup_now",
-                  title: "Now",
-                },
-              },
-              // {
-              // type: "reply",
-              // reply: {
-              //   id: "pickup_later",
-              //    title: "Later",
-              //   },
-              //  },
-            ],
-          },
-        },
-      };
+      // Use the calendar message template instead of requestTimePayload
+  const calendarMessage = {
+    type: "interactive",
+    interactive: {
+      type: "flow",
+      body: {
+        text: "When would you like to be picked up?"
+      },
+      flow: {
+        id: "1355403968945372" // Your flow ID
+      }
+    }
+  };
 
-      await sendWhatsAppMessage(phone, requestTimePayload, phoneNumberId);
+  await sendWhatsAppMessage(phone, calendarMessage, phoneNumberId);
 
-      userContext.stage = "EXPECTING_NOW_LATER";
-      userContexts.set(phone, userContext);
+  // Update user context
+  userContext.stage = "EXPECTING_DATETIME_SELECTION";
+  userContexts.set(phone, userContext);
     } else if (userContext.stage === "EXPECTING_PICKUP_ADDRESS_GOODS") {
       // Retrieve the order from userContext
       const userContext = userContexts.get(phone) || {};
@@ -2861,7 +2849,26 @@ async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
         );
         console.log("Expecting AGREE & PAY button reply");
         return;
-      } else {
+      } else if (message.interactive.type === "flow_response") {
+    // This handles the calendar flow response
+    const userContext = userContexts.get(phone) || {};
+    
+    if (userContext.stage === "EXPECTING_DATETIME_SELECTION") {
+      // Extract date and time from flow response
+      const flowData = message.interactive.flow_response.data;
+      const selectedDate = flowData.screen_0_Date_0;
+      const selectedTime = flowData.screen_0_Time_1;
+      
+      // Store the selections in user context
+      userContext.pickupDate = selectedDate;
+      userContext.pickupTime = selectedTime;
+      userContexts.set(phone, userContext);
+      
+      // Send available drivers message
+      await sendAvailableDriversMessage(phone, phoneNumberId);
+      return;
+    }
+  } else {
         await handleInteractiveMessages(message, phone, phoneNumberId);
         await handleSecondInteractiveMessages(message, phone, phoneNumberId);
         await handleDriverSelection(message, phone, phoneNumberId);
