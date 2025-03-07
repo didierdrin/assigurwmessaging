@@ -3024,20 +3024,18 @@ async function handlePhoneNumber1Logic(message, phone, changes, phoneNumberId) {
     const userContext = userContexts.get(phone) || {};
     
     if (userContext.stage === "EXPECTING_DATETIME_SELECTION") {
-      // Extract date and time from flow response
-      const flowData = message.interactive.flow_response.data;
-      const selectedDate = flowData.screen_0_Date_0;
-      const selectedTime = flowData.screen_0_Time_1;
-      
-      // Store the selections in user context
-      userContext.pickupDate = selectedDate;
-      userContext.pickupTime = selectedTime;
-      userContexts.set(phone, userContext);
-      
-      // Send available drivers message
-      await sendAvailableDriversMessage(phone, phoneNumberId);
-      return;
-    }
+          const flowData = message.interactive.flow_response.data;
+          const selectedDate = flowData.screen_0_Date_0;
+          const selectedTime = flowData.screen_0_Time_1;
+
+          userContext.pickupDate = selectedDate;
+          userContext.pickupTime = selectedTime;
+          userContexts.set(phone, userContext);
+
+          // Send available drivers message
+          await sendAvailableDriversMessage(phone, phoneNumberId);
+          return;
+        }
   } else {
         await handleInteractiveMessages(message, phone, phoneNumberId);
         await handleSecondInteractiveMessages(message, phone, phoneNumberId);
