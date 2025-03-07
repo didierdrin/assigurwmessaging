@@ -2518,7 +2518,154 @@ app.post("/extract-data-old", async (req, res) => {
   }
 });
 
+
+
 const handleLocation = async (location, phone, phoneNumberId) => {
+  const userContext = userContexts.get(phone) || {};
+  try {
+    if (userContext.stage === "EXPECTING_PICKUP_ADDRESS") {
+      // Retrieve the order from userContext
+      // Note: You don't need to redefine userContext here as it's already defined above
+      
+      userContext.pickupLatitude = location.latitude;
+      userContext.pickupLongitude = location.longitude;
+      userContext.pickupAddress = location.address || "";
+
+      // Send location request message
+      const locationRequestPayload = {
+        type: "interactive",
+        interactive: {
+          type: "location_request_message",
+          body: {
+            text: "Share your drop off address",
+          },
+          action: {
+            name: "send_location",
+          },
+        },
+      };
+
+      await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
+
+      // Update user context
+      userContext.stage = "EXPECTING_DROPOFF_ADDRESS";
+      userContexts.set(phone, userContext);
+    } else if (userContext.stage === "EXPECTING_DROPOFF_ADDRESS") {
+      userContext.dropoffAddress = location.address || "";
+      userContext.dropoffLatitude = location.latitude;
+      userContext.dropoffLongitude = location.longitude;
+
+      // Use the calendar message template
+      const calendarMessage = {
+        type: "interactive",
+        interactive: {
+          type: "flow",
+          body: {
+            text: "When would you like to be picked up?"
+          },
+          flow: {
+            id: "1355403968945372" // Your flow ID
+          }
+        }
+      };
+
+      await sendWhatsAppMessage(phone, calendarMessage, phoneNumberId);
+
+      // Update user context
+      userContext.stage = "EXPECTING_DATETIME_SELECTION";
+      userContexts.set(phone, userContext);
+    } else if (userContext.stage === "EXPECTING_PICKUP_ADDRESS_GOODS") {
+      // Note: You don't need to redefine userContext here
+      
+      userContext.pickupAddress = location.address || "";
+      userContext.pickupLatitude = location.latitude;
+      userContext.pickupLongitude = location.longitude;
+
+      // Send location request message
+      const locationRequestPayload = {
+        type: "interactive",
+        interactive: {
+          type: "location_request_message",
+          body: {
+            text: "Share your drop off address",
+          },
+          action: {
+            name: "send_location",
+          },
+        },
+      };
+
+      await sendWhatsAppMessage(phone, locationRequestPayload, phoneNumberId);
+
+      userContext.stage = "EXPECTING_DROPOFF_ADDRESS_GOODS";
+      userContexts.set(phone, userContext);
+    } else if (userContext.stage === "EXPECTING_DROPOFF_ADDRESS_GOODS") {
+      // Note: You don't need to redefine userContext here
+      
+      userContext.dropoffAddress = location.address || "";
+      userContext.dropoffLatitude = location.latitude;
+      userContext.dropoffLongitude = location.longitude;
+
+      const requestTimePayload = {
+        type: "interactive",
+        interactive: {
+          type: "button",
+          body: {
+            text: "When do you want to be picked up?",
+          },
+          action: {
+            buttons: [
+              {
+                type: "reply",
+                reply: {
+                  id: "pickup_now",
+                  title: "Now",
+                },
+              },
+              // You've commented out the "Later" option
+            ],
+          },
+        },
+      };
+
+      await sendWhatsAppMessage(phone, requestTimePayload, phoneNumberId);
+
+      userContext.stage = "EXPECTING_NOW_LATER_GOODS";
+      userContexts.set(phone, userContext);
+    } else if (userContext.stage === "EXPECTING_PICKUP_ADDRESS_QUICKRIDES") {
+      // Note: You don't need to redefine userContext here
+      
+      userContext.pickupAddress = location.address || "";
+      userContext.pickupLatitude = location.latitude;
+      userContext.pickupLongitude = location.longitude;
+
+      await sendAvailableDriversMessage(phone, phoneNumberId); 
+      userContexts.set(phone, userContext);
+    } else {
+      console.log("Not the correct stage");
+    }
+
+    console.log("Location updated and order saved successfully.");
+  } catch (error) {
+    console.error("Error processing location and saving order:", error);
+    
+    // Fix for the error message - handle the case where error might not be an object with a message property
+    const errorMessage = error && error.message ? error.message : "Unknown error";
+    
+    await sendWhatsAppMessage(
+      phone,
+      {
+        type: "text",
+        text: {
+          body: `Sorry, there was an error processing your location. Please try again.`,
+        },
+      },
+      phoneNumberId
+    );
+  }
+};
+
+const handleLocationOld = async (location, phone, phoneNumberId) => {
   const userContext = userContexts.get(phone) || {};
   try {
     if (userContext.stage === "EXPECTING_PICKUP_ADDRESS") {
