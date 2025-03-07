@@ -2572,7 +2572,7 @@ const handleLocation = async (location, phone, phoneNumberId) => {
       const calendarMessage = {
     type: "template",
     template: {
-      name: "insurancecovermessage", 
+      name: "calendarmessage", 
       language: {
         code: "en_US", // Replace with the appropriate language code
       },
