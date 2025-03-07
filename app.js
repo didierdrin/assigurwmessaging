@@ -2556,7 +2556,7 @@ const handleLocation = async (location, phone, phoneNumberId) => {
       userContext.dropoffLongitude = location.longitude;
 
       // Use the calendar message template
-      const calendarMessage = {
+      const calendarMessageOld = {
         type: "interactive",
         interactive: {
           type: "flow",
@@ -2568,6 +2568,29 @@ const handleLocation = async (location, phone, phoneNumberId) => {
           }
         }
       };
+
+      const calendarMessage = {
+    type: "template",
+    template: {
+      name: "insurancecovermessage", 
+      language: {
+        code: "en_US", // Replace with the appropriate language code
+      },
+      components: [
+        {
+          type: "button",
+          sub_type: "flow",
+          index: "0",
+          parameters: [
+            {
+              type: "payload",
+              payload: "1355403968945372", 
+            },
+          ],
+        },
+      ],
+    },
+  };
 
       await sendWhatsAppMessage(phone, calendarMessage, phoneNumberId);
 
